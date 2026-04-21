@@ -5,7 +5,7 @@ import Repository.SuperAdminRepo;
 
 public class SuperAdminService
 {
-    private SuperAdminRepo saRepo = new SuperAdminRepo();
+    private final SuperAdminRepo saRepo = new SuperAdminRepo();
     
     public boolean checkAccout()
     {
@@ -27,6 +27,30 @@ public class SuperAdminService
         }
         
         return 1;
+    }
+    
+    public boolean registerSA(String id, String fname, String lname,
+                              String contactNum, String position, String photo,
+                              String password, String confirmPass)
+    {
+        SuperAdmin sa = new SuperAdmin();
+        
+        if (!password.equals(confirmPass))
+        {
+            return false;
+        }
+        
+        sa.publicID = id;
+        sa.firstName = fname;
+        sa.lastName = lname;
+        sa.contactNum = contactNum;
+        sa.position = position;
+        sa.photoURL = photo;
+        sa.password = password;
+        
+        saRepo.registerSA(sa);
+        
+        return true;
     }
     
     /*public boolean registerSA(String id, String fname, String lname,
