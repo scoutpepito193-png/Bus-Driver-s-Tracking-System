@@ -10,11 +10,7 @@ public class ConsoleTest
         Scanner scan = new Scanner(System.in);
         SuperAdminService sas = new SuperAdminService();
         
-        int choice;
-        int logCount = 0;
-        String regID = "SA-0000";
-        String regPass = "admin";
-        
+        int choice;        
         do
         {
             System.out.println("Bus Driver's Tracking System");
@@ -33,6 +29,7 @@ public class ConsoleTest
             {
                case 1 ->
                {
+                   /*
                    int attempt = 0;
                    while (attempt != 3)
                     {
@@ -43,7 +40,7 @@ public class ConsoleTest
                         System.out.print("Password: ");
                         String password = scan.nextLine();
                         
-                        boolean logIn = sas.LogIn(id, regID, password, regPass);
+                        boolean logIn = sas.logIn(id, regID, password, regPass);
                         
                         if (logIn  == false)
                         {
