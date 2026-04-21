@@ -29,113 +29,85 @@ public class ConsoleTest
             {
                case 1 ->
                {
-                   /*
-                   int attempt = 0;
-                   while (attempt != 3)
-                    {
-                        System.out.println("Log-In");
-                        System.out.print("ID: ");
-                        String id = scan.nextLine();
+                   boolean verify = sas.checkAccout();
                    
-                        System.out.print("Password: ");
-                        String password = scan.nextLine();
-                        
-                        boolean logIn = sas.logIn(id, regID, password, regPass);
-                        
-                        if (logIn  == false)
-                        {
-                            ++attempt;
-                        }
-                        else
-                        {
-                            logCount++;
-                            break;
-                        }
-                    }
-                   
-                   if (logCount == 1)
+                   if (verify == false)
                    {
-                            boolean flag = true;
+                        boolean flag = true;
                            
-                            while (flag)
-                            {
-                                System.out.println("Set-Up Profile");
-                                System.out.print("ID: ");
-                                String id = scan.nextLine();
-                                
-                                System.out.print("First Name: ");
-                                String fname = scan.nextLine();
-                           
-                                System.out.println("Last Name: ");
-                                String lname = scan.nextLine();
-                           
-                                System.out.println("Contact Number: ");
-                                String contactNum = scan.nextLine();
-                           
-                                System.out.println("Position: ");
-                                String position = scan.nextLine();
-                                
-                                System.out.print("Pres [1[ to Confirm | [2] to Clear: ");
-                                int sAProfileChoice = scan.nextInt();
-                                scan.nextLine();
-                                
-                                if(sAProfileChoice == 1)
-                                {
-                                    boolean confirm = false;
-                                    while (confirm == false)
-                                    {
-                                        System.out.println("New Password: ");
-                                        String password = scan.nextLine();
-                                
-                                        System.out.println("Confirm Password: ");
-                                        String confirmPass = scan.nextLine();
-                                    
-                                        confirm = sas.registerSA(id, fname, lname, contactNum, position, password, confirmPass);
-                                    
-                                        if (confirm == false)
-                                        {
-                                            System.out.println("Password doesn't match");
-                                        }
-                                        else
-                                        {
-                                            regID = id;
-                                            regPass = password;
-                                            confirm = true;
-                                            flag = false;
-                                        }
-                                        
-                                    }
-                                }
-                            }                       
-                   }
-                    
-                    
-                           
-                   /*while ()
-                   
-                   if (id.equals(regID) && password.equals(regPass))
-                   {
-                       logCount++;
-                       
-                       if (logCount == 0)
+                        while (flag)
                         {
-
+                            System.out.println("Set-Up Profile");
+                            System.out.print("ID: ");
+                            String id = scan.nextLine();
+                              
+                            System.out.print("First Name: ");
+                            String fname = scan.nextLine();
+                          
+                            System.out.print("Last Name: ");
+                            String lname = scan.nextLine();
+                          
+                            System.out.print("Contact Number: ");
+                            String contactNum = scan.nextLine();
+                           
+                            System.out.print("Position: ");
+                            String position = scan.nextLine();
                             
-                        }
-                        System.out.println("");
+                            System.out.print("Upload Photo: ");
+                            String photo = scan.nextLine();
+                                
+                            System.out.print("Pres [1[ to Confirm | [2] to Clear: ");
+                            int sAProfileChoice = scan.nextInt();
+                            scan.nextLine();
+                                
+                            if(sAProfileChoice == 1)
+                            {
+                                boolean confirm = false;
+                                while (confirm == false)
+                                {
+                                    System.out.println("New Password: ");
+                                    String password = scan.nextLine();
+                                
+                                    System.out.println("Confirm Password: ");
+                                    String confirmPass = scan.nextLine();
+                                    
+                                    confirm = sas.registerSA(id, fname, lname, contactNum, position, photo, password, confirmPass);
+                                    
+                                    if (confirm == false)
+                                    {
+                                        System.out.println("Password doesn't match");
+                                    }
+                                    else
+                                    {
+                                        flag = false;
+                                    }
+                                        
+                                }
+                            }
+                        }                        
                    }
-                   else if (!id.equals(regID))
-                   {
-                       System.out.println("Wrong ID");
-                   }
-                   else if (!password.equals(regPass))
-                   {
-                       System.out.println("Wrong Password");
-                   }
-                   else
-                   {
-                       System.out.println("Wrong Credentials");
-                   }*/
+                   int attemp = 0;
+                OUTER:
+                while (attemp != 3) {
+                    System.out.println("Log-In");
+                    System.out.print("ID: ");
+                    String id = scan.nextLine();
+                    
+                    System.out.print("Password: ");
+                    String password = scan.nextLine();
+                    int logIn = sas.logIn(id, password);
+                    
+                    switch (logIn) {
+                        case 0 -> {
+                            System.out.println("Wrong Credentials!");
+                            ++attemp;
+                           }
+                        case 2 -> System.out.println("Account Not Found");
+                        default -> {
+                            break OUTER;
+                           }
+                    }
+                }
                }
                 case 2 -> {
                 }
