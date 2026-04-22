@@ -85,30 +85,43 @@ public class ConsoleTest
                                 }
                             }
                         }                        
-                   }
-                   int attemp = 0;
-                OUTER:
-                while (attemp != 3) {
-                    System.out.println("Log-In");
-                    System.out.print("ID: ");
-                    String id = scan.nextLine();
-                    
-                    System.out.print("Password: ");
-                    String password = scan.nextLine();
-                    int logIn = sas.logIn(id, password);
-                    
-                    switch (logIn) {
-                        case 0 -> {
-                            System.out.println("Wrong Credentials!");
-                            ++attemp;
-                           }
-                        case 2 -> System.out.println("Account Not Found");
-                        default -> {
-                            break OUTER;
-                           }
                     }
+                    int attemp = 0;
+                    OUTER:
+                    while (attemp != 3)
+                    {
+                        System.out.println("Log-In");
+                        System.out.print("ID: ");
+                        String id = scan.nextLine();
+                    
+                        System.out.print("Password: ");
+                        String password = scan.nextLine();
+                        int logIn = sas.logIn(id, password);
+                    
+                        switch (logIn)
+                        {
+                            case 0 ->
+                            {
+                                System.out.println("Wrong Credentials!");
+                                ++attemp;
+                            }
+                        
+                            case 2 -> 
+                            {
+                                System.out.println("Account Not Found");
+                                ++attemp;
+                            }
+                            
+                            default ->
+                            {
+                                System.out.println("Super Admin Dashboard");
+                                
+                            }
+                        }
+                    }
+                    
+                    
                 }
-               }
                 case 2 -> {
                 }
                 case 3 -> {
