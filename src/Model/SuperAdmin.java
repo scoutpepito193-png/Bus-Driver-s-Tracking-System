@@ -9,4 +9,5 @@ public class SuperAdmin
     public String contactNum;
     public String position;
     public String photoURL;
+    
 }

@@ -1,11 +1,16 @@
-/*package Service;
+package Service;
 
 import Model.Driver;
+import Repository.DriverRepo;
         
 public class DriverService
 {
-    public int totalDriver(String[] id)
+    private final DriverRepo dRepo = new DriverRepo();
+    
+    public int totalDriver()
     {
+        int total = dRepo.countDrivers();
         
+        return total;
     }
-}*/
+}

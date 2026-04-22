@@ -2,6 +2,9 @@ package Test;
 
 import java.util.Scanner;
 import Service.SuperAdminService;
+import Service.SubAdminService;
+import Service.DriverService;
+import Model.SuperAdmin;
 
 public class ConsoleTest
 {   
@@ -9,6 +12,8 @@ public class ConsoleTest
     {
         Scanner scan = new Scanner(System.in);
         SuperAdminService sas = new SuperAdminService();
+        SubAdminService subs = new SubAdminService();
+        DriverService ds = new DriverService();
         
         int choice;        
         do
@@ -87,8 +92,9 @@ public class ConsoleTest
                         }                        
                     }
                     int attemp = 0;
-                    OUTER:
-                    while (attemp != 3)
+                    boolean loggedIn = false;
+                    
+                    while (attemp != 3 && !loggedIn)
                     {
                         System.out.println("Log-In");
                         System.out.print("ID: ");
@@ -114,8 +120,21 @@ public class ConsoleTest
                             
                             default ->
                             {
-                                System.out.println("Super Admin Dashboard");
+                                loggedIn = true;
                                 
+                                SuperAdmin saOutput = sas.getSAData();
+                                System.out.println("Super Admin Dashboard");
+                                System.out.println("Profile Picture: " + saOutput.photoURL);
+                                System.out.println("Name: " + saOutput.firstName + " " + saOutput.lastName);
+                                System.out.println("Position: " + saOutput.position);
+                                System.out.println("ID: " + saOutput.publicID);
+                                System.out.println();
+                                
+                                int totalRegisteredDriver = ds.totalDriver();
+                                int totalRegisteredSubAdmin = subs.totalSubAdmin();
+                                
+                                System.out.println("Total Drivers: " + totalRegisteredDriver);
+                                System.out.println("Total Sub Admin: " + totalRegisteredSubAdmin);
                             }
                         }
                     }
