@@ -123,4 +123,76 @@ public class SuperAdminRepo
         
         return null;       
     }
+    
+    public int countPendingReq()
+    {
+        int count = 0;
+        
+        try
+        {           
+            String sql = "SELECT COUNT(*) FROM request WHERE status = 'PENDING'";
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                count = res.getInt(1);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return count;
+    }
+    
+    public int countApprovedReq()
+    {
+        int count = 0;
+        
+        try
+        {           
+            String sql = "SELECT COUNT(*) FROM request WHERE status = 'APPROVED'";
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                count = res.getInt(1);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return count;
+    }
+
+    public int countRejectedReq()
+    {
+        int count = 0;
+        
+        try
+        {           
+            String sql = "SELECT COUNT(*) FROM request WHERE status = 'REJECTED'";
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                count = res.getInt(1);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return count;
+    }
 }

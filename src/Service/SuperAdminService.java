@@ -57,6 +57,27 @@ public class SuperAdminService
     {
         return saRepo.getSuperAdminData();
     }
+
+    public int totalPending()
+    {
+        int total = saRepo.countPendingReq();
+        
+        return total;
+    }
+    
+    public int totalApproved()
+    {
+        int total = saRepo.countApprovedReq();
+        
+        return total;
+    }
+    
+    public int totalRejected()
+    {
+        int total = saRepo.countRejectedReq();
+        
+        return total;
+    }
     
     /*public boolean registerSA(String id, String fname, String lname,
                             String contactNum, String position, String password,

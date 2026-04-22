@@ -130,11 +130,16 @@ public class ConsoleTest
                                 System.out.println("ID: " + saOutput.publicID);
                                 System.out.println();
                                 
+                                System.out.println("[1] Overview    [2] Driver  [3] Sub Admin       [0] Sign Out");
+                                System.out.println();
+                                
                                 int totalRegisteredDriver = ds.totalDriver();
                                 int totalRegisteredSubAdmin = subs.totalSubAdmin();
+                                int totalPendingRequest = sas.totalPending();
                                 
                                 System.out.println("Total Drivers: " + totalRegisteredDriver);
                                 System.out.println("Total Sub Admin: " + totalRegisteredSubAdmin);
+                                System.out.println("Total Pending Request: " + totalPendingRequest);
                             }
                         }
                     }
