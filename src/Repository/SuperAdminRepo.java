@@ -7,12 +7,12 @@ import Model.SuperAdmin;
 
 public class SuperAdminRepo
 {
+    Connection conn = dbConnection.getConnection();
+    
     public boolean checkExistingSA()
     {
         try
-        {
-            Connection conn = dbConnection.getConnection();
-            
+        {   
             String sql = "SELECT * FROM super_admin";
             PreparedStatement prepS = conn.prepareStatement(sql);
             
@@ -34,7 +34,6 @@ public class SuperAdminRepo
     
     public void registerSA(SuperAdmin sa)
     {
-        Connection conn = dbConnection.getConnection();
         
         String sql = "INSERT INTO super_admin (public_id, password, first_name,"
                 + "last_name, contact_number, position_role, photo_url)"
@@ -63,7 +62,6 @@ public class SuperAdminRepo
     
     public SuperAdmin logInRepo(String publicID)
     {
-        Connection conn = dbConnection.getConnection();
         
         String sql = "SELECT * FROM super_admin WHERE public_id = ?";
         
@@ -91,5 +89,38 @@ public class SuperAdminRepo
         }
         
         return null;
+    }
+    
+    public SuperAdmin getSuperAdminData()
+    {
+        String sql = "SELECT * FROM super_admin LIMIT 1";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                SuperAdmin sa = new SuperAdmin();
+                
+                sa.publicID = res.getString("public_id");
+                sa.firstName = res.getString("first_name");
+                sa.lastName = res.getString("last_name");
+                sa.contactNum = res.getString("contact_number");
+                sa.position = res.getString("position_role");
+                sa.photoURL = res.getString("photo_url");
+                sa.password = res.getString("password");
+                
+                return sa;
+            }
+        }
+        
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return null;       
     }
 }

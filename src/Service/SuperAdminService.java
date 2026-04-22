@@ -53,6 +53,11 @@ public class SuperAdminService
         return true;
     }
     
+    public SuperAdmin getSAData()
+    {
+        return saRepo.getSuperAdminData();
+    }
+    
     /*public boolean registerSA(String id, String fname, String lname,
                             String contactNum, String position, String password,
                             String confirmPass)
