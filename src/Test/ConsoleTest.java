@@ -5,6 +5,10 @@ import Service.SuperAdminService;
 import Service.SubAdminService;
 import Service.DriverService;
 import Model.SuperAdmin;
+import Model.Driver;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsoleTest
 {   
@@ -140,6 +144,16 @@ public class ConsoleTest
                                 System.out.println("Total Drivers: " + totalRegisteredDriver);
                                 System.out.println("Total Sub Admin: " + totalRegisteredSubAdmin);
                                 System.out.println("Total Pending Request: " + totalPendingRequest);
+                                System.out.println();
+                                
+                                List<Driver> list = ds.getDriverRanking();
+                                
+                                for (Driver d : list)
+                                {
+                                    System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
+                                }
+                                
+                                
                                 
                                 
                             }

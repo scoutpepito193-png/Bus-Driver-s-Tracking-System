@@ -15,6 +15,7 @@ public class Driver
     private String address;
     private String contactNumber;
     private String licenseNum;
+    private String licenseExpiry;
     private String photoURL;
     private String password;
     
@@ -39,6 +40,26 @@ public class Driver
    public String getgender() { return gender; }
    public void setgender(String gender) { this.gender = gender; }
    
-   p
+   public String getdateOfBirth() { return dateOfBirth; }
+   public void setdateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+   
+   public String getaddress() { return address; }
+   public void setaddress(String address) { this.address = address; }
+   
+   public String getcontactNumber() { return contactNumber; }
+   public void setcontactNumber(String contactNumber) { this.contactNumber = contactNumber; }
+   
+   public String getlicenseNum() { return licenseNum; }
+   public void setlicenseNum(String licenseNum) { this.licenseNum = licenseNum; }
+   
+   public String getlicenseExpiry() { return licenseExpiry; }
+   public void setlicenseExpiry(String licenseExpiry) { this.licenseExpiry = licenseExpiry; }
+   
+   public String getphotoURL() { return photoURL; }
+   public void setphotoURL(String photoURL) { this.photoURL = photoURL; }
+   
+   public String getpassword() { return password; }
+   public void setpassword(String password) { this.password = password; }
+   
    
 }

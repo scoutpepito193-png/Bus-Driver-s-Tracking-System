@@ -9,6 +9,8 @@ import Model.Driver;
 
 public class DriverRepo
 {
+    Driver d = new Driver();
+    
     public int countDrivers()
     {
         int count = 0;
@@ -43,23 +45,34 @@ public class DriverRepo
         {
             Connection conn = dbConnection.getConnection();
             
-            String sql = " SELECT d.first_name, d.last_name, r.driver_rank"
-                    + " FROM ranking r"
-                    + " JOIN driver d ON d.driver_id = r.driver_id"
-                    + " ORDER BY r.driver_rank ASC";
+            String sql = " SELECT d.first_name, d.last_name, r.driver_rank "
+                    + "FROM ranking r "
+                    + "JOIN driver d ON d.driver_id = r.driver_id "
+                    + "ORDER BY r.driver_rank ASC ";
             
             PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
             while(res.next())
             {
-                String fullname 
+                d.setfirstName(res.getString("first_name"));
+                d.setlastName(res.getString("last_name"));
+                d.setranking(res.getInt("driver_rank"));
+                
+                list.add(d);
             }
             if(res.next())
             {
-                r
+                
             }
             
         }
+        
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return list;
     }
 }
