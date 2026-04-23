@@ -124,10 +124,10 @@ public class ConsoleTest
                                 
                                 SuperAdmin saOutput = sas.getSAData();
                                 System.out.println("Super Admin Dashboard");
-                                System.out.println("Profile Picture: " + saOutput.photoURL);
-                                System.out.println("Name: " + saOutput.firstName + " " + saOutput.lastName);
-                                System.out.println("Position: " + saOutput.position);
-                                System.out.println("ID: " + saOutput.publicID);
+                                System.out.println("Profile Picture: " + saOutput.getphotoURL());
+                                System.out.println("Name: " + saOutput.getfirstName() + " " + saOutput.getlastName());
+                                System.out.println("Position: " + saOutput.getposition());
+                                System.out.println("ID: " + saOutput.getPublicID());
                                 System.out.println();
                                 
                                 System.out.println("[1] Overview    [2] Driver  [3] Sub Admin       [0] Sign Out");
@@ -140,6 +140,8 @@ public class ConsoleTest
                                 System.out.println("Total Drivers: " + totalRegisteredDriver);
                                 System.out.println("Total Sub Admin: " + totalRegisteredSubAdmin);
                                 System.out.println("Total Pending Request: " + totalPendingRequest);
+                                
+                                
                             }
                         }
                     }

@@ -21,7 +21,7 @@ public class SuperAdminService
             return 0;
         }
         
-        if (!sa.password.equals(password))
+        if (!sa.getPassword().equals(password))
         {
             return 2;
         }
@@ -40,13 +40,13 @@ public class SuperAdminService
             return false;
         }
         
-        sa.publicID = id;
-        sa.firstName = fname;
-        sa.lastName = lname;
-        sa.contactNum = contactNum;
-        sa.position = position;
-        sa.photoURL = photo;
-        sa.password = password;
+        sa.setPublicID(id);
+        sa.setfirstName(fname);
+        sa.setlastName(lname);
+        sa.setcontactNum(contactNum);
+        sa.setposition(position);
+        sa.setphotoURL(photo);
+        sa.setPassword(password);
         
         saRepo.registerSA(sa);
         

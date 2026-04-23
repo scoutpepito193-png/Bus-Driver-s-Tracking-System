@@ -3,6 +3,9 @@ package Repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+import Model.Driver;
 
 public class DriverRepo
 {
@@ -30,5 +33,33 @@ public class DriverRepo
         }
         
         return count;
+    }
+    
+    public List<Driver> driverRanking()
+    {
+        List<Driver> list = new ArrayList<>();
+        
+        try
+        {
+            Connection conn = dbConnection.getConnection();
+            
+            String sql = " SELECT d.first_name, d.last_name, r.driver_rank"
+                    + " FROM ranking r"
+                    + " JOIN driver d ON d.driver_id = r.driver_id"
+                    + " ORDER BY r.driver_rank ASC";
+            
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            ResultSet res = prepS.executeQuery();
+            
+            while(res.next())
+            {
+                String fullname 
+            }
+            if(res.next())
+            {
+                r
+            }
+            
+        }
     }
 }
