@@ -109,7 +109,7 @@ public class SuperAdminRepo
                 sa.setfirstName(res.getString("first_name"));
                 sa.setlastName(res.getString("last_name"));
                 sa.setcontactNum(res.getString("contact_number"));
-                sa.setposition(res.getString("position"));
+                sa.setposition(res.getString("position_role"));
                 sa.setphotoURL(res.getString("photo_url"));
                 
                 return sa;
