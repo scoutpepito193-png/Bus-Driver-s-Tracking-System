@@ -5,6 +5,10 @@ import Service.SuperAdminService;
 import Service.SubAdminService;
 import Service.DriverService;
 import Model.SuperAdmin;
+import Model.Driver;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsoleTest
 {   
@@ -124,17 +128,34 @@ public class ConsoleTest
                                 
                                 SuperAdmin saOutput = sas.getSAData();
                                 System.out.println("Super Admin Dashboard");
-                                System.out.println("Profile Picture: " + saOutput.photoURL);
-                                System.out.println("Name: " + saOutput.firstName + " " + saOutput.lastName);
-                                System.out.println("Position: " + saOutput.position);
-                                System.out.println("ID: " + saOutput.publicID);
+                                System.out.println("Profile Picture: " + saOutput.getphotoURL());
+                                System.out.println("Name: " + saOutput.getfirstName() + " " + saOutput.getlastName());
+                                System.out.println("Position: " + saOutput.getposition());
+                                System.out.println("ID: " + saOutput.getPublicID());
+                                System.out.println();
+                                
+                                System.out.println("[1] Overview    [2] Driver  [3] Sub Admin       [0] Sign Out");
                                 System.out.println();
                                 
                                 int totalRegisteredDriver = ds.totalDriver();
                                 int totalRegisteredSubAdmin = subs.totalSubAdmin();
+                                int totalPendingRequest = sas.totalPending();
                                 
                                 System.out.println("Total Drivers: " + totalRegisteredDriver);
                                 System.out.println("Total Sub Admin: " + totalRegisteredSubAdmin);
+                                System.out.println("Total Pending Request: " + totalPendingRequest);
+                                System.out.println();
+                                
+                                List<Driver> list = ds.getDriverRanking();
+                                
+                                for (Driver d : list)
+                                {
+                                    System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
+                                }
+                                
+                                
+                                
+                                
                             }
                         }
                     }

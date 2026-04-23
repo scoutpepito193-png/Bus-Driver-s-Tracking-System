@@ -2,6 +2,8 @@ package Service;
 
 import Model.Driver;
 import Repository.DriverRepo;
+import java.util.ArrayList;
+import java.util.List;
         
 public class DriverService
 {
@@ -12,5 +14,10 @@ public class DriverService
         int total = dRepo.countDrivers();
         
         return total;
+    }
+    
+    public List<Driver> getDriverRanking()
+    {
+        return dRepo.driverRanking();
     }
 }
