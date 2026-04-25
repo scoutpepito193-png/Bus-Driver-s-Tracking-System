@@ -3,6 +3,9 @@ package Repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+import Model.SubAdmin;
 
 public class SubAdminRepo
 {
@@ -32,4 +35,14 @@ public class SubAdminRepo
         
         return count;
     }
+    
+    /*public List<SubAdmin> getSubAdmins()
+    {
+        List<SubAdmin> subA = new ArrayList<>();
+        
+        try
+        {
+            String sql = "SELECT "
+        }
+    }*/
 }
