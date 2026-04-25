@@ -6,11 +6,14 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import Model.Driver;
+import Model.DriverPerformance;
 
 public class DriverRepo
 {
     Driver d = new Driver();
+    DriverPerformance dp = new DriverPerformance();    
     Connection conn = dbConnection.getConnection();
+
     
     public int countDrivers()
     {
@@ -57,6 +60,48 @@ public class DriverRepo
                 d.setranking(res.getInt("driver_rank"));
                 
                 list.add(d);
+            }
+            if(res.next())
+            {
+                
+            }
+            
+        }
+        
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return list;
+    }
+    
+    public List<DriverPerformance> driverPerformance()
+    {
+        List<DriverPerformance> list = new ArrayList<>();
+        
+        try
+        {
+            String sql = " SELECT d.first_name, d.last_name, r.driver_rank "
+                    + "FROM ranking r "
+                    + "JOIN driver d ON d.driver_id = r.driver_id "
+                    + "ORDER BY r.driver_rank ASC ";
+            
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            ResultSet res = prepS.executeQuery();
+            
+            while(res.next())
+            {
+                d.setfirstName(res.getString("first_name"));
+                d.setlastName(res.getString("last_name"));
+                d.setranking(res.getInt("driver_rank"));
+                
+                dp.setdriver(d);
+                dp.setaverageKMPL(res.getDouble("average_kmpl"));
+                dp.settotalTickets(res.getInt("total_tickets"));
+                dp.settotalRevenue(res.getDouble("total_revenue"));
+                
+                list.add(dp);
             }
             if(res.next())
             {
