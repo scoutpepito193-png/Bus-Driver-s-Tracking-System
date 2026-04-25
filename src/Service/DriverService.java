@@ -1,6 +1,7 @@
 package Service;
 
 import Model.Driver;
+import Model.DriverPerformance;
 import Repository.DriverRepo;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,5 +20,10 @@ public class DriverService
     public List<Driver> getDriverRanking()
     {
         return dRepo.driverRanking();
+    }
+    
+    public List<DriverPerformance> getPerformance()
+    {
+        return dRepo.driverPerformance();
     }
 }

@@ -6,6 +6,7 @@ import Service.SubAdminService;
 import Service.DriverService;
 import Model.SuperAdmin;
 import Model.Driver;
+import Model.DriverPerformance;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -167,7 +168,13 @@ public class ConsoleTest
                                         
                                         case 2:
                                             
-                                            break;
+                                            List<DriverPerformance> listdp = ds.getPerformance();
+                                            
+                                            for (DriverPerformance dp : listdp)
+                                            {
+                                                System.out.println("ID: " + dp.getdriver() + "");
+                                            }
+                                             break;
                                     }
                                 }
                             }
