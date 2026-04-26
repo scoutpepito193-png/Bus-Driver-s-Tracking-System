@@ -8,11 +8,10 @@ import java.util.List;
 import Model.SubAdmin;
 
 public class SubAdminRepo
-{
-    Connection conn = dbConnection.getConnection();
-    
+{   
     public int countSubAdmin()
     {
+        Connection conn = dbConnection.getConnection();
         int count = 0;
         
         try
@@ -36,13 +35,38 @@ public class SubAdminRepo
         return count;
     }
     
-    /*public List<SubAdmin> getSubAdmins()
+    public List<SubAdmin> getSubAdmins()
     {
-        List<SubAdmin> subA = new ArrayList<>();
+        
+        Connection conn = dbConnection.getConnection();
+        List<SubAdmin> list = new ArrayList<>();
         
         try
         {
-            String sql = "SELECT "
+            String sql = "SELECT public_sub_id, first_name, last_name, position_role "
+                    + "FROM sub_admin";
+            
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            ResultSet res = prepS.executeQuery();
+            
+            while(res.next())
+            {
+                SubAdmin sub = new SubAdmin();
+                
+                sub.setpublic_sub_id(res.getString("public_sub_id"));
+                sub.setfirstName(res.getString("first_name"));
+                sub.setlastName(res.getString("last_name"));
+                sub.setposition(res.getString("position_role"));
+                
+                list.add(sub);
+            }
         }
-    }*/
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return list;
+    }
 }

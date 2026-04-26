@@ -9,14 +9,10 @@ import Model.Driver;
 import Model.DriverPerformance;
 
 public class DriverRepo
-{
-    Driver d = new Driver();
-    DriverPerformance dp = new DriverPerformance();    
-    Connection conn = dbConnection.getConnection();
-
-    
+{   
     public int countDrivers()
     {
+        Connection conn = dbConnection.getConnection();
         int count = 0;
         
         try
@@ -41,6 +37,7 @@ public class DriverRepo
     
     public List<Driver> driverRanking()
     {
+        Connection conn = dbConnection.getConnection();
         List<Driver> list = new ArrayList<>();
         
         try
@@ -48,22 +45,20 @@ public class DriverRepo
             String sql = " SELECT d.first_name, d.last_name, r.driver_rank "
                     + "FROM ranking r "
                     + "JOIN driver d ON d.driver_id = r.driver_id "
-                    + "ORDER BY r.driver_rank ASC ";
+                    + "ORDER BY r.driver_rank ASC";
             
             PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
             while(res.next())
             {
+                Driver d = new Driver();
+                
                 d.setfirstName(res.getString("first_name"));
                 d.setlastName(res.getString("last_name"));
                 d.setranking(res.getInt("driver_rank"));
                 
                 list.add(d);
-            }
-            if(res.next())
-            {
-                
             }
             
         }
@@ -78,23 +73,27 @@ public class DriverRepo
     
     public List<DriverPerformance> driverPerformance()
     {
+        Connection conn = dbConnection.getConnection();
         List<DriverPerformance> list = new ArrayList<>();
         
         try
         {
-            String sql = " SELECT d.first_name, d.last_name, r.driver_rank "
-                    + "FROM ranking r "
-                    + "JOIN driver d ON d.driver_id = r.driver_id "
-                    + "ORDER BY r.driver_rank ASC ";
+            String sql = "SELECT d.first_name, d.last_name, "
+                    + "p.average_kmpl, p.total_tickets, p.totel_revenue "
+                    + "FROM driver d "
+                    + "JOIN driver_performance p ON d.driver_id = p.driver_id "
+                    + "ORDER BY d.last_name ASC";
             
             PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
             while(res.next())
             {
+                Driver d = new Driver();
+                DriverPerformance dp = new DriverPerformance();  
+                
                 d.setfirstName(res.getString("first_name"));
                 d.setlastName(res.getString("last_name"));
-                d.setranking(res.getInt("driver_rank"));
                 
                 dp.setdriver(d);
                 dp.setaverageKMPL(res.getDouble("average_kmpl"));
@@ -102,12 +101,7 @@ public class DriverRepo
                 dp.settotalRevenue(res.getDouble("total_revenue"));
                 
                 list.add(dp);
-            }
-            if(res.next())
-            {
-                
-            }
-            
+            }            
         }
         
         catch (Exception e)
