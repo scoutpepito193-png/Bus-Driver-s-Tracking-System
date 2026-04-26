@@ -7,7 +7,7 @@ import Service.DriverService;
 import Model.SuperAdmin;
 import Model.Driver;
 import Model.DriverPerformance;
-
+import Model.SubAdmin;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -172,13 +172,21 @@ public class ConsoleTest
                                             
                                             for (DriverPerformance dp : listdp)
                                             {
-                                                System.out.println("ID: " + dp.getdriver() + "");
+                                                System.out.println(dp.getdriver().getpublic_driver_id() + "\t" + dp.getdriver().getlastName()
+                                                                    + ", " + dp.getdriver().getfirstName() + "\t" + dp.gettotalTickets()
+                                                                    + "\t" + dp.gettotalRevenue() + "\t" + dp.getaverageKMPL());
                                             }
                                              break;
                                              
                                         case 3:
                                             
+                                            List<SubAdmin> listSub = subs.getSubAdmins();
                                             
+                                            for(SubAdmin subS : listSub)
+                                            {
+                                                System.out.println(subS.getpublic_sub_id() + "\t" + subS.getlastName() + ", " + subS.getfirstName()
+                                                                    + "\t" + subS.getposition());
+                                            }
                                     }
                                 }
                             }
