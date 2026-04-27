@@ -189,6 +189,13 @@ public class ConsoleTest
                                                 System.out.println(subS.getpublic_sub_id() + "\t" + subS.getlastName() + ", " + subS.getfirstName()
                                                                     + "\t" + subS.getposition());
                                             }
+                                            break;
+                                            
+                                        case 0:
+                                            
+                                            inSADashboard = false;
+                                            System.out.println("Sign Out!");
+                                            break;
                                     }
                                 }
                             }

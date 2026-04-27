@@ -79,7 +79,7 @@ public class DriverRepo
         try
         {
             String sql = "SELECT d.first_name, d.last_name, "
-                    + "p.average_kmpl, p.total_tickets, p.totel_revenue "
+                    + "p.average_kmpl, p.total_tickets, p.total_revenue "
                     + "FROM driver d "
                     + "JOIN driver_performance p ON d.driver_id = p.driver_id "
                     + "ORDER BY d.last_name ASC";
