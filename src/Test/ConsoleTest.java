@@ -170,6 +170,7 @@ public class ConsoleTest
                                             
                                             List<DriverPerformance> listdp = ds.getPerformance();
                                             
+                                            System.out.println("ID\tName\tTotal Ticket\tRevenue\tAverage KM/L");
                                             for (DriverPerformance dp : listdp)
                                             {
                                                 System.out.println(dp.getdriver().getpublic_driver_id() + "\t" + dp.getdriver().getlastName()
@@ -182,6 +183,7 @@ public class ConsoleTest
                                             
                                             List<SubAdmin> listSub = subs.getSubAdmins();
                                             
+                                            System.out.println("ID\tName\tPosition");
                                             for(SubAdmin subS : listSub)
                                             {
                                                 System.out.println(subS.getpublic_sub_id() + "\t" + subS.getlastName() + ", " + subS.getfirstName()
