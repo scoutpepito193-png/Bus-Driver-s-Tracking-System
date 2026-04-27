@@ -1,11 +1,29 @@
-/*package Service;
+package Service;
 
 import Model.Driver;
+import Model.DriverPerformance;
+import Repository.DriverRepo;
+import java.util.ArrayList;
+import java.util.List;
         
 public class DriverService
 {
-    public int totalDriver(String[] id)
+    private final DriverRepo dRepo = new DriverRepo();
+    
+    public int totalDriver()
     {
+        int total = dRepo.countDrivers();
         
+        return total;
     }
-}*/
+    
+    public List<Driver> getDriverRanking()
+    {
+        return dRepo.driverRanking();
+    }
+    
+    public List<DriverPerformance> getPerformance()
+    {
+        return dRepo.driverPerformance();
+    }
+}

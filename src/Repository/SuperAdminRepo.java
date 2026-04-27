@@ -7,12 +7,12 @@ import Model.SuperAdmin;
 
 public class SuperAdminRepo
 {
+    Connection conn = dbConnection.getConnection();
+    
     public boolean checkExistingSA()
     {
         try
-        {
-            Connection conn = dbConnection.getConnection();
-            
+        {   
             String sql = "SELECT * FROM super_admin";
             PreparedStatement prepS = conn.prepareStatement(sql);
             
@@ -34,7 +34,6 @@ public class SuperAdminRepo
     
     public void registerSA(SuperAdmin sa)
     {
-        Connection conn = dbConnection.getConnection();
         
         String sql = "INSERT INTO super_admin (public_id, password, first_name,"
                 + "last_name, contact_number, position_role, photo_url)"
@@ -44,13 +43,13 @@ public class SuperAdminRepo
         {
             PreparedStatement prepS = conn.prepareStatement(sql);
             
-            prepS.setString(1, sa.publicID);
-            prepS.setString(2, sa.password);
-            prepS.setString(3, sa.firstName);
-            prepS.setString(4, sa.lastName);
-            prepS.setString(5, sa.contactNum);
-            prepS.setString(6, sa.position);
-            prepS.setString(7, sa.photoURL);
+            prepS.setString(1, sa.getPublicID());
+            prepS.setString(2, sa.getPassword());
+            prepS.setString(3, sa.getfirstName());
+            prepS.setString(4, sa.getlastName());
+            prepS.setString(5, sa.getcontactNum());
+            prepS.setString(6, sa.getposition());
+            prepS.setString(7, sa.getphotoURL());
             
             prepS.executeUpdate();
         }
@@ -63,7 +62,6 @@ public class SuperAdminRepo
     
     public SuperAdmin logInRepo(String publicID)
     {
-        Connection conn = dbConnection.getConnection();
         
         String sql = "SELECT * FROM super_admin WHERE public_id = ?";
         
@@ -78,8 +76,8 @@ public class SuperAdminRepo
             {
                 SuperAdmin sa = new SuperAdmin();
                 
-                sa.publicID = res.getString("public_id");
-                sa.password = res.getString("password");
+                sa.setPublicID(res.getString("public_id"));
+                sa.setPassword(res.getString("password")); 
                 
                 return sa;
             }
@@ -91,5 +89,110 @@ public class SuperAdminRepo
         }
         
         return null;
+    }
+    
+    public SuperAdmin getSuperAdminData()
+    {
+        String sql = "SELECT * FROM super_admin LIMIT 1";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                SuperAdmin sa = new SuperAdmin();
+                
+                sa.setPublicID(res.getString("public_id"));
+                sa.setPassword(res.getString("password"));                
+                sa.setfirstName(res.getString("first_name"));
+                sa.setlastName(res.getString("last_name"));
+                sa.setcontactNum(res.getString("contact_number"));
+                sa.setposition(res.getString("position_role"));
+                sa.setphotoURL(res.getString("photo_url"));
+                
+                return sa;
+            }
+        }
+        
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return null;       
+    }
+    
+    public int countPendingReq()
+    {
+        int count = 0;
+        
+        try
+        {           
+            String sql = "SELECT COUNT(*) FROM request WHERE status = 'PENDING'";
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                count = res.getInt(1);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return count;
+    }
+    
+    public int countApprovedReq()
+    {
+        int count = 0;
+        
+        try
+        {           
+            String sql = "SELECT COUNT(*) FROM request WHERE status = 'APPROVED'";
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                count = res.getInt(1);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return count;
+    }
+
+    public int countRejectedReq()
+    {
+        int count = 0;
+        
+        try
+        {           
+            String sql = "SELECT COUNT(*) FROM request WHERE status = 'REJECTED'";
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                count = res.getInt(1);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return count;
     }
 }

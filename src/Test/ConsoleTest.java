@@ -2,6 +2,14 @@ package Test;
 
 import java.util.Scanner;
 import Service.SuperAdminService;
+import Service.SubAdminService;
+import Service.DriverService;
+import Model.SuperAdmin;
+import Model.Driver;
+import Model.DriverPerformance;
+import Model.SubAdmin;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsoleTest
 {   
@@ -9,6 +17,8 @@ public class ConsoleTest
     {
         Scanner scan = new Scanner(System.in);
         SuperAdminService sas = new SuperAdminService();
+        SubAdminService subs = new SubAdminService();
+        DriverService ds = new DriverService();
         
         int choice;        
         do
@@ -29,114 +39,162 @@ public class ConsoleTest
             {
                case 1 ->
                {
-                   /*
-                   int attempt = 0;
-                   while (attempt != 3)
+                   boolean verify = sas.checkAccout();
+                   
+                   if (verify == false)
+                   {
+                        boolean flag = true;
+                           
+                        while (flag)
+                        {
+                            System.out.println("Set-Up Profile");
+                            System.out.print("ID: ");
+                            String id = scan.nextLine();
+                              
+                            System.out.print("First Name: ");
+                            String fname = scan.nextLine();
+                          
+                            System.out.print("Last Name: ");
+                            String lname = scan.nextLine();
+                          
+                            System.out.print("Contact Number: ");
+                            String contactNum = scan.nextLine();
+                           
+                            System.out.print("Position: ");
+                            String position = scan.nextLine();
+                            
+                            System.out.print("Upload Photo: ");
+                            String photo = scan.nextLine();
+                                
+                            System.out.print("Pres [1[ to Confirm | [2] to Clear: ");
+                            int sAProfileChoice = scan.nextInt();
+                            scan.nextLine();
+                                
+                            if(sAProfileChoice == 1)
+                            {
+                                boolean confirm = false;
+                                while (confirm == false)
+                                {
+                                    System.out.println("New Password: ");
+                                    String password = scan.nextLine();
+                                
+                                    System.out.println("Confirm Password: ");
+                                    String confirmPass = scan.nextLine();
+                                    
+                                    confirm = sas.registerSA(id, fname, lname, contactNum, position, photo, password, confirmPass);
+                                    
+                                    if (confirm == false)
+                                    {
+                                        System.out.println("Password doesn't match");
+                                    }
+                                    else
+                                    {
+                                        flag = false;
+                                    }
+                                        
+                                }
+                            }
+                        }                        
+                    }
+                    int attemp = 0;
+                    boolean loggedIn = false;
+                    
+                    while (attemp != 3 && !loggedIn)
                     {
                         System.out.println("Log-In");
                         System.out.print("ID: ");
                         String id = scan.nextLine();
-                   
+                    
                         System.out.print("Password: ");
                         String password = scan.nextLine();
-                        
-                        boolean logIn = sas.logIn(id, regID, password, regPass);
-                        
-                        if (logIn  == false)
+                        int logIn = sas.logIn(id, password);
+                    
+                        switch (logIn)
                         {
-                            ++attempt;
-                        }
-                        else
-                        {
-                            logCount++;
-                            break;
-                        }
-                    }
-                   
-                   if (logCount == 1)
-                   {
-                            boolean flag = true;
-                           
-                            while (flag)
+                            case 0 ->
                             {
-                                System.out.println("Set-Up Profile");
-                                System.out.print("ID: ");
-                                String id = scan.nextLine();
+                                System.out.println("Wrong Credentials!");
+                                ++attemp;
+                            }
+                        
+                            case 2 -> 
+                            {
+                                System.out.println("Account Not Found");
+                                ++attemp;
+                            }
+                            
+                            default ->
+                            {
+                                loggedIn = true;
                                 
-                                System.out.print("First Name: ");
-                                String fname = scan.nextLine();
-                           
-                                System.out.println("Last Name: ");
-                                String lname = scan.nextLine();
-                           
-                                System.out.println("Contact Number: ");
-                                String contactNum = scan.nextLine();
-                           
-                                System.out.println("Position: ");
-                                String position = scan.nextLine();
+                                SuperAdmin saOutput = sas.getSAData();
+                                System.out.println("Super Admin Dashboard");
+                                System.out.println("Profile Picture: " + saOutput.getphotoURL());
+                                System.out.println("Name: " + saOutput.getfirstName() + " " + saOutput.getlastName());
+                                System.out.println("Position: " + saOutput.getposition());
+                                System.out.println("ID: " + saOutput.getPublicID());
+                                System.out.println();
                                 
-                                System.out.print("Pres [1[ to Confirm | [2] to Clear: ");
-                                int sAProfileChoice = scan.nextInt();
-                                scan.nextLine();
+                                System.out.println("[1] Overview    [2] Driver  [3] Sub Admin       [0] Sign Out");
+                                System.out.println();                                
                                 
-                                if(sAProfileChoice == 1)
+                                boolean inSADashboard = true;
+                                
+                                while (inSADashboard)
                                 {
-                                    boolean confirm = false;
-                                    while (confirm == false)
-                                    {
-                                        System.out.println("New Password: ");
-                                        String password = scan.nextLine();
+                                    System.out.print("Enter Choice: ");
+                                    int superAdminDBchoice = scan.nextInt();
                                 
-                                        System.out.println("Confirm Password: ");
-                                        String confirmPass = scan.nextLine();
-                                    
-                                        confirm = sas.registerSA(id, fname, lname, contactNum, position, password, confirmPass);
-                                    
-                                        if (confirm == false)
-                                        {
-                                            System.out.println("Password doesn't match");
-                                        }
-                                        else
-                                        {
-                                            regID = id;
-                                            regPass = password;
-                                            confirm = true;
-                                            flag = false;
-                                        }
+                                    switch (superAdminDBchoice)
+                                    {
+                                        case 1:
+                                            int totalRegisteredDriver = ds.totalDriver();
+                                            int totalRegisteredSubAdmin = subs.totalSubAdmin();
+                                            int totalPendingRequest = sas.totalPending();
+                                
+                                            System.out.println("Total Drivers: " + totalRegisteredDriver);
+                                            System.out.println("Total Sub Admin: " + totalRegisteredSubAdmin);
+                                            System.out.println("Total Pending Request: " + totalPendingRequest);
+                                            System.out.println();
+                                
+                                            List<Driver> list = ds.getDriverRanking();
+                                            
+                                            System.out.println("Top Drivers");
+                                            for (Driver d : list)
+                                            {
+                                                System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
+                                            }                                            
+                                            break;
                                         
+                                        case 2:
+                                            
+                                            List<DriverPerformance> listdp = ds.getPerformance();
+                                            
+                                            for (DriverPerformance dp : listdp)
+                                            {
+                                                System.out.println(dp.getdriver().getpublic_driver_id() + "\t" + dp.getdriver().getlastName()
+                                                                    + ", " + dp.getdriver().getfirstName() + "\t" + dp.gettotalTickets()
+                                                                    + "\t" + dp.gettotalRevenue() + "\t" + dp.getaverageKMPL());
+                                            }
+                                             break;
+                                             
+                                        case 3:
+                                            
+                                            List<SubAdmin> listSub = subs.getSubAdmins();
+                                            
+                                            for(SubAdmin subS : listSub)
+                                            {
+                                                System.out.println(subS.getpublic_sub_id() + "\t" + subS.getlastName() + ", " + subS.getfirstName()
+                                                                    + "\t" + subS.getposition());
+                                            }
                                     }
                                 }
-                            }                       
-                   }
-                    
-                    
-                           
-                   /*while ()
-                   
-                   if (id.equals(regID) && password.equals(regPass))
-                   {
-                       logCount++;
-                       
-                       if (logCount == 0)
-                        {
-
-                            
+                            }
                         }
-                        System.out.println("");
-                   }
-                   else if (!id.equals(regID))
-                   {
-                       System.out.println("Wrong ID");
-                   }
-                   else if (!password.equals(regPass))
-                   {
-                       System.out.println("Wrong Password");
-                   }
-                   else
-                   {
-                       System.out.println("Wrong Credentials");
-                   }*/
-               }
+                    }
+                    
+                    
+                }
                 case 2 -> {
                 }
                 case 3 -> {

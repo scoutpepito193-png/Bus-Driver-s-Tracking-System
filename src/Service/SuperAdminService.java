@@ -5,7 +5,7 @@ import Repository.SuperAdminRepo;
 
 public class SuperAdminService
 {
-    private SuperAdminRepo saRepo = new SuperAdminRepo();
+    private final SuperAdminRepo saRepo = new SuperAdminRepo();
     
     public boolean checkAccout()
     {
@@ -21,12 +21,62 @@ public class SuperAdminService
             return 0;
         }
         
-        if (!sa.password.equals(password))
+        if (!sa.getPassword().equals(password))
         {
             return 2;
         }
         
         return 1;
+    }
+    
+    public boolean registerSA(String id, String fname, String lname,
+                              String contactNum, String position, String photo,
+                              String password, String confirmPass)
+    {
+        SuperAdmin sa = new SuperAdmin();
+        
+        if (!password.equals(confirmPass))
+        {
+            return false;
+        }
+        
+        sa.setPublicID(id);
+        sa.setfirstName(fname);
+        sa.setlastName(lname);
+        sa.setcontactNum(contactNum);
+        sa.setposition(position);
+        sa.setphotoURL(photo);
+        sa.setPassword(password);
+        
+        saRepo.registerSA(sa);
+        
+        return true;
+    }
+    
+    public SuperAdmin getSAData()
+    {
+        return saRepo.getSuperAdminData();
+    }
+
+    public int totalPending()
+    {
+        int total = saRepo.countPendingReq();
+        
+        return total;
+    }
+    
+    public int totalApproved()
+    {
+        int total = saRepo.countApprovedReq();
+        
+        return total;
+    }
+    
+    public int totalRejected()
+    {
+        int total = saRepo.countRejectedReq();
+        
+        return total;
     }
     
     /*public boolean registerSA(String id, String fname, String lname,
