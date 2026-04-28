@@ -111,6 +111,75 @@ public class DriverRepo
         
         return list;
     }
+    public Driver driverLogin(String publicDriverId, String password)
+{
+    Connection conn = dbConnection.getConnection();
+
+    try
+    {
+        String sql = "SELECT * FROM driver WHERE public_driver_id = ? AND driver_password = ?";
+        PreparedStatement prepS = conn.prepareStatement(sql);
+        prepS.setString(1, publicDriverId);
+        prepS.setString(2, password);
+
+        ResultSet res = prepS.executeQuery();
+
+        if (res.next())
+        {
+            Driver d = new Driver();
+            d.setpublic_driver_id(res.getString("public_driver_id"));
+            d.setfirstName(res.getString("first_name"));
+            d.setlastName(res.getString("last_name"));
+            d.setgender(res.getString("gender"));
+            d.setdateOfBirth(res.getString("date_of_birth"));
+            d.setaddress(res.getString("address"));
+            d.setcontactNumber(res.getString("contact_number"));
+            d.setlicenseNum(res.getString("license_number"));
+            d.setlicenseExpiry(res.getString("license_expiry_date"));
+            return d;
+        }
+    }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return null;
+}
+
+public List<DriverPerformance> driverRecords(String publicDriverId)
+{
+    Connection conn = dbConnection.getConnection();
+    List<DriverPerformance> list = new ArrayList<>();
+
+    try
+    {
+        String sql = "SELECT dp.* FROM driver_performance dp "
+                + "JOIN driver d ON dp.driver_id = d.driver_id "
+                + "WHERE d.public_driver_id = ? "
+                + "ORDER BY dp.record_date DESC";
+
+        PreparedStatement prepS = conn.prepareStatement(sql);
+        prepS.setString(1, publicDriverId);
+
+        ResultSet res = prepS.executeQuery();
+
+        while (res.next())
+        {
+            DriverPerformance dp = new DriverPerformance();
+            dp.setaverageKMPL(res.getDouble("average_kmpl"));
+            dp.settotalTickets(res.getInt("total_tickets"));
+            dp.settotalRevenue(res.getDouble("total_revenue"));
+            list.add(dp);
+        }
+    }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return list;
+}
     
     /*public List<Driver> listofDrivers()
     {
