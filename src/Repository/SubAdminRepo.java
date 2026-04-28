@@ -14,7 +14,7 @@ public class SubAdminRepo
     {
         Connection conn = dbConnection.getConnection();
         
-        String sql = "INSERT INTO sud_admin (public_sub_id, first_name, last_name, gender, "
+        String sql = "INSERT INTO sub_admin (public_sub_id, first_name, last_name, gender, "
                 + "date_of_birth, address, contact_number, photo_url, password)"
                 + "VALUES (?,?,?,?,?,?,?,?,?)";
         
@@ -39,6 +39,39 @@ public class SubAdminRepo
         {
             e.printStackTrace();
         }
+    }
+    
+    public SubAdmin logIn(String publicID)
+    {
+        Connection conn = dbConnection.getConnection();
+        
+        String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ?";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            prepS.setString(1, publicID);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if(res.next())
+            {
+                SubAdmin sub = new SubAdmin();
+                
+                sub.setpublic_sub_id(res.getString("public_sub_id"));
+                sub.setpassword(res.getString("password"));
+                
+                return sub;
+            }
+            
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return null;
     }
     
     public List<SubAdmin> getSubAdmins()
