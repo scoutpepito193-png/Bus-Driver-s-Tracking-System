@@ -10,6 +10,7 @@ import Model.DriverPerformance;
 import Model.SubAdmin;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 
 public class ConsoleTest
 {   
@@ -189,6 +190,80 @@ public class ConsoleTest
                                                 System.out.println(subS.getpublic_sub_id() + "\t" + subS.getlastName() + ", " + subS.getfirstName()
                                                                     + "\t" + subS.getposition());
                                             }
+                                            
+                                            System.out.println();
+                                            System.out.print("Add Sub-Admin [y/n]: ");
+                                            char addSub = scan.next().charAt(0);
+                                            scan.nextLine();
+                                            
+                                            if (addSub == 'y' || addSub == 'Y')
+                                            {
+                                                boolean flag = true;
+                                                
+                                                while(flag)
+                                                {
+                                                    System.out.print("ID: ");
+                                                    String subID = scan.nextLine();
+                                                
+                                                    System.out.print("First Name: ");
+                                                    String subFname = scan.nextLine();
+                                                
+                                                    System.out.print("Last Name: ");
+                                                    String subLname = scan.nextLine();
+                                                
+                                                    System.out.print("Gender: ");
+                                                    String subGender = scan.nextLine();
+                                                
+                                                    System.out.print("Date of Birth: ");
+                                                    String input = scan.nextLine();
+                                                    LocalDate subDateOfBirth = LocalDate.parse(input);
+                                                
+                                                    System.out.print("Address: ");
+                                                    String subAddress = scan.nextLine();
+                                                
+                                                    System.out.print("Contact Number: ");
+                                                    String subContactNumber = scan.nextLine();
+                                                
+                                                    System.out.print("Upload Photo: ");
+                                                    String subPhotoURL = scan.nextLine();
+                                                
+                                                    System.out.print("Press [1] Confirm and [2] Clear: ");
+                                                    int subProfileChoice = scan.nextInt();
+                                                    
+                                                    
+                                                    if(subProfileChoice == 1)
+                                                    {
+                                                        boolean confirm = false;
+                                                        
+                                                        while(confirm == false)
+                                                        {
+                                                            System.out.print("New Password: ");
+                                                            String subPassword = scan.nextLine();
+                                                            
+                                                            System.out.print("Confirm Password: ");
+                                                            String subConfirmPass = scan.nextLine();
+                                                            
+                                                            confirm = subs.registerSubAdmin(subID, subFname, subLname, subGender, subDateOfBirth, subAddress, subContactNumber, subPhotoURL, subPassword, subConfirmPass);
+                                                            
+                                                            if (confirm == false)
+                                                            {
+                                                                System.out.println("Password don't match");
+                                                            }
+                                                            else
+                                                            {
+                                                                flag = false;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                
+                                            }
+                                            else
+                                            {
+                                                break;
+                                            }
+                                            
+                                            
                                             break;
                                             
                                         case 0:

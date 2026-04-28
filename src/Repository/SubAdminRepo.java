@@ -9,30 +9,36 @@ import Model.SubAdmin;
 
 public class SubAdminRepo
 {   
-    public int countSubAdmin()
+
+    public void registerSubAdmin(SubAdmin subA)
     {
         Connection conn = dbConnection.getConnection();
-        int count = 0;
+        
+        String sql = "INSERT INTO sud_admin (public_sub_id, first_name, last_name, gender, "
+                + "date_of_birth, address, contact_number, photo_url, password)"
+                + "VALUES (?,?,?,?,?,?,?,?,?)";
         
         try
         {
-            String sql = "SELECT * FROM sub_admin";
             PreparedStatement prepS = conn.prepareStatement(sql);
             
-            ResultSet res = prepS.executeQuery();
+            prepS.setString(1, subA.getpublic_sub_id());
+            prepS.setString(2, subA.getfirstName());
+            prepS.setString(3, subA.getlastName());
+            prepS.setString(4, subA.getgender());
+            prepS.setDate(5, java.sql.Date.valueOf(subA.getdateOfBirth()));
+            prepS.setString(6, subA.getaddress());
+            prepS.setString(7, subA.getcontactNum());
+            prepS.setString(8, subA.getphotoURL());
+            prepS.setString(9, subA.getpassword());
             
-            if (res.next())
-            {
-                count = res.getInt(1);
-            }
+            prepS.executeUpdate();
         }
         
-        catch (Exception e)
+        catch(Exception e)
         {
             e.printStackTrace();
         }
-        
-        return count;
     }
     
     public List<SubAdmin> getSubAdmins()
@@ -68,5 +74,31 @@ public class SubAdminRepo
         }
         
         return list;
+    }
+    
+    public int countSubAdmin()
+    {
+        Connection conn = dbConnection.getConnection();
+        int count = 0;
+        
+        try
+        {
+            String sql = "SELECT * FROM sub_admin";
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if (res.next())
+            {
+                count = res.getInt(1);
+            }
+        }
+        
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return count;
     }
 }
