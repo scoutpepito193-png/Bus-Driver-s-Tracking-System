@@ -198,6 +198,99 @@ public class ConsoleTest
                 case 2 -> {
                 }
                 case 3 -> {
+                      int attemp = 0;
+    boolean loggedIn = false;
+
+    while (attemp != 3 && !loggedIn)
+    {
+        System.out.println("Driver Log-In");
+        System.out.println("[0] Cancel");
+        System.out.print("ID: ");
+        String driverId = scan.nextLine();
+
+        if (driverId.equals("0"))
+        {
+            break;
+        }
+
+        System.out.print("Password: ");
+        String password = scan.nextLine();
+
+        Driver driver = ds.loginDriver(driverId, password);
+
+        if (driver != null)
+        {
+            loggedIn = true;
+
+            System.out.println("\nDriver Dashboard");
+            System.out.println("Name: " + driver.getfirstName() + " " + driver.getlastName());
+            System.out.println("ID#: " + driver.getpublic_driver_id());
+
+            boolean inDriverDashboard = true;
+            while (inDriverDashboard)
+            {
+                System.out.println("\n[1] Profile  [2] Records  [3] Leaderboard  [0] Sign Out");
+                System.out.print("Enter Choice: ");
+                int driverChoice = scan.nextInt();
+                scan.nextLine();
+
+                switch (driverChoice)
+                {
+                    case 1 ->
+                    {
+                        System.out.println("\n===== Driver Profile =====");
+                        System.out.println("Name          : " + driver.getfirstName() + " " + driver.getlastName());
+                        System.out.println("ID#           : " + driver.getpublic_driver_id());
+                        System.out.println("Gender        : " + driver.getgender());
+                        System.out.println("Date of Birth : " + driver.getdateOfBirth());
+                        System.out.println("Address       : " + driver.getaddress());
+                        System.out.println("Contact       : " + driver.getcontactNumber());
+                        System.out.println("License No.   : " + driver.getlicenseNum());
+                        System.out.println("License Expiry: " + driver.getlicenseExpiry());
+                    }
+                    case 2 ->
+                    {
+                        List<DriverPerformance> records = ds.getDriverRecords(driver.getpublic_driver_id());
+                        System.out.println("\n===== Driver Records =====");
+                        System.out.printf("%-15s %-15s %-15s%n", "Tickets", "Revenue", "Avg KMPL");
+                        System.out.println("=".repeat(45));
+                        for (DriverPerformance dp : records)
+                        {
+                            System.out.printf("%-15d %-15.2f %-15.2f%n",
+                                dp.gettotalTickets(),
+                                dp.gettotalRevenue(),
+                                dp.getaverageKMPL());
+                        }
+                    }
+                    case 3 ->
+                    {
+                        List<Driver> ranking = ds.getDriverRanking();
+                        System.out.println("\n===== Leaderboard =====");
+                        for (Driver d : ranking)
+                        {
+                            System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
+                        }
+                    }
+                    case 0 ->
+                    {
+                        System.out.println("Signing out...");
+                        inDriverDashboard = false;
+                    }
+                    default -> System.out.println("Invalid choice.");
+                }
+            }
+        }
+        else
+        {
+            System.out.println("Wrong Credentials!");
+            ++attemp;
+        }
+    }
+
+    if (attemp == 3)
+    {
+        System.out.println("Too many failed attempts. Access locked.");
+    }
                 }
                 case 0 -> System.out.println("Exit!");
                 default -> {
