@@ -26,4 +26,13 @@ public class DriverService
     {
         return dRepo.driverPerformance();
     }
+    public Driver loginDriver(String publicDriverId, String password)
+    {
+    return dRepo.driverLogin(publicDriverId, password);
+    }
+
+    public List<DriverPerformance> getDriverRecords(String publicDriverId)
+    {
+    return dRepo.driverRecords(publicDriverId);
+    }
 }
