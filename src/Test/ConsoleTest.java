@@ -307,15 +307,68 @@ public class ConsoleTest
                             loggedIn = true;
                             
                             System.out.println("Sub-Admin Dashboard");
+                            System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard]");
+                            System.out.println();
+                            
+                            boolean inDashboard = true;
+                            
+                            while(inDashboard)
+                            {
+                                System.out.print("Enter Choicee: ");
+                                int inDashboardChoice = scan.nextInt();
+                                
+                                switch(inDashboardChoice)
+                                {
+                                    case 1:
+                                        System.out.println("Total Driver: ");
+                                        System.out.println("Active Drivers: ");
+                                        System.out.println("Inactive Drivers: ");
+                                        System.out.println("Violations Logges: ");
+                                        
+                                        List<Driver> list = ds.getDriverRanking();
+                                        
+                                        System.out.println("Top Drivers");
+                                        for (Driver d : list)
+                                        {
+                                            System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
+                                        }
+
+                                        break;
+                                        
+                                    case 2:
+                                        
+                                        System.out.println("[1] Add Driver      [2] Record Performance");
+                                        System.out.print("Enter Choice: ");
+                                        int addORrecordChoice = scan.nextInt();
+                                        
+                                        if(addORrecordChoice == 1)
+                                        {
+                                            
+                                        }
+                                        
+                                        List<DriverPerformance> listdp = ds.getPerformance();
+                                            
+                                        System.out.println("ID\tName\tTotal Ticket\tRevenue\tAverage KM/L");
+                                        for (DriverPerformance dp : listdp)
+                                        {
+                                            System.out.println(dp.getdriver().getpublic_driver_id() + "\t" + dp.getdriver().getlastName()
+                                                               + ", " + dp.getdriver().getfirstName() + "\t" + dp.gettotalTickets()
+                                                               + "\t" + dp.gettotalRevenue() + "\t" + dp.getaverageKMPL());
+                                        }
+                                        
+                                        break;
+                                        
+                                    case 3:
+                                        
+                                        System.out.println("My Request");
+                                        
+                                        
+                                }
+                            }
+                            
                             
                         }
                     }
-                    
-                    /*System.out.println("Sub-Admin Dashboard");
-                    System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard]");*/
-                    
-                    
-                    
                 }
                 case 3 -> 
                 {

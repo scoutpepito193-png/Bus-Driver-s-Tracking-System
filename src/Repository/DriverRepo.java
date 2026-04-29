@@ -5,11 +5,48 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 import Model.Driver;
 import Model.DriverPerformance;
 
 public class DriverRepo
 {   
+    
+    public void registerDriver(Driver d)
+    {
+        Connection conn = dbConnection.getConnection();
+        
+        String sql = "INSERT INTO driver (public_driver_id, first_name, last_name, "
+                + "gender, date_of_birth, address, contact_number, "
+                + "license_number, license_expiry_date, photo_url, "
+                + "driver_password) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            prepS.setString(1, d.getpublic_driver_id());
+            prepS.setString(2, d.getfirstName());
+            prepS.setString(3, d.getlastName());
+            prepS.setString(4, d.getgender());
+            prepS.setDate(5, java.sql.Date.valueOf(d.getdateOfBirth()));
+            prepS.setString(6, d.getaddress());
+            prepS.setString(7, d.getcontactNumber());
+            prepS.setString(8, d.getlicenseNum());
+            prepS.setDate(9, java.sql.Date.valueOf(d.getlicenseExpiry()));
+            prepS.setString(10, d.getphotoURL());
+            prepS.setString(11, d.getpassword());
+            
+            prepS.executeUpdate();
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
     public int countDrivers()
     {
         Connection conn = dbConnection.getConnection();
@@ -78,10 +115,13 @@ public class DriverRepo
         
         try
         {
-            String sql = "SELECT d.first_name, d.last_name, "
-                    + "p.average_kmpl, p.total_tickets, p.total_revenue "
+            String sql = "SELECT d.public_driver_id, d.first_name, d.last_name, "
+                    + "AVG (p.average_kmpl) AS average_kmpl, "
+                    + "SUM (p.total_tickets) AS total_tickets, "
+                    + "SUM (p.total_revenue) AS total_revenue "
                     + "FROM driver d "
                     + "JOIN driver_performance p ON d.driver_id = p.driver_id "
+                    + "GROUP BY d.driver_id, d.first_name, d.last_name "
                     + "ORDER BY d.last_name ASC";
             
             PreparedStatement prepS = conn.prepareStatement(sql);
@@ -92,6 +132,7 @@ public class DriverRepo
                 Driver d = new Driver();
                 DriverPerformance dp = new DriverPerformance();  
                 
+                d.setpublic_driver_id(res.getString("public_driver_id"));
                 d.setfirstName(res.getString("first_name"));
                 d.setlastName(res.getString("last_name"));
                 
@@ -131,11 +172,11 @@ public class DriverRepo
             d.setfirstName(res.getString("first_name"));
             d.setlastName(res.getString("last_name"));
             d.setgender(res.getString("gender"));
-            d.setdateOfBirth(res.getString("date_of_birth"));
+            d.setdateOfBirth(res.getObject("date_of_birth", LocalDate.class));
             d.setaddress(res.getString("address"));
             d.setcontactNumber(res.getString("contact_number"));
             d.setlicenseNum(res.getString("license_number"));
-            d.setlicenseExpiry(res.getString("license_expiry_date"));
+            d.setlicenseExpiry(res.getObject("license_expiry_date", LocalDate.class));
             return d;
         }
     }
