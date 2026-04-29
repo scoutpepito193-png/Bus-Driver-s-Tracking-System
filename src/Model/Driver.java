@@ -6,6 +6,7 @@ public class Driver
 {
     private int unitNum;
     private int ranking;
+    private int driverID;
     
     private double salary;
     
@@ -26,6 +27,9 @@ public class Driver
    
    public int getranking() { return ranking; }
    public void setranking(int ranking) { this.ranking = ranking; }
+   
+   public int getdriverID() { return driverID; }
+   public void setdriverID(int driverID) { this.driverID = driverID; }
    
    public double getsalary() { return salary; }
    public void setsalary(double salary) { this.salary = salary; }

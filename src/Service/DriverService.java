@@ -37,7 +37,7 @@ public class DriverService
         d.setphotoURL(photoURL);
         d.setpassword(password);
         
-        dRepo.registerDriver(d);
+        dRepo.requestDriverRegistrastion(d);
         
         return true;        
     }
@@ -47,6 +47,30 @@ public class DriverService
         int total = dRepo.countDrivers();
         
         return total;
+    }
+    
+    public boolean recordDriverPerformance(String publicID, double kmpl, int ticket, double revenue)
+    {
+        int driverID = dRepo.getDriverIdByPublicID(publicID);
+        
+        if(driverID == -1)
+        {
+            return false;
+        }
+        
+        Driver d = new Driver();
+        d.setdriverID(driverID);
+        
+        DriverPerformance dp = new DriverPerformance();
+        dp.setdriver(d);
+        
+        dp.setaverageKMPL(kmpl);
+        dp.settotalTickets(ticket);
+        dp.settotalRevenue(revenue);
+        
+        dRepo.enterDriverPerformance(dp);
+        
+        return true;
     }
     
     public List<Driver> getDriverRanking()
