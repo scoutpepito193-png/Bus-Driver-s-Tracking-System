@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 import Model.SubAdmin;
 
 public class SubAdminRepo
@@ -41,16 +42,16 @@ public class SubAdminRepo
         }
     }
     
-    public SubAdmin logIn(String publicID)
+    public SubAdmin subAdminLogIn(String publicID, String password)
     {
         Connection conn = dbConnection.getConnection();
         
-        String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ?";
-        
         try
         {
+                    String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ? AND password = ?";
             PreparedStatement prepS = conn.prepareStatement(sql);
             prepS.setString(1, publicID);
+            prepS.setString(2, password);
             
             ResultSet res = prepS.executeQuery();
             
@@ -59,11 +60,17 @@ public class SubAdminRepo
                 SubAdmin sub = new SubAdmin();
                 
                 sub.setpublic_sub_id(res.getString("public_sub_id"));
+                sub.setfirstName(res.getString("first_name"));
+                sub.setlastName(res.getString("last_name"));
+                sub.setdateOfBirth(res.getObject("date_of_birth", LocalDate.class));
+                sub.setaddress(res.getString("address"));
+                sub.setcontactnum(res.getString("contact_number"));
+                sub.setposition(res.getString("position_role"));
+                sub.setphotoURL(res.getString("photo_url"));
                 sub.setpassword(res.getString("password"));
                 
                 return sub;
             }
-            
         }
         
         catch(Exception e)

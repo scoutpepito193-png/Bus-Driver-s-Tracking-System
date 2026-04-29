@@ -280,8 +280,28 @@ public class ConsoleTest
                     
                     
                 }
-                case 2 -> {
+                case 2 ->
+                {
+                    int attemp = 0;
+                    boolean loggedIn = false;
                     
+                    while(attemp != 3 && !loggedIn)
+                    {
+                        System.out.println("Sub-Admin Log-In");
+                        System.out.println("[0] Cancel");
+                        System.out.print("ID: ");
+                        String publicSubID = scan.nextLine();
+                        
+                        if(publicSubID.equals("0"))
+                        {
+                            break;
+                        }
+                        
+                        System.out.print("Password: ");
+                        String subPass = scan.nextLine();
+                        
+                        
+                    }
                     
                     /*System.out.println("Sub-Admin Dashboard");
                     System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard]");*/
