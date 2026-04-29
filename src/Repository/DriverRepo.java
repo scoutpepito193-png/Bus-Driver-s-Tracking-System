@@ -12,31 +12,33 @@ import Model.DriverPerformance;
 public class DriverRepo
 {   
     
-    public void registerDriver(Driver d)
+    public void requestDriverRegistrastion(Driver d)
     {
         Connection conn = dbConnection.getConnection();
         
-        String sql = "INSERT INTO driver (public_driver_id, first_name, last_name, "
-                + "gender, date_of_birth, address, contact_number, "
-                + "license_number, license_expiry_date, photo_url, "
-                + "driver_password) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO request (request_info, details) "
+                + "VALUES (?,?)";
         
         try
         {
             PreparedStatement prepS = conn.prepareStatement(sql);
             
-            prepS.setString(1, d.getpublic_driver_id());
-            prepS.setString(2, d.getfirstName());
-            prepS.setString(3, d.getlastName());
-            prepS.setString(4, d.getgender());
-            prepS.setDate(5, java.sql.Date.valueOf(d.getdateOfBirth()));
-            prepS.setString(6, d.getaddress());
-            prepS.setString(7, d.getcontactNumber());
-            prepS.setString(8, d.getlicenseNum());
-            prepS.setDate(9, java.sql.Date.valueOf(d.getlicenseExpiry()));
-            prepS.setString(10, d.getphotoURL());
-            prepS.setString(11, d.getpassword());
+            String details = "{"
+                    + "\"driver_id\":\"" + d.getpublic_driver_id() + "\","
+                    + "\"first_name\":\"" + d.getfirstName() + "\","
+                    + "\"last_name\":\"" + d.getlastName() + "\","
+                    + "\"gender\":\"" + d.getgender() + "\","
+                    + "\"date_of_birth\":\"" + d.getdateOfBirth() + "\","
+                    + "\"address\":\"" + d.getaddress() + "\","
+                    + "\"contact\":\"" + d.getcontactNumber() + "\","
+                    + "\"license_number\":\"" + d.getlicenseNum() + "\","
+                    + "\"license_expiry\":\"" + d.getlicenseExpiry() + "\","
+                    + "\"photo_url\":\"" + d.getphotoURL() + "\","
+                    + "\"password\":\"" + d.getpassword() + "\","
+                    + "}";
+            
+            prepS.setString(1, "DRIVER_REGISTRATION");
+            prepS.setString(2, details);
             
             prepS.executeUpdate();
         }
@@ -106,6 +108,61 @@ public class DriverRepo
         }
         
         return list;
+    }
+    
+    public int getDriverIdByPublicID(String publicID)
+    {
+        Connection conn = dbConnection.getConnection();
+        
+        String sql = "SELECT driver_id FROM driver WHERE public_driver_id = ?";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            prepS.setString(1, publicID);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if(res.next())
+            {
+                return res.getInt("driver_id");
+            }
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return -1;
+    }
+    
+    public boolean enterDriverPerformance(DriverPerformance dp)
+    {
+        Connection conn = dbConnection.getConnection();
+        
+        String sql = "INSERT INTO driver_performance "
+                + "(driver_id, average_kmpl, total_tickets, total_revenue, record_date) "
+                + "VALUES (?,?,?,?, CURRENT_DATE)";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            prepS.setInt(1, dp.getdriver().getdriverID());
+            prepS.setDouble(2, dp.getaverageKMPL());
+            prepS.setInt(3, dp.gettotalTickets());
+            prepS.setDouble(4, dp.gettotalRevenue());
+            
+            prepS.executeUpdate();
+            return true;
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
     }
     
     public List<DriverPerformance> driverPerformance()

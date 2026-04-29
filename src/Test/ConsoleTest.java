@@ -136,7 +136,7 @@ public class ConsoleTest
                                 System.out.println("ID: " + saOutput.getPublicID());
                                 System.out.println();
                                 
-                                System.out.println("[1] Overview    [2] Driver  [3] Sub Admin       [0] Sign Out");
+                                System.out.println("[1] Overview    [2] Driver    [3] Sub Admin       [4] Request       [0] Sign Out");
                                 System.out.println();                                
                                 
                                 boolean inSADashboard = true;
@@ -267,6 +267,10 @@ public class ConsoleTest
                                             
                                             break;
                                             
+                                        case 4:
+                                            
+                                            break;
+                                            
                                         case 0:
                                             
                                             inSADashboard = false;
@@ -337,13 +341,107 @@ public class ConsoleTest
                                         
                                     case 2:
                                         
-                                        System.out.println("[1] Add Driver      [2] Record Performance");
+                                        System.out.println("[1] Add Driver      [2] Record Performance      [3] View Driver");
                                         System.out.print("Enter Choice: ");
                                         int addORrecordChoice = scan.nextInt();
+                                        scan.nextLine();
                                         
                                         if(addORrecordChoice == 1)
                                         {
+                                            boolean flag = true;
                                             
+                                            while(flag)
+                                            {
+                                                System.out.print("ID: ");
+                                                String driverID = scan.nextLine();
+                                                
+                                                System.out.print("First Name: ");
+                                                String driverfName = scan.nextLine();
+                                                
+                                                System.out.print("Last Name: ");
+                                                String driverlName = scan.nextLine();
+                                                
+                                                System.out.print("Gender: ");
+                                                String driverGender = scan.nextLine();
+                                                
+                                                System.out.print("Date of Birth: ");
+                                                String input = scan.nextLine();
+                                                LocalDate driverDateOfBirth = LocalDate.parse(input);
+                                                
+                                                System.out.print("Address: ");
+                                                String driverAddress = scan.nextLine();
+                                                
+                                                System.out.print("Contact Number: ");
+                                                String driverContactNumber = scan.nextLine();
+                                                
+                                                System.out.print("License Number: ");
+                                                String driverLicenseNum = scan.nextLine();
+                                                
+                                                System.out.print("License Expiry Date: ");
+                                                String input2 = scan.nextLine();
+                                                LocalDate driverLicenseExpiry = LocalDate.parse(input2);
+                                                
+                                                System.out.print("Upload Photo: ");
+                                                String driverPhotoURL = scan.nextLine();
+                                                
+                                                System.out.print("Press [1]Confirm or [2]Clear: ");
+                                                int driverAddChoice = scan.nextInt();
+                                                scan.nextLine();
+                                                
+                                                if(driverAddChoice == 1)
+                                                {
+                                                    boolean confirm = false;
+                                                    
+                                                    while(confirm == false)
+                                                    {
+                                                        System.out.print("New Password: ");
+                                                        String driverPass = scan.nextLine();
+                                                    
+                                                        System.out.print("Confirm Password: ");
+                                                        String driverConfirmPass = scan.nextLine();
+                                                        
+                                                        confirm = ds.registerDriver(driverID, driverfName, driverlName, driverGender, driverDateOfBirth, driverAddress, 
+                                                                driverContactNumber, driverLicenseNum, driverLicenseExpiry, driverPhotoURL, driverPass, driverConfirmPass);
+                                                        
+                                                        if(confirm == false)
+                                                        {
+                                                            System.out.println("Password doesn't match");
+                                                        }
+                                                        else
+                                                        {
+                                                            flag = false;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        if (addORrecordChoice == 2)
+                                        {
+                                            boolean flag = false;
+                                            
+                                            while(flag == false)
+                                            {
+                                                System.out.print("Enter Driver ID: ");
+                                                String d_ID = scan.nextLine();
+                                                
+                                                System.out.print("Average KM/L: ");
+                                                double aveKMPL = scan.nextDouble();
+                                                
+                                                System.out.print("Total Ticket: ");
+                                                int totalTickets = scan.nextInt();
+                                                
+                                                System.out.print("Total Revenue: ");
+                                                double totalRevenue = scan.nextDouble();
+                                                
+                                                flag = ds.recordDriverPerformance(publicSubID, aveKMPL, choice, totalRevenue);
+                                                
+                                                if(flag == false)
+                                                {
+                                                    System.out.println("Driver not Found");
+                                                }
+                                                
+                                            }
                                         }
                                         
                                         List<DriverPerformance> listdp = ds.getPerformance();
