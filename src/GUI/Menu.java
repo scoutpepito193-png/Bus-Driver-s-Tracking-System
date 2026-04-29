@@ -1,21 +1,33 @@
 
 package GUI;
 
+import Model.Driver;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
+import javax.swing.ImageIcon;
+import java.util.List;
+import Model.DriverPerformance;
+import Model.SuperAdmin;
+import Service.DriverService;
+import Service.SubAdminService;
+import Service.SuperAdminService;
 
 public class Menu extends JFrame implements ActionListener {
 
     JButton button, button1;
 
-    // TEMP SUPER ADMIN STORAGE RANI PIERRE HAHAHAHA
-    static String superAdminUser = null;
-    static String superAdminPass = null;
-    static boolean superAdminExists = false;
-
+    // ===== storage ni ======
+    DriverService ds =  new DriverService();
+    SuperAdminService sas = new SuperAdminService();;
+    SubAdminService subs = new SubAdminService();
+    
     public Menu() {
+        
+           
+        ImageIcon logo = new ImageIcon("/logo.jpg");
+        setIconImage(logo.getImage());
         setTitle("Bus Driver Tracking System");
         setSize(800, 450);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -35,6 +47,9 @@ public class Menu extends JFrame implements ActionListener {
         button.addActionListener(this);
         button1.addActionListener(this);
 
+    
+        
+        
         JLabel label = new JLabel("Bus Drivers' Tracking System");
         label.setBounds(0, 50, 800, 100);
         label.setHorizontalAlignment(JLabel.CENTER);
@@ -45,6 +60,7 @@ public class Menu extends JFrame implements ActionListener {
         add(label);
 
         setVisible(true);
+       
     }
 
     @Override
@@ -58,8 +74,99 @@ public class Menu extends JFrame implements ActionListener {
             dispose();
         }
     }
+        // ======= DRIVER PANEL =======
+        class  DriverDashboard extends JFrame{
+            
+            DriverDashboard(Driver driver){
+                 
+                setTitle("Driver Dashboard");
+                setSize(800,450);
+                setLocationRelativeTo(null);
+                setLayout(null);
+                getContentPane().setBackground(new Color(255, 192, 0));
+                
+                JLabel name = new JLabel("Name" + driver.getfirstName() + " " + driver.getlastName());
+                name.setBounds(50,50,400,30);
+                
+                JLabel id = new JLabel("ID" + driver.getpublic_driver_id());
+                id.setBounds(50,90,400,30);
+                
+                JButton records = new JButton("View Records");
+                records.setBounds(50,150,200,40);
+                
+                records.addActionListener(e ->{
+                    
+                    List <DriverPerformance> list = ds.getDriverRecords(driver.getpublic_driver_id());
+                    
+                    StringBuilder sb = new StringBuilder();
+                    
+                    for (DriverPerformance dp : list)
+                    {
+                        sb.append("Tickets: ").append(dp.gettotalTickets())
+                         .append(" | Revenue: ").append(dp.gettotalRevenue())
+                         .append(" | KM/L: ").append(dp.getaverageKMPL())
+                         .append("\n");       
+                    }
+                    
+                    JOptionPane.showMessageDialog(this, sb.toString());
+                });
+                
+                JButton back = new JButton("LOG OUT");
+                back.setBounds(650,10,100,30);
+                
+                back.addActionListener(e ->{
+                    new Menu();
+                    dispose();
+                   
+                });
+                
+                add(name);
+                add(id);
+                add(records);
+                add(back);
+                        
+                    
+                setVisible(true);
+            }
+                    
+            
+    }
+    //========= SUPER ADMIN DASHBOARD ========
+        
+        class SuperAdminDashboard extends JFrame
+{
+    SuperAdminDashboard()
+    {
+        setTitle("Super Admin Dashboard");
+        setSize(800, 450);
+        setLocationRelativeTo(null);
+        setLayout(null);
+        getContentPane().setBackground(new Color(255, 192, 0));
 
-    // DRIVER LOGIN 
+        SuperAdmin sa = sas.getSAData();
+
+        JLabel name = new JLabel("Name: " + sa.getfirstName() + " " + sa.getlastName());
+        name.setBounds(50, 50, 400, 30);
+
+        JLabel id = new JLabel("ID: " + sa.getPublicID());
+        id.setBounds(50, 90, 400, 30);
+
+        JLabel stats = new JLabel(
+            "Drivers: " + ds.totalDriver() +
+            " | SubAdmins: " + subs.totalSubAdmin() +
+            " | Pending: " + sas.totalPending()
+        );
+        stats.setBounds(50, 140, 600, 30);
+
+        add(name);
+        add(id);
+        add(stats);
+
+        setVisible(true);
+    }
+}
+
+    // ========= DRIVER LOGIN ==========
     class DriverLoginPanel extends JFrame {
         DriverLoginPanel() {
             setTitle("Driver Login");
@@ -78,7 +185,7 @@ public class Menu extends JFrame implements ActionListener {
             JLabel title = new JLabel("DRIVER LOGIN");
             title.setBounds(320, 60, 200, 30);
 
-            JLabel uLabel = new JLabel("Username:");
+            JLabel uLabel = new JLabel("ID Number:");
             uLabel.setBounds(250, 120, 100, 30);
 
             JTextField username = new JTextField();
@@ -92,7 +199,27 @@ public class Menu extends JFrame implements ActionListener {
 
             JButton login = new JButton("LOGIN");
             login.setBounds(350, 230, 140, 35);
-
+            
+            login.addActionListener(e -> {
+                
+                String id = username.getText();
+                String pass = new String(password.getPassword());
+                
+                Driver driver = ds.loginDriver(id, pass);
+                
+                if (driver !=null)
+                {
+                    JOptionPane.showMessageDialog(this, "Login Succesful");
+                    new DriverDashboard(driver);
+                    dispose();
+                }
+                else
+                {
+                    JOptionPane.showMessageDialog(this, "Wrong Credintials");
+                }
+            });
+            
+            
             add(back);
             add(title);
             add(uLabel);
@@ -223,12 +350,23 @@ public class Menu extends JFrame implements ActionListener {
             login.setBounds(330, 230, 140, 35);
 
             login.addActionListener(e -> {
-                if (user.getText().equals(superAdminUser)
-                        && new String(pass.getPassword()).equals(superAdminPass)) {
-                    new SuperAdminWelcome();
+                int result = sas.logIn(user.getText(),
+                        new String(pass.get.Password()));
+                
+                if (result == 1)
+                {
+                    JOptionPane.showMessageDialog(this, "LOGIN SUCCESS");
+                    new SuperAdminDashBoard();
                     dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Invalid Credentials");
+                }
+                else if (result == 2)
+                {
+                    JOptionPane.showMessageDialog(this, "Wrong Credintials");
+                    
+                }
+                 else
+                {
+                    JOptionPane.showMessageDialog(this, "Account not found");
                 }
             });
 
