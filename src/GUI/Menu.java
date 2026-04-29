@@ -66,6 +66,7 @@ public class Menu extends JFrame implements ActionListener {
             setSize(800, 450);
             setLocationRelativeTo(null);
             getContentPane().setBackground(new Color(255, 192, 0));
+            setFont(new Font("Calisto MT", Font.PLAIN, 15));
             setLayout(null);
 
             JButton back = new JButton("BACK");
@@ -116,6 +117,7 @@ public class Menu extends JFrame implements ActionListener {
 
             JButton back = new JButton("BACK");
             back.setBounds(680, 10, 90, 25);
+            back.setFont(new Font("Calisto MT", Font.PLAIN, 10));
             back.addActionListener(e -> {
                 new Menu();
                 dispose();
@@ -123,9 +125,12 @@ public class Menu extends JFrame implements ActionListener {
 
             JButton superAdmin = new JButton("SUPER ADMIN");
             JButton subAdmin = new JButton("SUB ADMIN");
+            
+            superAdmin.setFont(new Font("Calisto MT", Font.PLAIN, 15));
+            subAdmin.setFont(new Font("Calisto MT", Font.PLAIN, 15));
 
-            superAdmin.setBounds(300, 140, 200, 40);
-            subAdmin.setBounds(300, 200, 200, 40);
+            superAdmin.setBounds(300, 130, 200, 50);
+            subAdmin.setBounds(300, 205, 200, 50);
 
             superAdmin.addActionListener(e -> {
                 if (!superAdminExists) {
@@ -160,14 +165,15 @@ public class Menu extends JFrame implements ActionListener {
 
             JButton back = new JButton("BACK");
             back.setBounds(680, 10, 90, 25);
+            back.setFont(new Font("Calisto MT", Font.BOLD, 10));
             back.addActionListener(e -> {
                 new AdminPanel();
                 dispose();
             });
 
             JLabel title = new JLabel("SUPER ADMIN SIGN UP");
-            title.setBounds(300, 50, 300, 30);
-            title.setFont(new Font("Arial", Font.BOLD, 20));
+            title.setBounds(250, 50, 300, 60);
+            title.setFont(new Font("Calisto MT", Font.BOLD, 25));
 
             JTextField user = new JTextField();
             JPasswordField pass = new JPasswordField();
@@ -176,6 +182,7 @@ public class Menu extends JFrame implements ActionListener {
             pass.setBounds(300, 170, 200, 30);
 
             JButton signup = new JButton("SIGN UP");
+            signup.setFont(new Font("Calisto MT", Font.PLAIN, 13));
             signup.setBounds(330, 230, 140, 35);
 
             signup.addActionListener(e -> {
