@@ -48,7 +48,7 @@ public class SubAdminRepo
         
         try
         {
-                    String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ? AND password = ?";
+            String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ? AND password = ?";
             PreparedStatement prepS = conn.prepareStatement(sql);
             prepS.setString(1, publicID);
             prepS.setString(2, password);

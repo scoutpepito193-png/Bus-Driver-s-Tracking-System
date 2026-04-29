@@ -41,10 +41,10 @@ public class SubAdminService
     }
     
     
-    /*public boolean subAdminLogIn(String publicID, String password)
+    public SubAdmin subAdminLogIn(String publicID, String password)
     {
-        
-    }*/
+        return subARepo.subAdminLogIn(publicID, password);
+    }
     
     public int totalSubAdmin()
     {

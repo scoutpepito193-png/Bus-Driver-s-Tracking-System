@@ -300,7 +300,15 @@ public class ConsoleTest
                         System.out.print("Password: ");
                         String subPass = scan.nextLine();
                         
+                        SubAdmin sub = subs.subAdminLogIn(publicSubID, subPass);
                         
+                        if(sub != null)
+                        {
+                            loggedIn = true;
+                            
+                            System.out.println("Sub-Admin Dashboard");
+                            
+                        }
                     }
                     
                     /*System.out.println("Sub-Admin Dashboard");
