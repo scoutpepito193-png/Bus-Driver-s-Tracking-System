@@ -127,7 +127,7 @@ public class SuperAdminRepo
         return null;       
     }
     
-    /*public List<Request> getAllRequest()
+    public List<Request> getAllRequest()
     {
         List<Request> list = new ArrayList<>();
         
@@ -144,11 +144,22 @@ public class SuperAdminRepo
             {
                 Request req = new Request();
                 
-                req.setRequestID(res.getInt("request_id"));
+                req.setRequestCode(res.getString("request_code"));
+                req.setRequestInfo(res.getString("request_info"));
+                req.setDetails(res.getString("details"));
+                req.setStatus(res.getString("status"));
                 
+                list.add(req);
             }
         }
-    }*/
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return list;
+    }
     
     public int countPendingReq()
     {

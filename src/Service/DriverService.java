@@ -5,13 +5,24 @@ import Model.DriverPerformance;
 import Repository.DriverRepo;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ThreadLocalRandom;
 import java.time.LocalDate;
         
 public class DriverService
 {
     private final DriverRepo dRepo = new DriverRepo();
     
-    public boolean registerDriver(String id, String fname, String lname,
+    public String generateReqCode()
+    {
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        
+        int random = ThreadLocalRandom.current().nextInt(1000, 10000);
+        
+        return "REQ-" + date + "-" + random;
+    }
+    
+    public String registerDriver(String id, String fname, String lname,
                                     String gender, LocalDate dateOfBirth,
                                     String address, String contactNum,
                                     String licenseNum, LocalDate licenseExpiry,
@@ -20,9 +31,9 @@ public class DriverService
     {
         Driver d = new Driver();
         
-        if (!password.equals(confirmPass))
+        if (!password.trim().equals(confirmPass.trim()))
         {
-            return false;
+            return null;
         }
         
         d.setpublic_driver_id(id);
@@ -37,9 +48,16 @@ public class DriverService
         d.setphotoURL(photoURL);
         d.setpassword(password);
         
-        dRepo.requestDriverRegistrastion(d);
+        String requestCode = generateReqCode();
         
-        return true;        
+        boolean success = dRepo.requestDriverRegistrastion(d, requestCode);
+    
+        if(!success)
+        {
+            return null;
+        }
+        
+        return requestCode;        
     }
     
     public int totalDriver()

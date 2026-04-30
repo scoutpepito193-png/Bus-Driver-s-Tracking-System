@@ -1,5 +1,7 @@
 package Service;
 
+import java.util.List;
+import Model.Request;
 import Model.SuperAdmin;
 import Repository.SuperAdminRepo;
 
@@ -77,6 +79,11 @@ public class SuperAdminService
         int total = saRepo.countRejectedReq();
         
         return total;
+    }
+    
+    public List<Request> getAllRequest()
+    {
+        return saRepo.getAllRequest();
     }
     
     /*public boolean registerSA(String id, String fname, String lname,
