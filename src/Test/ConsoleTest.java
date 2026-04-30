@@ -8,6 +8,7 @@ import Model.SuperAdmin;
 import Model.Driver;
 import Model.DriverPerformance;
 import Model.SubAdmin;
+import Model.Request;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
@@ -269,6 +270,9 @@ public class ConsoleTest
                                             
                                         case 4:
                                             
+                                            List<Request> listReq = new ArrayList<>();
+                                            
+                                            
                                             break;
                                             
                                         case 0:
@@ -311,7 +315,7 @@ public class ConsoleTest
                             loggedIn = true;
                             
                             System.out.println("Sub-Admin Dashboard");
-                            System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard]");
+                            System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard]    [0] Sign-Out");
                             System.out.println();
                             
                             boolean inDashboard = true;
@@ -400,16 +404,18 @@ public class ConsoleTest
                                                         System.out.print("Confirm Password: ");
                                                         String driverConfirmPass = scan.nextLine();
                                                         
-                                                        confirm = ds.registerDriver(driverID, driverfName, driverlName, driverGender, driverDateOfBirth, driverAddress, 
+                                                        String reqCode = ds.registerDriver(driverID, driverfName, driverlName, driverGender, driverDateOfBirth, driverAddress, 
                                                                 driverContactNumber, driverLicenseNum, driverLicenseExpiry, driverPhotoURL, driverPass, driverConfirmPass);
                                                         
-                                                        if(confirm == false)
+                                                        if(reqCode != null)
                                                         {
-                                                            System.out.println("Password doesn't match");
+                                                            flag = false;
+                                                            confirm = true;
+                                                            System.out.println("Driver Registration Submitted!");
                                                         }
                                                         else
                                                         {
-                                                            flag = false;
+                                                            System.out.println("Password doesn't match");
                                                         }
                                                     }
                                                 }

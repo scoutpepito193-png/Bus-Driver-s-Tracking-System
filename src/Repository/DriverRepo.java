@@ -12,12 +12,12 @@ import Model.DriverPerformance;
 public class DriverRepo
 {   
     
-    public void requestDriverRegistrastion(Driver d)
+    public boolean requestDriverRegistrastion(Driver d, String requestCode)
     {
         Connection conn = dbConnection.getConnection();
         
-        String sql = "INSERT INTO request (request_info, details) "
-                + "VALUES (?::request_type,?)";
+        String sql = "INSERT INTO request (request_code, request_info, details) "
+                + "VALUES (?,?::request_type,?::jsonb)";
         
         try
         {
@@ -37,15 +37,20 @@ public class DriverRepo
                     + "\"password\":\"" + d.getpassword() + "\""
                     + "}";
             
-            prepS.setString(1, "DRIVER REGISTRATION");
-            prepS.setString(2, details);
+            prepS.setString(1, requestCode);
+            prepS.setString(2, "DRIVER REGISTRATION");
+            prepS.setString(3, details);
             
-            prepS.executeUpdate();
+            int rows = prepS.executeUpdate();
+            
+            return rows > 0;
         }
         
         catch(Exception e)
         {
             e.printStackTrace();
+            
+            return false;
         }
     }
     
