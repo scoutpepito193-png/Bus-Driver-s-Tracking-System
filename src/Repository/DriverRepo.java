@@ -17,7 +17,7 @@ public class DriverRepo
         Connection conn = dbConnection.getConnection();
         
         String sql = "INSERT INTO request (request_info, details) "
-                + "VALUES (?,?)";
+                + "VALUES (?::request_type,?)";
         
         try
         {
@@ -34,10 +34,10 @@ public class DriverRepo
                     + "\"license_number\":\"" + d.getlicenseNum() + "\","
                     + "\"license_expiry\":\"" + d.getlicenseExpiry() + "\","
                     + "\"photo_url\":\"" + d.getphotoURL() + "\","
-                    + "\"password\":\"" + d.getpassword() + "\","
+                    + "\"password\":\"" + d.getpassword() + "\""
                     + "}";
             
-            prepS.setString(1, "DRIVER_REGISTRATION");
+            prepS.setString(1, "DRIVER REGISTRATION");
             prepS.setString(2, details);
             
             prepS.executeUpdate();

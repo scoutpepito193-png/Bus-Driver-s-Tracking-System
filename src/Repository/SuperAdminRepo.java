@@ -3,7 +3,10 @@ package Repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import Model.SuperAdmin;
+import Model.Request;
 
 public class SuperAdminRepo
 {
@@ -123,6 +126,29 @@ public class SuperAdminRepo
         
         return null;       
     }
+    
+    /*public List<Request> getAllRequest()
+    {
+        List<Request> list = new ArrayList<>();
+        
+        Connection conn = dbConnection.getConnection();
+        String sql = "SELECT * FROM request "
+                + "ORDER BY created_at DESC";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            ResultSet res = prepS.executeQuery();
+            
+            if(res.next())
+            {
+                Request req = new Request();
+                
+                req.setRequestID(res.getInt("request_id"));
+                
+            }
+        }
+    }*/
     
     public int countPendingReq()
     {
