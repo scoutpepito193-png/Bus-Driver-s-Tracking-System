@@ -1,9 +1,12 @@
 package Model;
 
+import java.time.LocalDate;
+
 public class Driver
 {
     private int unitNum;
     private int ranking;
+    private int driverID;
     
     private double salary;
     
@@ -11,11 +14,11 @@ public class Driver
     private String firstName;
     private String lastName;
     private String gender;
-    private String dateOfBirth;
+    private LocalDate dateOfBirth;
     private String address;
     private String contactNumber;
     private String licenseNum;
-    private String licenseExpiry;
+    private LocalDate licenseExpiry;
     private String photoURL;
     private String password;
     
@@ -24,6 +27,9 @@ public class Driver
    
    public int getranking() { return ranking; }
    public void setranking(int ranking) { this.ranking = ranking; }
+   
+   public int getdriverID() { return driverID; }
+   public void setdriverID(int driverID) { this.driverID = driverID; }
    
    public double getsalary() { return salary; }
    public void setsalary(double salary) { this.salary = salary; }
@@ -40,8 +46,8 @@ public class Driver
    public String getgender() { return gender; }
    public void setgender(String gender) { this.gender = gender; }
    
-   public String getdateOfBirth() { return dateOfBirth; }
-   public void setdateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+   public LocalDate getdateOfBirth() { return dateOfBirth; }
+   public void setdateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
    
    public String getaddress() { return address; }
    public void setaddress(String address) { this.address = address; }
@@ -52,8 +58,8 @@ public class Driver
    public String getlicenseNum() { return licenseNum; }
    public void setlicenseNum(String licenseNum) { this.licenseNum = licenseNum; }
    
-   public String getlicenseExpiry() { return licenseExpiry; }
-   public void setlicenseExpiry(String licenseExpiry) { this.licenseExpiry = licenseExpiry; }
+   public LocalDate getlicenseExpiry() { return licenseExpiry; }
+   public void setlicenseExpiry(LocalDate licenseExpiry) { this.licenseExpiry = licenseExpiry; }
    
    public String getphotoURL() { return photoURL; }
    public void setphotoURL(String photoURL) { this.photoURL = photoURL; }
