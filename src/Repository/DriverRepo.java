@@ -40,8 +40,7 @@ public class DriverRepo
             
             prepS.setString(1, requestCode);
             prepS.setString(2, "DRIVER REGISTRATION");
-            prepS.setString(3, detai
-            int rows = prepS.executeUpdatls);
+            prepS.setString(3, details);
             
             int rows = prepS.executeUpdate();
             
