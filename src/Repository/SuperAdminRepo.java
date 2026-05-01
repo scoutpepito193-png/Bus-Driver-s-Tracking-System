@@ -3,7 +3,10 @@ package Repository;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import Model.SuperAdmin;
+import Model.Request;
 
 public class SuperAdminRepo
 {
@@ -122,6 +125,91 @@ public class SuperAdminRepo
         }
         
         return null;       
+    }
+    
+    public List<Request> getAllRequest()
+    {
+        List<Request> list = new ArrayList<>();
+        
+        
+        String sql = "SELECT * FROM request "
+                + "ORDER BY created_at DESC";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            ResultSet res = prepS.executeQuery();
+            
+            while(res.next())
+            {
+                Request req = new Request();
+                
+                req.setRequestCode(res.getString("request_code"));
+                req.setRequestInfo(res.getString("request_info"));
+                req.setDetails(res.getString("details"));
+                req.setStatus(res.getString("status"));
+                
+                list.add(req);
+            }
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return list;
+    }
+    
+    public String getRequestDetails(String reqCode)
+    {
+        String sql = "SELECT details "
+                + "FROM request "
+                + "WHERE request_code = ?";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            prepS.setString(1, reqCode);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if(res.next())
+            {
+                return res.getString("details");
+            }
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    public boolean updateRequestStatus(String reqCode, String status)
+    {
+        
+        String sql = "UPDATE request "
+                + "SET status = ?::request_status "
+                + "WHERE request_code = ?";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            prepS.setString(1, status);
+            prepS.setString(2, reqCode);
+            
+            return prepS.executeUpdate() > 0;
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return false;
     }
     
     public int countPendingReq()

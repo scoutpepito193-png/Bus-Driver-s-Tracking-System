@@ -8,6 +8,7 @@ import Model.SuperAdmin;
 import Model.Driver;
 import Model.DriverPerformance;
 import Model.SubAdmin;
+import Model.Request;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
@@ -136,7 +137,7 @@ public class ConsoleTest
                                 System.out.println("ID: " + saOutput.getPublicID());
                                 System.out.println();
                                 
-                                System.out.println("[1] Overview    [2] Driver  [3] Sub Admin       [0] Sign Out");
+                                System.out.println("[1] Overview    [2] Driver    [3] Sub Admin       [4] Request       [0] Sign Out");
                                 System.out.println();                                
                                 
                                 boolean inSADashboard = true;
@@ -145,6 +146,7 @@ public class ConsoleTest
                                 {
                                     System.out.print("Enter Choice: ");
                                     int superAdminDBchoice = scan.nextInt();
+                                    scan.nextLine();
                                 
                                     switch (superAdminDBchoice)
                                     {
@@ -267,6 +269,78 @@ public class ConsoleTest
                                             
                                             break;
                                             
+                                        case 4:
+                                            
+                                            List<Request> listReq = sas.getAllRequest();
+                                            
+                                            System.out.println("Request Code\t\tRequest Info\t\tStatus");
+                                            
+                                            for (Request req : listReq)
+                                            {
+                                                System.out.println(req.getRequestCode() + "\t" + req.getRequestInfo() + "\t" + req.getStatus());
+                                            }
+                                            
+                                            System.out.print("Enter Request Code or [0]To Exit: ");
+                                            String viewRequest = scan.nextLine().trim();
+                                            
+                                            if(viewRequest.equals("0"))
+                                            {
+                                                break;
+                                            }
+
+                                            Driver d = sas.getReqDetails(viewRequest);
+                                            
+                                            if(d != null)
+                                            {
+                                                System.out.println("ID: " + d.getpublic_driver_id());
+                                                System.out.println("Name: " + d.getfirstName() + " " + d.getlastName());
+                                                System.out.println("Gender: " + d.getgender());
+                                                System.out.println("Date Of Birth: " + d.getdateOfBirth());
+                                                System.out.println("Address: " + d.getaddress());
+                                                System.out.println("Contact Number: " + d.getcontactNumber());
+                                                System.out.println("License Number: " + d.getlicenseNum());
+                                                System.out.println("License Expiry: " + d.getlicenseExpiry());
+                                                
+                                                System.out.println("[1]Approve [2]Reject [0]Back");
+                                                System.out.print("Choice: ");
+                                                int approveORreject = scan.nextInt();
+                                                scan.nextLine();
+                                                
+                                                
+                                                switch(approveORreject)
+                                                {
+                                                    case 1:
+                                                        boolean approved = sas.approveRequest(viewRequest);
+                                                        
+                                                        if(approved == true)
+                                                        {
+                                                            System.out.println("Request Approved");
+                                                        }
+                                                        else
+                                                        {
+                                                            System.out.println("Approval Failed");
+                                                        }
+                                                        break;
+                                                        
+                                                    case 2:
+                                                        
+                                                        break;
+                                                        
+                                                    case 0:
+                                                        break;
+                                                        
+                                                }
+                                            }
+                                            else
+                                            {
+                                                System.out.println("Request not found!");
+                                            }
+                                            
+                                            
+                                            
+                                            
+                                            break;
+                                            
                                         case 0:
                                             
                                             inSADashboard = false;
@@ -307,15 +381,164 @@ public class ConsoleTest
                             loggedIn = true;
                             
                             System.out.println("Sub-Admin Dashboard");
+                            System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard]    [0] Sign-Out");
+                            System.out.println();
+                            
+                            boolean inDashboard = true;
+                            
+                            while(inDashboard)
+                            {
+                                System.out.print("Enter Choicee: ");
+                                int inDashboardChoice = scan.nextInt();
+                                
+                                switch(inDashboardChoice)
+                                {
+                                    case 1:
+                                        System.out.println("Total Driver: ");
+                                        System.out.println("Active Drivers: ");
+                                        System.out.println("Inactive Drivers: ");
+                                        System.out.println("Violations Logges: ");
+                                        
+                                        List<Driver> list = ds.getDriverRanking();
+                                        
+                                        System.out.println("Top Drivers");
+                                        for (Driver d : list)
+                                        {
+                                            System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
+                                        }
+
+                                        break;
+                                        
+                                    case 2:
+                                        
+                                        System.out.println("[1] Add Driver      [2] Record Performance      [3] View Driver");
+                                        System.out.print("Enter Choice: ");
+                                        int addORrecordChoice = scan.nextInt();
+                                        scan.nextLine();
+                                        
+                                        if(addORrecordChoice == 1)
+                                        {
+                                            boolean flag = true;
+                                            
+                                            while(flag)
+                                            {
+                                                System.out.print("ID: ");
+                                                String driverID = scan.nextLine();
+                                                
+                                                System.out.print("First Name: ");
+                                                String driverfName = scan.nextLine();
+                                                
+                                                System.out.print("Last Name: ");
+                                                String driverlName = scan.nextLine();
+                                                
+                                                System.out.print("Gender: ");
+                                                String driverGender = scan.nextLine();
+                                                
+                                                System.out.print("Date of Birth: ");
+                                                String input = scan.nextLine();
+                                                LocalDate driverDateOfBirth = LocalDate.parse(input);
+                                                
+                                                System.out.print("Address: ");
+                                                String driverAddress = scan.nextLine();
+                                                
+                                                System.out.print("Contact Number: ");
+                                                String driverContactNumber = scan.nextLine();
+                                                
+                                                System.out.print("License Number: ");
+                                                String driverLicenseNum = scan.nextLine();
+                                                
+                                                System.out.print("License Expiry Date: ");
+                                                String input2 = scan.nextLine();
+                                                LocalDate driverLicenseExpiry = LocalDate.parse(input2);
+                                                
+                                                System.out.print("Upload Photo: ");
+                                                String driverPhotoURL = scan.nextLine();
+                                                
+                                                System.out.print("Press [1]Confirm or [2]Clear: ");
+                                                int driverAddChoice = scan.nextInt();
+                                                scan.nextLine();
+                                                
+                                                if(driverAddChoice == 1)
+                                                {
+                                                    boolean confirm = false;
+                                                    
+                                                    while(confirm == false)
+                                                    {
+                                                        System.out.print("New Password: ");
+                                                        String driverPass = scan.nextLine();
+                                                    
+                                                        System.out.print("Confirm Password: ");
+                                                        String driverConfirmPass = scan.nextLine();
+                                                        
+                                                        String reqCode = ds.registerDriver(driverID, driverfName, driverlName, driverGender, driverDateOfBirth, driverAddress, 
+                                                                driverContactNumber, driverLicenseNum, driverLicenseExpiry, driverPhotoURL, driverPass, driverConfirmPass);
+                                                        
+                                                        if(reqCode != null)
+                                                        {
+                                                            flag = false;
+                                                            confirm = true;
+                                                            System.out.println("Driver Registration Submitted!");
+                                                        }
+                                                        else
+                                                        {
+                                                            System.out.println("Password doesn't match");
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        if (addORrecordChoice == 2)
+                                        {
+                                            boolean flag = false;
+                                            
+                                            while(flag == false)
+                                            {
+                                                System.out.print("Enter Driver ID: ");
+                                                String d_ID = scan.nextLine();
+                                                
+                                                System.out.print("Average KM/L: ");
+                                                double aveKMPL = scan.nextDouble();
+                                                
+                                                System.out.print("Total Ticket: ");
+                                                int totalTickets = scan.nextInt();
+                                                
+                                                System.out.print("Total Revenue: ");
+                                                double totalRevenue = scan.nextDouble();
+                                                
+                                                flag = ds.recordDriverPerformance(publicSubID, aveKMPL, choice, totalRevenue);
+                                                
+                                                if(flag == false)
+                                                {
+                                                    System.out.println("Driver not Found");
+                                                }
+                                                
+                                            }
+                                        }
+                                        
+                                        List<DriverPerformance> listdp = ds.getPerformance();
+                                            
+                                        System.out.println("ID\tName\tTotal Ticket\tRevenue\tAverage KM/L");
+                                        for (DriverPerformance dp : listdp)
+                                        {
+                                            System.out.println(dp.getdriver().getpublic_driver_id() + "\t" + dp.getdriver().getlastName()
+                                                               + ", " + dp.getdriver().getfirstName() + "\t" + dp.gettotalTickets()
+                                                               + "\t" + dp.gettotalRevenue() + "\t" + dp.getaverageKMPL());
+                                        }
+                                        
+                                        break;
+                                        
+                                    case 3:
+                                        
+                                        System.out.println("My Request");
+                                        
+                                        
+                                }
+                            }
+                            
                             
                         }
                     }
-                    
-                    /*System.out.println("Sub-Admin Dashboard");
-                    System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard]");*/
-                    
-                    
-                    
                 }
                 case 3 -> 
                 {
