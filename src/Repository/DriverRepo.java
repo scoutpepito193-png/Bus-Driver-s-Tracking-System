@@ -54,6 +54,40 @@ public class DriverRepo
         }
     }
     
+    public boolean insertApprovedDriver(Driver d)
+    {
+        Connection conn = dbConnection.getConnection();
+        String sql = "INSERT INTO driver "
+                + "(public_driver_id, first_name, last_name, gender, date_of_birth, address, contact_number, license_number, license_expiry_date, photo_url, driver_password) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            prepS.setString(1, d.getpublic_driver_id());
+            prepS.setString(2, d.getfirstName());
+            prepS.setString(3, d.getlastName());
+            prepS.setString(4, d.getgender());
+            prepS.setDate(5, java.sql.Date.valueOf(d.getdateOfBirth()));
+            prepS.setString(6, d.getaddress());
+            prepS.setString(7, d.getcontactNumber());
+            prepS.setString(8, d.getlicenseNum());
+            prepS.setDate(9, java.sql.Date.valueOf(d.getlicenseExpiry()));
+            prepS.setString(10, d.getphotoURL());
+            prepS.setString(11, d.getpassword());
+            
+            return prepS.executeUpdate() > 0;
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
     public int countDrivers()
     {
         Connection conn = dbConnection.getConnection();

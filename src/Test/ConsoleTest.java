@@ -300,6 +300,36 @@ public class ConsoleTest
                                                 System.out.println("Contact Number: " + d.getcontactNumber());
                                                 System.out.println("License Number: " + d.getlicenseNum());
                                                 System.out.println("License Expiry: " + d.getlicenseExpiry());
+                                                
+                                                System.out.println("[1]Approve [2]Reject [0]Back");
+                                                System.out.print("Choice: ");
+                                                int approveORreject = scan.nextInt();
+                                                scan.nextLine();
+                                                
+                                                
+                                                switch(approveORreject)
+                                                {
+                                                    case 1:
+                                                        boolean approved = sas.approveRequest(viewRequest);
+                                                        
+                                                        if(approved == true)
+                                                        {
+                                                            System.out.println("Request Approved");
+                                                        }
+                                                        else
+                                                        {
+                                                            System.out.println("Approval Failed");
+                                                        }
+                                                        break;
+                                                        
+                                                    case 2:
+                                                        
+                                                        break;
+                                                        
+                                                    case 0:
+                                                        break;
+                                                        
+                                                }
                                             }
                                             else
                                             {

@@ -188,6 +188,30 @@ public class SuperAdminRepo
         return null;
     }
     
+    public boolean updateRequestStatus(String reqCode, String status)
+    {
+        
+        String sql = "UPDATE request "
+                + "SET status = ?::request_status "
+                + "WHERE request_code = ?";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            prepS.setString(1, status);
+            prepS.setString(2, reqCode);
+            
+            return prepS.executeUpdate() > 0;
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
     public int countPendingReq()
     {
         int count = 0;
