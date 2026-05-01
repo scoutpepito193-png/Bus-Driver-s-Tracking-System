@@ -24,16 +24,16 @@ public class DriverRepo
             PreparedStatement prepS = conn.prepareStatement(sql);
             
             String details = "{"
-                    + "\"driver_id\":\"" + d.getpublic_driver_id() + "\","
-                    + "\"first_name\":\"" + d.getfirstName() + "\","
-                    + "\"last_name\":\"" + d.getlastName() + "\","
+                    + "\"public_driver_id\":\"" + d.getpublic_driver_id() + "\","
+                    + "\"firstName\":\"" + d.getfirstName() + "\","
+                    + "\"lastName\":\"" + d.getlastName() + "\","
                     + "\"gender\":\"" + d.getgender() + "\","
-                    + "\"date_of_birth\":\"" + d.getdateOfBirth() + "\","
+                    + "\"dateOfBirth\":\"" + d.getdateOfBirth() + "\","
                     + "\"address\":\"" + d.getaddress() + "\","
-                    + "\"contact\":\"" + d.getcontactNumber() + "\","
-                    + "\"license_number\":\"" + d.getlicenseNum() + "\","
-                    + "\"license_expiry\":\"" + d.getlicenseExpiry() + "\","
-                    + "\"photo_url\":\"" + d.getphotoURL() + "\","
+                    + "\"contactNumber\":\"" + d.getcontactNumber() + "\","
+                    + "\"licenseNum\":\"" + d.getlicenseNum() + "\","
+                    + "\"licenseExpiry\":\"" + d.getlicenseExpiry() + "\","
+                    + "\"photoURL\":\"" + d.getphotoURL() + "\","
                     + "\"password\":\"" + d.getpassword() + "\""
                     + "}";
             

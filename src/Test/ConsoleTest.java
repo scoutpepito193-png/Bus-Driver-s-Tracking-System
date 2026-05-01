@@ -146,6 +146,7 @@ public class ConsoleTest
                                 {
                                     System.out.print("Enter Choice: ");
                                     int superAdminDBchoice = scan.nextInt();
+                                    scan.nextLine();
                                 
                                     switch (superAdminDBchoice)
                                     {
@@ -270,7 +271,42 @@ public class ConsoleTest
                                             
                                         case 4:
                                             
-                                            List<Request> listReq = new ArrayList<>();
+                                            List<Request> listReq = sas.getAllRequest();
+                                            
+                                            System.out.println("Request Code\t\tRequest Info\t\tStatus");
+                                            
+                                            for (Request req : listReq)
+                                            {
+                                                System.out.println(req.getRequestCode() + "\t" + req.getRequestInfo() + "\t" + req.getStatus());
+                                            }
+                                            
+                                            System.out.print("Enter Request Code or [0]To Exit: ");
+                                            String viewRequest = scan.nextLine().trim();
+                                            
+                                            if(viewRequest.equals("0"))
+                                            {
+                                                break;
+                                            }
+
+                                            Driver d = sas.getReqDetails(viewRequest);
+                                            
+                                            if(d != null)
+                                            {
+                                                System.out.println("ID: " + d.getpublic_driver_id());
+                                                System.out.println("Name: " + d.getfirstName() + " " + d.getlastName());
+                                                System.out.println("Gender: " + d.getgender());
+                                                System.out.println("Date Of Birth: " + d.getdateOfBirth());
+                                                System.out.println("Address: " + d.getaddress());
+                                                System.out.println("Contact Number: " + d.getcontactNumber());
+                                                System.out.println("License Number: " + d.getlicenseNum());
+                                                System.out.println("License Expiry: " + d.getlicenseExpiry());
+                                            }
+                                            else
+                                            {
+                                                System.out.println("Request not found!");
+                                            }
+                                            
+                                            
                                             
                                             
                                             break;
