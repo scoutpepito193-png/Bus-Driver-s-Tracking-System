@@ -7,6 +7,7 @@ import Model.Driver;
 import Model.Request;
 import Model.SuperAdmin;
 import Repository.SuperAdminRepo;
+import Repository.DriverRepo;
 
 public class SuperAdminService
 {
@@ -111,6 +112,33 @@ public class SuperAdminService
             return null;
         }
     }
+    
+    public boolean approveRequest(String reqCode)
+    {
+        DriverRepo dRepo = new DriverRepo();
+        try
+        {
+            Driver d = getReqDetails(reqCode);
+            
+            if(d == null) return false;
+            
+            boolean insert = dRepo.insertApprovedDriver(d);
+            if(!insert) return false;
+            
+            boolean update = saRepo.updateRequestStatus(reqCode, "APPROVED");
+            
+            return update;
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    
     /*public boolean registerSA(String id, String fname, String lname,
                             String contactNum, String position, String password,
                             String confirmPass)
