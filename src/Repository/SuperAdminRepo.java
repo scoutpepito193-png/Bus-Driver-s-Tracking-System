@@ -131,7 +131,7 @@ public class SuperAdminRepo
     {
         List<Request> list = new ArrayList<>();
         
-        Connection conn = dbConnection.getConnection();
+        
         String sql = "SELECT * FROM request "
                 + "ORDER BY created_at DESC";
         
@@ -140,7 +140,7 @@ public class SuperAdminRepo
             PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
-            if(res.next())
+            while(res.next())
             {
                 Request req = new Request();
                 
@@ -159,6 +159,33 @@ public class SuperAdminRepo
         }
         
         return list;
+    }
+    
+    public String getRequestDetails(String reqCode)
+    {
+        String sql = "SELECT details "
+                + "FROM request "
+                + "WHERE request_code = ?";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            prepS.setString(1, reqCode);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if(res.next())
+            {
+                return res.getString("details");
+            }
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return null;
     }
     
     public int countPendingReq()
