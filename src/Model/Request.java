@@ -3,6 +3,7 @@ package Model;
 public class Request
 {
     private int requestID;
+    private int driverID;
     
     private String requestCode;
     private String requestInfo;
@@ -11,6 +12,9 @@ public class Request
     
     public int getRequestID() { return requestID; }
     public void  setRequestID(int requestID) { this.requestID = requestID; }
+    
+    public int getDriverID() { return driverID; }
+    public void setDriverID(int driverID) { this.driverID = driverID; }
     
     public String getRequestCode() { return requestCode; }
     public void setRequestCode(String requestCode) { this.requestCode = requestCode; }

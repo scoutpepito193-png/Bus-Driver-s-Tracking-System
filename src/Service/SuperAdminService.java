@@ -113,7 +113,7 @@ public class SuperAdminService
         }
     }
     
-    public boolean approveRequest(String reqCode)
+    /*public boolean approveRequest(String reqCode)
     {
         DriverRepo dRepo = new DriverRepo();
         try
@@ -136,8 +136,55 @@ public class SuperAdminService
         }
         
         return false;
-    }
+    }*/
     
+    public boolean approveRequest(String reqCode)
+    {
+        DriverRepo dRepo = new DriverRepo();
+        
+        try
+        {
+            Request req = saRepo.getRequest(reqCode);
+            
+            if(req == null) return false;
+            
+            String type = req.getRequestInfo();
+            
+            boolean success = false;
+            
+            if("DRIVER REGISTRATION".equals(type))
+            {
+                Driver d = getReqDetails(reqCode);
+                
+                if(d == null) return false;
+                
+                success = dRepo.insertApprovedDriver(d);
+            }
+            
+            else if("REMOVE DRIVER".equals(type))
+            {
+                int driverID = req.getDriverID();
+                
+                if(driverID == -1) return false;
+                
+                success = dRepo.deactivateDriver(driverID);
+            }
+            
+            if(success)
+            {
+                return saRepo.updateRequestStatus(reqCode, "APPROVED");
+            }
+            
+            return false;
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
     
     /*public boolean registerSA(String id, String fname, String lname,
                             String contactNum, String position, String password,

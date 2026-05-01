@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
+import Service.DriverService;
 import Model.Driver;
 import Model.DriverPerformance;
 
@@ -39,7 +40,8 @@ public class DriverRepo
             
             prepS.setString(1, requestCode);
             prepS.setString(2, "DRIVER REGISTRATION");
-            prepS.setString(3, details);
+            prepS.setString(3, detai
+            int rows = prepS.executeUpdatls);
             
             int rows = prepS.executeUpdate();
             
@@ -52,6 +54,48 @@ public class DriverRepo
             
             return false;
         }
+    }
+    
+    public boolean requestDriverRemoval(String publicDriverID, String details)
+    {
+        DriverService ds = new DriverService();
+        Connection conn = dbConnection.getConnection();
+        
+        try
+        {
+            String getIDsql = "SELECT driver_id FROM driver WHERE public_driver_id = ?";
+            PreparedStatement prepS = conn.prepareStatement(getIDsql);
+            prepS.setString(1, publicDriverID.trim());
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if(!res.next())
+            {
+                return false;
+            }
+            
+            int driver = res.getInt("driver_id");
+            
+            String requestCode = ds.generateReqCode();
+            
+            String insertSQL = "INSERT INTO request (request_code, request_info, status, details, driver_id) "
+                    + "VALUES (?, 'REMOVE DRIVER', 'PENDING', ?, ?)";
+            
+            PreparedStatement prepSt = conn.prepareStatement(insertSQL);
+            prepSt.setString(1, requestCode);
+            prepS.setString(2, details);
+            prepSt.setInt(3, driver);
+            
+            return prepSt.executeUpdate() > 0;
+            
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return false;
     }
     
     public boolean insertApprovedDriver(Driver d)
@@ -85,6 +129,27 @@ public class DriverRepo
             e.printStackTrace();
         }
         
+        return false;
+    }
+    
+    public boolean deactivateDriver(int driverId)
+    {
+        Connection conn = dbConnection.getConnection();
+        
+        String sql = "UPDATE driver SET status = 'INACTIVE' WHERE driver_id = ?";
+
+        try
+        {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, driverId);
+
+            return ps.executeUpdate() > 0;
+        }
+        catch(Exception e)
+        {
+           e.printStackTrace();
+        }
+
         return false;
     }
     
@@ -216,7 +281,7 @@ public class DriverRepo
                     + "SUM (p.total_tickets) AS total_tickets, "
                     + "SUM (p.total_revenue) AS total_revenue "
                     + "FROM driver d "
-                    + "JOIN driver_performance p ON d.driver_id = p.driver_id "
+                    + "LEFT JOIN driver_performance p ON d.driver_id = p.driver_id "
                     + "GROUP BY d.driver_id, d.first_name, d.last_name "
                     + "ORDER BY d.last_name ASC";
             
@@ -316,6 +381,29 @@ public List<DriverPerformance> driverRecords(String publicDriverId)
     }
 
     return list;
+}
+
+public boolean updateDriverStatus(int driverID, String status)
+{
+    Connection conn = dbConnection.getConnection();
+    
+    try
+    {
+        String sql = "UPDATE driver SET status = ? WHERE driver_id = ?";
+        PreparedStatement prepS = conn.prepareStatement(sql);
+        
+        prepS.setString(1, status);
+        prepS.setInt(2, driverID);
+        
+        return prepS.executeUpdate() > 0;
+    }
+    
+    catch(Exception e)
+    {
+        e.printStackTrace();
+    }
+    
+    return false;
 }
     
     /*public List<Driver> listofDrivers()

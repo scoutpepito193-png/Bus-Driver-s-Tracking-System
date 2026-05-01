@@ -109,4 +109,9 @@ public class DriverService
     {
     return dRepo.driverRecords(publicDriverId);
     }
+    
+    public boolean requestDriverRemoval(String publicDriverID, String details)
+    {
+        return dRepo.requestDriverRemoval(publicDriverID, details);
+    }
 }

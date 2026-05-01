@@ -397,7 +397,7 @@ public class ConsoleTest
                                         System.out.println("Total Driver: ");
                                         System.out.println("Active Drivers: ");
                                         System.out.println("Inactive Drivers: ");
-                                        System.out.println("Violations Logges: ");
+                                        System.out.println("Violations Logged: ");
                                         
                                         List<Driver> list = ds.getDriverRanking();
                                         
@@ -506,7 +506,7 @@ public class ConsoleTest
                                                 System.out.print("Total Revenue: ");
                                                 double totalRevenue = scan.nextDouble();
                                                 
-                                                flag = ds.recordDriverPerformance(publicSubID, aveKMPL, choice, totalRevenue);
+                                                flag = ds.recordDriverPerformance(d_ID, aveKMPL, totalTickets, totalRevenue);
                                                 
                                                 if(flag == false)
                                                 {
@@ -524,6 +524,31 @@ public class ConsoleTest
                                             System.out.println(dp.getdriver().getpublic_driver_id() + "\t" + dp.getdriver().getlastName()
                                                                + ", " + dp.getdriver().getfirstName() + "\t" + dp.gettotalTickets()
                                                                + "\t" + dp.gettotalRevenue() + "\t" + dp.getaverageKMPL());
+                                        }
+                                        
+                                        System.out.print("Remove Driver [y/n]: ");
+                                        char removeDriver = scan.next().charAt(0);
+                                        scan.nextLine();
+                                        
+                                        if (removeDriver == 'y' || removeDriver == 'Y')
+                                        {
+                                            System.out.print("Enter Driver ID to Remove: ");
+                                            String publicDriverID = scan.nextLine();
+                                            
+                                            System.out.print("Rason of Removal: ");
+                                            String reason = scan.nextLine();
+                                            
+                                            boolean succes = ds.requestDriverRemoval(publicDriverID, reason);
+                                            
+                                            if(succes)
+                                            {
+                                                System.out.println("Request Sent");
+                                            }
+                                            
+                                            else
+                                            {
+                                                System.out.println("Failes");
+                                            }
                                         }
                                         
                                         break;
