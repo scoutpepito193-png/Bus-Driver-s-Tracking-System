@@ -78,11 +78,14 @@ public class DriverRepo
             String requestCode = ds.generateReqCode();
             
             String insertSQL = "INSERT INTO request (request_code, request_info, status, details, driver_id) "
-                    + "VALUES (?, 'REMOVE DRIVER', 'PENDING', ?, ?)";
+                    + "VALUES (?, 'REMOVE DRIVER', 'PENDING', ?::jsonb, ?)";
             
             PreparedStatement prepSt = conn.prepareStatement(insertSQL);
+            
+            String jsonDetails = "{\"reason\":\"" + details + "\"}";
+            
             prepSt.setString(1, requestCode);
-            prepS.setString(2, details);
+            prepSt.setString(2, jsonDetails);
             prepSt.setInt(3, driver);
             
             return prepSt.executeUpdate() > 0;
@@ -159,7 +162,7 @@ public class DriverRepo
         
         try
         {            
-            String sql = "SELECT COUNT(*) FROM driver";
+            String sql = "SELECT COUNT(*) FROM driver WHERE status = 'ACTIVE'";
             PreparedStatement prepS = conn.prepareStatement(sql);
             
             ResultSet res = prepS.executeQuery();
@@ -281,6 +284,7 @@ public class DriverRepo
                     + "SUM (p.total_revenue) AS total_revenue "
                     + "FROM driver d "
                     + "LEFT JOIN driver_performance p ON d.driver_id = p.driver_id "
+                    + "WHERE status = 'ACTIVE'"
                     + "GROUP BY d.driver_id, d.first_name, d.last_name "
                     + "ORDER BY d.last_name ASC";
             
@@ -318,7 +322,7 @@ public class DriverRepo
 
     try
     {
-        String sql = "SELECT * FROM driver WHERE public_driver_id = ? AND driver_password = ?";
+        String sql = "SELECT * FROM driver WHERE public_driver_id = ? AND driver_password = ? AND status = 'ACTIVE'";
         PreparedStatement prepS = conn.prepareStatement(sql);
         prepS.setString(1, publicDriverId);
         prepS.setString(2, password);

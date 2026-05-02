@@ -3,6 +3,7 @@ package Service;
 import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.util.Map;
 import Model.Driver;
 import Model.Request;
 import Model.SuperAdmin;
@@ -90,20 +91,34 @@ public class SuperAdminService
         return saRepo.getAllRequest();
     }
     
-    public Driver getReqDetails(String reqCode)
+    public Request getRequest(String reqCode)
+    {
+        return saRepo.getRequest(reqCode);
+    }
+    
+    public Object getReqDetails(String reqCode)
     {
         try
         {
-            String json = saRepo.getRequestDetails(reqCode);
+            Request req = saRepo.getRequest(reqCode);
+            if(req == null) return null;
             
-            if(json == null)
-            {
-                return null;
-            }
+            String json = req.getDetails();
             
             ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-            return mapper.readValue(json, Driver.class);
+            mapper.registerModule(new JavaTimeModule());            
+            
+            if("DRIVER REGISTRATION".equals(req.getRequestInfo()))
+            {
+                return mapper.readValue(json, Driver.class);
+            }
+            
+            else if("REMOVE DRIVER".equals(req.getRequestInfo()))
+            {
+                return mapper.readValue(json, Map.class);
+            }
+            
+            return null;
         }
         
         catch(Exception e)
@@ -154,7 +169,7 @@ public class SuperAdminService
             
             if("DRIVER REGISTRATION".equals(type))
             {
-                Driver d = getReqDetails(reqCode);
+                Driver d =(Driver) getReqDetails(reqCode);
                 
                 if(d == null) return false;
                 

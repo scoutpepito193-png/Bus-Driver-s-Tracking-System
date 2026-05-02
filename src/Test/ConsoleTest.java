@@ -12,6 +12,7 @@ import Model.Request;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
+import java.util.Map;
 
 public class ConsoleTest
 {   
@@ -288,10 +289,21 @@ public class ConsoleTest
                                                 break;
                                             }
 
-                                            Driver d = sas.getReqDetails(viewRequest);
+                                            Request req = sas.getRequest(viewRequest);
                                             
-                                            if(d != null)
+                                            if(req == null)
                                             {
+                                                System.out.println("Request not found!");
+                                                break;
+
+                                            }
+                                            
+                                            String type = req.getRequestInfo();
+                                            
+                                            if("DRIVER REGISTRATION".equals(type))
+                                            {
+                                                Driver d = (Driver) sas.getReqDetails(viewRequest);
+                                                
                                                 System.out.println("ID: " + d.getpublic_driver_id());
                                                 System.out.println("Name: " + d.getfirstName() + " " + d.getlastName());
                                                 System.out.println("Gender: " + d.getgender());
@@ -301,40 +313,43 @@ public class ConsoleTest
                                                 System.out.println("License Number: " + d.getlicenseNum());
                                                 System.out.println("License Expiry: " + d.getlicenseExpiry());
                                                 
-                                                System.out.println("[1]Approve [2]Reject [0]Back");
-                                                System.out.print("Choice: ");
-                                                int approveORreject = scan.nextInt();
-                                                scan.nextLine();
-                                                
-                                                
-                                                switch(approveORreject)
-                                                {
-                                                    case 1:
-                                                        boolean approved = sas.approveRequest(viewRequest);
-                                                        
-                                                        if(approved == true)
-                                                        {
-                                                            System.out.println("Request Approved");
-                                                        }
-                                                        else
-                                                        {
-                                                            System.out.println("Approval Failed");
-                                                        }
-                                                        break;
-                                                        
-                                                    case 2:
-                                                        
-                                                        break;
-                                                        
-                                                    case 0:
-                                                        break;
-                                                        
-                                                }
                                             }
-                                            else
+                                            else if("REMOVE DRIVER".equals(type))
                                             {
-                                                System.out.println("Request not found!");
+                                                Map<String, String> data = (Map<String, String>) sas.getReqDetails(viewRequest);
+                                                
+                                                System.out.println("Reason of Removal: " + data.get("reason"));
                                             }
+
+                                            System.out.println("[1]Approve [2]Reject [0]Back");
+                                            System.out.print("Choice: ");
+                                            int approveORreject = scan.nextInt();
+                                            scan.nextLine();
+                                                
+                                                
+                                            switch(approveORreject)
+                                            {
+                                                case 1:
+                                                    boolean approved = sas.approveRequest(viewRequest);
+                                                      
+                                                    if(approved == true)
+                                                    {
+                                                        System.out.println("Request Approved");
+                                                    }
+                                                    else
+                                                    {
+                                                        System.out.println("Approval Failed");
+                                                    }
+                                                    break;
+                                                        
+                                                case 2:
+                                                        
+                                                    break;
+                                                        
+                                                case 0:
+                                                        break;
+                                                        
+                                            }                                            
                                             
                                             
                                             
