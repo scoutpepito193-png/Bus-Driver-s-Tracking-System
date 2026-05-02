@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
+import Service.DriverService;
 import Model.Driver;
 import Model.DriverPerformance;
 
@@ -54,6 +55,51 @@ public class DriverRepo
         }
     }
     
+    public boolean requestDriverRemoval(String publicDriverID, String details)
+    {
+        DriverService ds = new DriverService();
+        Connection conn = dbConnection.getConnection();
+        
+        try
+        {
+            String getIDsql = "SELECT driver_id FROM driver WHERE public_driver_id = ?";
+            PreparedStatement prepS = conn.prepareStatement(getIDsql);
+            prepS.setString(1, publicDriverID.trim());
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if(!res.next())
+            {
+                return false;
+            }
+            
+            int driver = res.getInt("driver_id");
+            
+            String requestCode = ds.generateReqCode();
+            
+            String insertSQL = "INSERT INTO request (request_code, request_info, status, details, driver_id) "
+                    + "VALUES (?, 'REMOVE DRIVER', 'PENDING', ?::jsonb, ?)";
+            
+            PreparedStatement prepSt = conn.prepareStatement(insertSQL);
+            
+            String jsonDetails = "{\"reason\":\"" + details + "\"}";
+            
+            prepSt.setString(1, requestCode);
+            prepSt.setString(2, jsonDetails);
+            prepSt.setInt(3, driver);
+            
+            return prepSt.executeUpdate() > 0;
+            
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
     public boolean insertApprovedDriver(Driver d)
     {
         Connection conn = dbConnection.getConnection();
@@ -88,6 +134,27 @@ public class DriverRepo
         return false;
     }
     
+    public boolean deactivateDriver(int driverId)
+    {
+        Connection conn = dbConnection.getConnection();
+        
+        String sql = "UPDATE driver SET status = 'INACTIVE' WHERE driver_id = ?";
+
+        try
+        {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, driverId);
+
+            return ps.executeUpdate() > 0;
+        }
+        catch(Exception e)
+        {
+           e.printStackTrace();
+        }
+
+        return false;
+    }
+    
     public int countDrivers()
     {
         Connection conn = dbConnection.getConnection();
@@ -95,7 +162,7 @@ public class DriverRepo
         
         try
         {            
-            String sql = "SELECT COUNT(*) FROM driver";
+            String sql = "SELECT COUNT(*) FROM driver WHERE status = 'ACTIVE'";
             PreparedStatement prepS = conn.prepareStatement(sql);
             
             ResultSet res = prepS.executeQuery();
@@ -216,7 +283,8 @@ public class DriverRepo
                     + "SUM (p.total_tickets) AS total_tickets, "
                     + "SUM (p.total_revenue) AS total_revenue "
                     + "FROM driver d "
-                    + "JOIN driver_performance p ON d.driver_id = p.driver_id "
+                    + "LEFT JOIN driver_performance p ON d.driver_id = p.driver_id "
+                    + "WHERE status = 'ACTIVE'"
                     + "GROUP BY d.driver_id, d.first_name, d.last_name "
                     + "ORDER BY d.last_name ASC";
             
@@ -254,7 +322,7 @@ public class DriverRepo
 
     try
     {
-        String sql = "SELECT * FROM driver WHERE public_driver_id = ? AND driver_password = ?";
+        String sql = "SELECT * FROM driver WHERE public_driver_id = ? AND driver_password = ? AND status = 'ACTIVE'";
         PreparedStatement prepS = conn.prepareStatement(sql);
         prepS.setString(1, publicDriverId);
         prepS.setString(2, password);
@@ -316,6 +384,29 @@ public List<DriverPerformance> driverRecords(String publicDriverId)
     }
 
     return list;
+}
+
+public boolean updateDriverStatus(int driverID, String status)
+{
+    Connection conn = dbConnection.getConnection();
+    
+    try
+    {
+        String sql = "UPDATE driver SET status = ? WHERE driver_id = ?";
+        PreparedStatement prepS = conn.prepareStatement(sql);
+        
+        prepS.setString(1, status);
+        prepS.setInt(2, driverID);
+        
+        return prepS.executeUpdate() > 0;
+    }
+    
+    catch(Exception e)
+    {
+        e.printStackTrace();
+    }
+    
+    return false;
 }
     
     /*public List<Driver> listofDrivers()

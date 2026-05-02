@@ -133,6 +133,7 @@ public class SuperAdminRepo
         
         
         String sql = "SELECT * FROM request "
+                + "WHERE status = 'PENDING' "
                 + "ORDER BY created_at DESC";
         
         try
@@ -159,6 +160,50 @@ public class SuperAdminRepo
         }
         
         return list;
+    }
+    
+    public Request getRequest(String reqCode)
+    {
+        String sql = "SELECT * FROM request WHERE request_code = ?";
+        
+        try
+        {
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            prepS.setString(1,reqCode);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if(res.next())
+            {
+                Request req = new Request();
+                
+                req.setRequestCode(res.getString("request_code"));
+                req.setRequestInfo(res.getString("request_info"));
+                req.setStatus(res.getString("status"));
+                
+                int driverID = res.getInt("driver_id");
+                
+                if(res.wasNull())
+                {
+                    req.setDriverID(-1);
+                }
+                else
+                {
+                    req.setDriverID(driverID);
+                }
+                
+                req.setDetails(res.getString("details"));
+                
+                return req;
+            }
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return null;
     }
     
     public String getRequestDetails(String reqCode)
