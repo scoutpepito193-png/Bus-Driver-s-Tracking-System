@@ -243,6 +243,53 @@ public class DriverRepo
         return -1;
     }
     
+public Driver getDriverProfileById(int driverID)
+{
+    String sql = "SELECT public_driver_id, first_name, last_name, gender, "
+               + "date_of_birth, address, contact_number, license_num, "
+               + "license_expiry, photo_url, status "
+               + "FROM driver WHERE driver_id = ?";
+
+    try (Connection conn = dbConnection.getConnection();
+         PreparedStatement prepS = conn.prepareStatement(sql))
+    {
+        prepS.setInt(1, driverID);
+
+        ResultSet res = prepS.executeQuery();
+
+        if(res.next())
+        {
+            Driver d = new Driver();
+
+            d.setpublic_driver_id(res.getString("public_driver_id"));
+            d.setfirstName(res.getString("first_name"));
+            d.setlastName(res.getString("last_name"));
+            d.setgender(res.getString("gender"));
+
+            if(res.getDate("date_of_birth") != null)
+                d.setdateOfBirth(res.getDate("date_of_birth").toLocalDate());
+
+            d.setaddress(res.getString("address"));
+            d.setcontactNumber(res.getString("contact_number"));
+            d.setlicenseNum(res.getString("license_num"));
+
+            if(res.getDate("license_expiry") != null)
+                d.setlicenseExpiry(res.getDate("license_expiry").toLocalDate());
+
+            d.setphotoURL(res.getString("photo_url"));
+            d.setStatus(res.getString("status"));
+
+            return d;
+        }
+    }
+    catch(Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return null;
+}
+    
     public boolean enterDriverPerformance(DriverPerformance dp)
     {
         Connection conn = dbConnection.getConnection();
@@ -270,6 +317,36 @@ public class DriverRepo
             return false;
         }
     }
+    
+    public DriverPerformance getDriverPerformance(int driverID)
+{
+    String sql = "SELECT * FROM driver_performance WHERE driver_id = ?";
+
+    try (Connection conn = dbConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql))
+    {
+        ps.setInt(1, driverID);
+
+        ResultSet rs = ps.executeQuery();
+
+        if(rs.next())
+        {
+            DriverPerformance p = new DriverPerformance();
+
+            p.settotalTickets(rs.getInt("total_tickets"));
+            p.settotalRevenue(rs.getDouble("total_revenue"));
+            p.setaverageKMPL(rs.getDouble("average_kmpl"));
+
+            return p;
+        }
+    }
+    catch(Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return null;
+}
     
     public List<DriverPerformance> driverPerformance()
     {

@@ -91,6 +91,18 @@ public class DriverService
         return true;
     }
     
+    public boolean viewDriverProfile(String publicID)
+    {
+        int driverID = dRepo.getDriverIdByPublicID(publicID);
+        
+        if(driverID == -1)
+        {
+            return false;
+        }
+        
+        Driver d = dRepo.
+    }
+    
     public List<Driver> getDriverRanking()
     {
         return dRepo.driverRanking();

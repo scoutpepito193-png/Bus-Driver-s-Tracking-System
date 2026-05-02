@@ -566,6 +566,10 @@ public class ConsoleTest
                                             }
                                         }
                                         
+                                        System.out.println("View Driver Profile [y/n]: ");
+                                        String viewDriverProfile = scan.nextLine();
+                                        
+                                        
                                         break;
                                         
                                     case 3:

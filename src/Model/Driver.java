@@ -21,6 +21,7 @@ public class Driver
     private LocalDate licenseExpiry;
     private String photoURL;
     private String password;
+    private String status;
     
    public int getunitNum() { return unitNum; }
    public void setunitNum(int unitNum) { this.unitNum = unitNum; }
@@ -66,6 +67,9 @@ public class Driver
    
    public String getpassword() { return password; }
    public void setpassword(String password) { this.password = password; }
+   
+   public String getStatus() { return status; }
+   public void setStatus(String status) { this.status = status; }
    
    
 }
