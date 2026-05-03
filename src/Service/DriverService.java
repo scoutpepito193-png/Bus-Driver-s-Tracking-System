@@ -2,12 +2,14 @@ package Service;
 
 import Model.Driver;
 import Model.DriverPerformance;
+import Model.DriverProfile;
 import Repository.DriverRepo;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 import java.time.LocalDate;
+import util.TraccarAPI;
         
 public class DriverService
 {
@@ -91,17 +93,22 @@ public class DriverService
         return true;
     }
     
-    public boolean viewDriverProfile(String publicID)
-    {
-        int driverID = dRepo.getDriverIdByPublicID(publicID);
-        
-        if(driverID == -1)
-        {
-            return false;
-        }
-        
-        Driver d = dRepo.
-    }
+public DriverProfile getDriverProfile(String publicID)
+{
+    int driverID = dRepo.getDriverIdByPublicID(publicID);
+
+    if(driverID == -1) return null;
+
+    Driver driver = dRepo.getDriverProfileById(driverID);
+    DriverPerformance perf = dRepo.getDriverPerformance(driverID);
+
+    DriverProfile profile = new DriverProfile();
+    profile.setDriver(driver);
+    profile.setPerformance(perf);
+
+    return profile;
+}
+
     
     public List<Driver> getDriverRanking()
     {

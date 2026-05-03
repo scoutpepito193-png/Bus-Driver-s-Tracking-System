@@ -1,9 +1,15 @@
 package Service;
 
 import Repository.SubAdminRepo;
+import util.TraccarAPI;
+import Model.Driver;
+import Repository.DriverRepo;
 import java.util.ArrayList;
 import java.util.List;
+import util.Session;
+import org.json.JSONObject;
 import Model.SubAdmin;
+import Model.Request;
 import java.time.LocalDate;
 
 
@@ -56,5 +62,28 @@ public class SubAdminService
     public List<SubAdmin> getSubAdmins()
     {
         return subARepo.getSubAdmins();
+    }
+    
+    public List<Request> getMyRequests()
+    {
+        int subAdminID = Session.currentSubAdmin.getSubID();
+
+        return subARepo.getAllMyRequest(subAdminID);
+    }
+    
+    private final DriverRepo driverRepo = new DriverRepo();
+
+    public JSONObject getDriverLocation(String publicDriverId)
+    {
+        int driverID = driverRepo.getDriverIdByPublicID(publicDriverId);
+        
+        Integer deviceId = driverRepo.getTraccarDeviceId(driverID);
+
+        if(deviceId == null)
+        {
+            return null;
+        }
+
+        return TraccarAPI.getLatestPosition(deviceId);
     }
 }

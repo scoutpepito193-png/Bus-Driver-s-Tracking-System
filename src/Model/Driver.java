@@ -7,6 +7,7 @@ public class Driver
     private int unitNum;
     private int ranking;
     private int driverID;
+    private int traccarID;
     
     private double salary;
     
@@ -31,6 +32,9 @@ public class Driver
    
    public int getdriverID() { return driverID; }
    public void setdriverID(int driverID) { this.driverID = driverID; }
+   
+   public int getTracerID() { return traccarID; }
+   public void setTraccarID(int traccarID) { this.traccarID = traccarID; }
    
    public double getsalary() { return salary; }
    public void setsalary(double salary) { this.salary = salary; }

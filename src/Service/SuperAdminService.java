@@ -9,6 +9,7 @@ import Model.Request;
 import Model.SuperAdmin;
 import Repository.SuperAdminRepo;
 import Repository.DriverRepo;
+import util.TraccarAPI;
 
 public class SuperAdminService
 {
@@ -170,8 +171,22 @@ public class SuperAdminService
             if("DRIVER REGISTRATION".equals(type))
             {
                 Driver d =(Driver) getReqDetails(reqCode);
+                TraccarAPI.logIn("joshrheven@gmail.com", "gwapojosh12345");
                 
                 if(d == null) return false;
+                
+                String deviceName = d.getpublic_driver_id() + " - " + d.getfirstName() + " - " + d.getlastName();
+                
+                String uniqueId = d.getpublic_driver_id();
+           
+                 int deviceID = TraccarAPI.creationDeviceID(deviceName, uniqueId);
+            
+                if(deviceID == -1)
+                {
+                    return false;
+                }
+            
+                d.setTraccarID(deviceID);
                 
                 success = dRepo.insertApprovedDriver(d);
             }

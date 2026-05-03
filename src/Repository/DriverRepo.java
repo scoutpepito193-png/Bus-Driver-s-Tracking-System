@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import Service.DriverService;
 import Model.Driver;
 import Model.DriverPerformance;
+import util.Session;
 
 public class DriverRepo
 {   
@@ -17,12 +18,14 @@ public class DriverRepo
     {
         Connection conn = dbConnection.getConnection();
         
-        String sql = "INSERT INTO request (request_code, request_info, details) "
-                + "VALUES (?,?::request_type,?::jsonb)";
+        String sql = "INSERT INTO request (request_code, request_info, details, sub_admin_id) "
+                + "VALUES (?,?::request_type,?::jsonb,?)";
         
         try
         {
             PreparedStatement prepS = conn.prepareStatement(sql);
+            
+            int subAdminID = Session.currentSubAdmin.getSubID();
             
             String details = "{"
                     + "\"public_driver_id\":\"" + d.getpublic_driver_id() + "\","
@@ -41,6 +44,7 @@ public class DriverRepo
             prepS.setString(1, requestCode);
             prepS.setString(2, "DRIVER REGISTRATION");
             prepS.setString(3, details);
+            prepS.setInt(4, subAdminID);
             
             int rows = prepS.executeUpdate();
             
@@ -104,8 +108,8 @@ public class DriverRepo
     {
         Connection conn = dbConnection.getConnection();
         String sql = "INSERT INTO driver "
-                + "(public_driver_id, first_name, last_name, gender, date_of_birth, address, contact_number, license_number, license_expiry_date, photo_url, driver_password) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+                + "(public_driver_id, first_name, last_name, gender, date_of_birth, address, contact_number, license_number, license_expiry_date, photo_url, driver_password, traccar_device_id) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
         
         try
         {
@@ -122,6 +126,7 @@ public class DriverRepo
             prepS.setDate(9, java.sql.Date.valueOf(d.getlicenseExpiry()));
             prepS.setString(10, d.getphotoURL());
             prepS.setString(11, d.getpassword());
+            prepS.setInt(12, d.getTracerID());
             
             return prepS.executeUpdate() > 0;
         }
@@ -243,52 +248,53 @@ public class DriverRepo
         return -1;
     }
     
-public Driver getDriverProfileById(int driverID)
-{
-    String sql = "SELECT public_driver_id, first_name, last_name, gender, "
-               + "date_of_birth, address, contact_number, license_num, "
-               + "license_expiry, photo_url, status "
-               + "FROM driver WHERE driver_id = ?";
-
-    try (Connection conn = dbConnection.getConnection();
-         PreparedStatement prepS = conn.prepareStatement(sql))
+    public Driver getDriverProfileById(int driverID)
     {
-        prepS.setInt(1, driverID);
+        String sql = "SELECT public_driver_id, first_name, last_name, gender, "
+                    + "date_of_birth, address, contact_number, license_number, "
+                    + "license_expiry_date, photo_url, status"
+                    + "FROM driver WHERE driver_id = ?";
 
-        ResultSet res = prepS.executeQuery();
-
-        if(res.next())
+        try     (Connection conn = dbConnection.getConnection();
+             PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            Driver d = new Driver();
+            prepS.setInt(1, driverID);
 
-            d.setpublic_driver_id(res.getString("public_driver_id"));
-            d.setfirstName(res.getString("first_name"));
-            d.setlastName(res.getString("last_name"));
-            d.setgender(res.getString("gender"));
+            ResultSet res = prepS.executeQuery();
 
-            if(res.getDate("date_of_birth") != null)
-                d.setdateOfBirth(res.getDate("date_of_birth").toLocalDate());
+            if(res.next())
+            {
+                Driver d = new Driver();
 
-            d.setaddress(res.getString("address"));
-            d.setcontactNumber(res.getString("contact_number"));
-            d.setlicenseNum(res.getString("license_num"));
+            
+                d.setpublic_driver_id(res.getString("public_driver_id"));
+                d.setfirstName(res.getString("first_name"));
+                d.setlastName(res.getString("last_name"));
+                d.setgender(res.getString("gender"));
 
-            if(res.getDate("license_expiry") != null)
-                d.setlicenseExpiry(res.getDate("license_expiry").toLocalDate());
+                if(res.getDate("date_of_birth") != null)
+                    d.setdateOfBirth(res.getDate("date_of_birth").toLocalDate());
 
-            d.setphotoURL(res.getString("photo_url"));
-            d.setStatus(res.getString("status"));
+                d.setaddress(res.getString("address"));
+                d.setcontactNumber(res.getString("contact_number"));
+                d.setlicenseNum(res.getString("license_number"));
 
-            return d;
+                if(res.getDate("license_expiry_date") != null)
+                    d.setlicenseExpiry(res.getDate("license_expiry_date").toLocalDate());
+
+                d.setphotoURL(res.getString("photo_url"));
+                d.setStatus(res.getString("status"));
+
+                return d;
+            }
         }
-    }
-    catch(Exception e)
-    {
-        e.printStackTrace();
-    }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
 
-    return null;
-}
+        return null;
+    }
     
     public boolean enterDriverPerformance(DriverPerformance dp)
     {
@@ -484,6 +490,38 @@ public boolean updateDriverStatus(int driverID, String status)
     }
     
     return false;
+}
+
+public Integer getTraccarDeviceId(int driverID)
+{
+    String sql = "SELECT traccar_device_id FROM driver WHERE driver_id = ?";
+
+    try (Connection conn = dbConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql))
+    {
+        ps.setInt(1, driverID);
+
+        ResultSet rs = ps.executeQuery();
+
+        if (rs.next())
+        {
+            int deviceId = rs.getInt("traccar_device_id");
+
+            // IMPORTANT: handle SQL NULL properly
+            if (rs.wasNull())
+            {
+                return null;
+            }
+
+            return deviceId;
+        }
+    }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return null;
 }
     
     /*public List<Driver> listofDrivers()
