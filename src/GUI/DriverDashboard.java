@@ -15,7 +15,7 @@ public class DriverDashboard extends JFrame {
     public DriverDashboard(Driver driver) {
 
         setTitle("Driver Dashboard");
-        setSize(800, 450);
+        setSize(1400, 900);
         setLocationRelativeTo(null);
         setLayout(null);
         getContentPane().setBackground(new Color(255, 192, 0));
