@@ -12,7 +12,7 @@ public class DriverDashboard extends JFrame {
 
     DriverService ds = new DriverService();
 
-    public DriverDashboard(Driver driver) {
+    public DriverDashboard(Driver driver, DriverService driverService) {
 
         setTitle("Driver Dashboard");
         setSize(1400, 900);
