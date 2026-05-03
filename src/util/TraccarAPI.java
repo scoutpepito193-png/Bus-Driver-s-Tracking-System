@@ -8,128 +8,177 @@ import org.json.JSONObject;
 public class TraccarAPI 
 {
     private static String sessionCookie;
+    private static final String BASE_URL = "https://sight-robertson-knee-magazines.trycloudflare.com";
     
-    public static boolean logIn(String email, String password)
+    public static APIResponse logIn(String email, String password)
     {
         try
         {
-            URL url = new URL("http://demo.traccar.org/api/session");
+            URL url = new URL(BASE_URL + "/api/session");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             
-            String data = "email=" + email + "&password=" + password;
+            String data = "email=" + URLEncoder.encode(email, "UTF-8") + "&password=" + URLEncoder.encode(password, "UTF-8");
             
             OutputStream os = conn.getOutputStream();            
             os.write(data.getBytes());
             os.flush();
             os.close();
             
-            if(conn.getResponseCode() == 200)
+            int code = conn.getResponseCode();
+            
+            if (code == 200)
             {
                 String cookie = conn.getHeaderField("Set-Cookie");
                 
-                if(cookie != null)
+                if (cookie != null)
                 {
                     sessionCookie = cookie.split(";", 2)[0];
+                    return new APIResponse(true, null);
                 }
-                return true;
+                
+                return new APIResponse(false, "Missing session cookie");
             }
+            
+            BufferedReader err = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+                
+            String line;
+            StringBuilder sb = new StringBuilder();
+                
+            while ((line = err.readLine()) != null)
+            {
+                sb.append(line);
+            }
+                
+            return new APIResponse(false, sb.toString());
+            
             
         }
         
         catch(Exception e)
         {
-            e.printStackTrace();
-        }
-        
-        return false;
+            return new APIResponse(false, e.getMessage());
+        }   
     }
     
-public static int creationDeviceID(String name, String uniqueId)
+private static boolean isLoggedIn()
 {
+    if (sessionCookie == null || sessionCookie.isEmpty())
+    {
+        return false;
+    }
+
     try
     {
-        URL url = new URL("http://demo.traccar.org/api/devices");
+        URL url = new URL(BASE_URL + "/api/session");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-        conn.setRequestMethod("POST");
-        conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestMethod("GET");
         conn.setRequestProperty("Cookie", sessionCookie);
 
-        String json = "{"
-                + "\"name\":\"" + name + "\","
-                + "\"uniqueId\":\"" + uniqueId + "\""
-                + "}";
+        int code = conn.getResponseCode();
 
-        OutputStream os = conn.getOutputStream();
-        os.write(json.getBytes());
-        os.flush();
-        os.close();
-
-        int responseCode = conn.getResponseCode();
-
-        if (responseCode != 200 && responseCode != 201)
-        {
-            BufferedReader err = new BufferedReader(
-                    new InputStreamReader(conn.getErrorStream())
-            );
-
-            StringBuilder error = new StringBuilder();
-            String line;
-
-            while ((line = err.readLine()) != null)
-            {
-                error.append(line);
-            }
-
-            err.close();
-
-            System.out.println("Failed: HTTP " + responseCode);
-            System.out.println("Error: " + error);
-
-            return -1;
-        }
-
-        BufferedReader buff = new BufferedReader(
-                new InputStreamReader(conn.getInputStream())
-        );
-
-        StringBuilder response = new StringBuilder();
-        String line;
-
-        while ((line = buff.readLine()) != null)
-        {
-            response.append(line);
-        }
-
-        buff.close();
-
-        JSONObject obj = new JSONObject(response.toString());
-
-        return obj.getInt("id");
+        return code == 200;
     }
     catch (Exception e)
     {
-        e.printStackTrace();
+        return false;
     }
-
-    return -1;
 }
+    
+    public static int creationDeviceID(String name, String uniqueId)
+    {
+        try
+        {
+            URL url = new URL(BASE_URL + "/api/devices");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Cookie", sessionCookie);
+
+            String json = "{"
+                    + "\"name\":\"" + name + "\","
+                    + "\"uniqueId\":\"" + uniqueId + "\""
+                    + "}";
+
+            OutputStream os = conn.getOutputStream();
+            os.write(json.getBytes());
+            os.flush();
+            os.close();
+
+            int responseCode = conn.getResponseCode();
+
+            if (responseCode != 200 && responseCode != 201)
+            {
+                BufferedReader err = new BufferedReader(
+                        new InputStreamReader(conn.getErrorStream())
+                );
+
+                StringBuilder error = new StringBuilder();
+                String line;
+
+                while ((line = err.readLine()) != null)
+                {
+                    error.append(line);
+                }
+
+                err.close();
+
+                System.out.println("Failed: HTTP " + responseCode);
+                System.out.println("Error: " + error);
+
+                return -1;
+            }
+
+            BufferedReader buff = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream())
+            );
+
+            StringBuilder response = new StringBuilder();
+            String line;
+
+            while ((line = buff.readLine()) != null)
+            {
+                response.append(line);
+            }
+
+            buff.close();
+
+            JSONObject obj = new JSONObject(response.toString());
+
+            return obj.getInt("id");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return -1;
+    }
     
 public static JSONObject getLatestPosition(int deviceID)
 {
     try
     {
-        URL url = new URL("http://demo.traccar.org/api/positions?deviceId=" + deviceID);
+        if (!isLoggedIn())
+        {
+            APIResponse res = logIn("scoutpepito193@gmail.com", "goaltogetrich4b");
+
+            if (!res.isSuccess())
+            {
+                return null;
+            }
+        }
+
+        URL url = new URL(BASE_URL + "/api/positions?deviceId=" + deviceID + "&limit=1");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         conn.setRequestMethod("GET");
-
-        // 🔥 IMPORTANT: send session cookie
         conn.setRequestProperty("Cookie", sessionCookie);
         conn.setRequestProperty("Accept", "application/json");
 
@@ -137,12 +186,24 @@ public static JSONObject getLatestPosition(int deviceID)
 
         if (code != 200)
         {
-            System.out.println("HTTP Error: " + code);
+            BufferedReader err = new BufferedReader(
+                new InputStreamReader(conn.getErrorStream())
+            );
+
+            String line;
+            StringBuilder sbErr = new StringBuilder();
+
+            while ((line = err.readLine()) != null)
+            {
+                sbErr.append(line);
+            }
+
+
             return null;
         }
 
         BufferedReader buff = new BufferedReader(
-                new InputStreamReader(conn.getInputStream())
+            new InputStreamReader(conn.getInputStream())
         );
 
         StringBuilder sb = new StringBuilder();
@@ -155,19 +216,28 @@ public static JSONObject getLatestPosition(int deviceID)
 
         buff.close();
 
-        JSONArray arr = new JSONArray(sb.toString());
+        String responseText = sb.toString();
 
-        if (arr.length() > 0)
+        if (responseText.trim().equals("[]"))
         {
-            return arr.getJSONObject(0); // latest position
+            return null;
         }
 
+        JSONArray arr = new JSONArray(responseText);
+
+        if (arr.length() == 0)
+        {
+            return null;
+        }
+
+        JSONObject position = arr.getJSONObject(0);
+
+        return position;
     }
     catch (Exception e)
     {
         e.printStackTrace();
+        return null;
     }
-
-    return null;
 }
 }

@@ -615,22 +615,18 @@ public class ConsoleTest
                                             System.out.println("Enter Driver ID: ");
                                             String publicId = scan.nextLine();
                                             
-                                            JSONObject pos = subs.getDriverLocation(publicId);
-                                            
-                                            if(pos != null)
+                                            subs.startTracking(publicId, (lat, lng) ->
                                             {
-                                                double lat = pos.getDouble("latitude");
-                                                double lon = pos.getDouble("longitude");
-                                                
+                                                if (Double.isNaN(lat) || Double.isNaN(lng))
+                                                {
+                                                    System.out.println("No location found (driver not linked or offline).");
+                                                    return;
+                                                }
+                                                    
                                                 System.out.println("=== DRIVER LOCATION ===");
                                                 System.out.println("Latitude: " + lat);
-                                                System.out.println("Longitude: " + lon);
-                                            }
-                                            
-                                            else
-                                            {
-                                                System.out.println("No location found (driver not linked or offline).");
-                                            }                                            
+                                                System.out.println("Longitude: " + lng);
+                                            });
                                         }
                                         else
                                         {

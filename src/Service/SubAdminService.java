@@ -71,12 +71,17 @@ public class SubAdminService
         return subARepo.getAllMyRequest(subAdminID);
     }
     
+    public interface LocationListener
+    {
+        void onLocationUpdate(double latitude, double longhitudep);
+    }
+    
     private final DriverRepo driverRepo = new DriverRepo();
 
     public JSONObject getDriverLocation(String publicDriverId)
     {
         int driverID = driverRepo.getDriverIdByPublicID(publicDriverId);
-        
+
         Integer deviceId = driverRepo.getTraccarDeviceId(driverID);
 
         if(deviceId == null)
@@ -84,6 +89,42 @@ public class SubAdminService
             return null;
         }
 
-        return TraccarAPI.getLatestPosition(deviceId);
+        JSONObject position = TraccarAPI.getLatestPosition(deviceId);
+
+        return position;
+    }
+    
+    public void startTracking(String publicDriverId, LocationListener listener)
+    {
+        new Thread(() ->
+        {
+            while(true)
+            {
+                try
+                {
+                    JSONObject position = getDriverLocation(publicDriverId);
+                    
+                    if(position != null)
+                    {
+                        double lat = position.getDouble("latitude");
+                        double lng = position.getDouble("longitude");
+                        
+                        listener.onLocationUpdate(lat, lng);
+                    }
+                    
+                    else
+                    {
+                        listener.onLocationUpdate(Double.NaN, Double.NaN);
+                    }
+                    
+                    Thread.sleep(5000);
+                }
+                
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 }

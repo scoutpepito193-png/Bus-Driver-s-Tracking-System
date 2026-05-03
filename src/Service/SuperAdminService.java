@@ -10,10 +10,12 @@ import Model.SuperAdmin;
 import Repository.SuperAdminRepo;
 import Repository.DriverRepo;
 import util.TraccarAPI;
+import util.APIResponse;
 
 public class SuperAdminService
 {
     private final SuperAdminRepo saRepo = new SuperAdminRepo();
+    private final TraccarService traccarService = new TraccarService();
     
     public boolean checkAccout()
     {
@@ -171,15 +173,21 @@ public class SuperAdminService
             if("DRIVER REGISTRATION".equals(type))
             {
                 Driver d =(Driver) getReqDetails(reqCode);
-                TraccarAPI.logIn("joshrheven@gmail.com", "gwapojosh12345");
                 
                 if(d == null) return false;
+                
+                APIResponse res = traccarService.initSession();
+
+                if (!res.isSuccess())
+                {
+                    return false;
+                }
                 
                 String deviceName = d.getpublic_driver_id() + " - " + d.getfirstName() + " - " + d.getlastName();
                 
                 String uniqueId = d.getpublic_driver_id();
            
-                 int deviceID = TraccarAPI.creationDeviceID(deviceName, uniqueId);
+                int deviceID = TraccarAPI.creationDeviceID(deviceName, uniqueId);
             
                 if(deviceID == -1)
                 {
