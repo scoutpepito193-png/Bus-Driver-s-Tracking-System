@@ -67,5 +67,16 @@ public class Driver
    public String getpassword() { return password; }
    public void setpassword(String password) { this.password = password; }
    
-   
+   // ADD THIS METHOD HERE
+   public boolean isProfileComplete() {
+       return firstName != null && !firstName.isEmpty() &&
+              lastName != null && !lastName.isEmpty() &&
+              gender != null && !gender.isEmpty() &&
+              dateOfBirth != null &&
+              address != null && !address.isEmpty() &&
+              contactNumber != null && !contactNumber.isEmpty() &&
+              licenseNum != null && !licenseNum.isEmpty() &&
+              licenseExpiry != null &&
+              photoURL != null && !photoURL.isEmpty();
+   }
 }

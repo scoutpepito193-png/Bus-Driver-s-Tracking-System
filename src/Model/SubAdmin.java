@@ -14,6 +14,7 @@ public class SubAdmin
     private String photoURL;
     private String password;
     private String position;
+    private int age;  // ADD THIS FIELD
     
     public String getpublic_sub_id() { return public_sub_id; }
     public void setpublic_sub_id(String public_sub_id) { this.public_sub_id = public_sub_id; }
@@ -44,4 +45,8 @@ public class SubAdmin
     
     public String getposition() { return position; }
     public void setposition(String position) { this.position = position; }
+    
+    // ADD THESE TWO METHODS
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
 }

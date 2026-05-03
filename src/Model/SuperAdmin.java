@@ -1,7 +1,7 @@
 package Model;
 
-public class SuperAdmin
-{
+public class SuperAdmin {
+    
     private String publicID;
     private String password;
     private String firstName;
@@ -9,6 +9,7 @@ public class SuperAdmin
     private String contactNum;
     private String position;
     private String photoURL;
+    private int age;  // ADD THIS FIELD
     
     public String getPublicID() { return publicID; }
     public void setPublicID(String publicID) { this.publicID = publicID; }
@@ -30,4 +31,8 @@ public class SuperAdmin
     
     public String getphotoURL() { return photoURL; }
     public void setphotoURL(String photoURL) { this.photoURL = photoURL; }
+    
+    // ADD THESE TWO METHODS
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
 }
