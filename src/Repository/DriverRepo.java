@@ -10,6 +10,7 @@ import Service.DriverService;
 import Model.Driver;
 import Model.DriverPerformance;
 import util.Session;
+import util.TimeProvider;
 
 public class DriverRepo
 {   
@@ -341,19 +342,28 @@ public class DriverRepo
     {
         List<DriverPerformance> list = new ArrayList<>();
         
+        LocalDate today = TimeProvider.now();
+        LocalDate startMonth = TimeProvider.startOfMonth(today);
+        LocalDate nextMonth = TimeProvider.startOfNextMonth(today);
+        
         String sql = "SELECT d.public_driver_id, d.first_name, d.last_name, "
-                + "AVG (p.average_kmpl) AS average_kmpl, "
-                + "SUM (p.total_tickets) AS total_tickets, "
-                + "SUM (p.total_revenue) AS total_revenue "
+                + "COALESCE(AVG(p.average_kmpl), 0) AS average_kmpl, "
+                + "COALESCE(SUM(p.total_tickets), 0) AS total_tickets, "
+                + "COALESCE(SUM(p.total_revenue), 0) AS total_revenue "
                 + "FROM driver d "
                 + "LEFT JOIN driver_performance p ON d.driver_id = p.driver_id "
-                + "WHERE status = 'ACTIVE'"
+                + "AND p.record_date >= ? "
+                + "AND p.record_date < ? "
+                + "WHERE status = 'ACTIVE' "
                 + "GROUP BY d.driver_id, d.first_name, d.last_name "
                 + "ORDER BY d.last_name ASC";        
         
         try(Connection conn = dbConnection.getConnection();
                 PreparedStatement prepS = conn.prepareStatement(sql))
         {
+            prepS.setDate(1, java.sql.Date.valueOf(startMonth));
+            prepS.setDate(2, java.sql.Date.valueOf(nextMonth));
+            
             ResultSet res = prepS.executeQuery();
             
             while(res.next())
@@ -506,54 +516,79 @@ public class DriverRepo
     }
     
 
-        public void updateRanking()
-{
-    String deleteSql = "DELETE FROM ranking";
-    String sql = "INSERT INTO ranking (driver_id, driver_rank, rank_date) "
-            + "SELECT d.driver_id, "
-            + "ROW_NUMBER() OVER (ORDER BY "
-            + "SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 "
-            + "         WHEN a.status = 'HALF DAY' THEN 0.5 "
-            + "         ELSE 0.0 END) DESC, "
-            + "SUM(dp.total_tickets) DESC, "
-            + "SUM(dp.total_revenue) DESC, "
-            + "SUM(dp.violations) ASC "
-            + ") AS driver_rank, "
-            + "CURRENT_DATE as rank_date "
-            + "FROM driver d "
-            + "JOIN driver_performance dp ON d.driver_id = dp.driver_id "
-            + "JOIN driver_attendance a ON d.driver_id = a.driver_id "
-            + "WHERE EXTRACT(MONTH FROM a.date) = EXTRACT(MONTH FROM CURRENT_DATE) "
-            + "AND EXTRACT(YEAR FROM a.date) = EXTRACT(YEAR FROM CURRENT_DATE) "
-            + "GROUP BY d.driver_id";
-
-    try (Connection conn = dbConnection.getConnection();
-         PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
-         PreparedStatement prepS = conn.prepareStatement(sql))
+    public void updateRanking()
     {
-        deleteStmt.executeUpdate();
-        prepS.executeUpdate();
-    }
-    catch (Exception e)
-    {
-        e.printStackTrace();
-    }
-    }
-}
-    /*public List<Driver> listofDrivers()
-    {
-        List<Driver> d = new ArrayList<>();
+        LocalDate today = TimeProvider.now();
         
-        try
+        String deleteSql = "DELETE FROM ranking";
+        String sql = "INSERT INTO ranking (driver_id, driver_rank, rank_date) "
+                + "SELECT d.driver_id, "
+                + "ROW_NUMBER() OVER (ORDER BY "
+                + "SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 "
+                + "         WHEN a.status = 'HALF DAY' THEN 0.5 "
+                + "         ELSE 0.0 END) DESC, "
+                + "SUM(dp.total_tickets) DESC, "
+                + "SUM(dp.total_revenue) DESC, "
+                + "SUM(dp.violations) ASC "
+                + ") AS driver_rank, "
+                + "? as rank_date "
+                + "FROM driver d "
+                + "JOIN driver_performance dp ON d.driver_id = dp.driver_id "
+                + "JOIN driver_attendance a ON d.driver_id = a.driver_id "
+                + "WHERE EXTRACT(MONTH FROM a.date) = ? "
+                + "AND EXTRACT(YEAR FROM a.date) = ? "
+                + "AND EXTRACT(MONTH FROM dp.record_date) = ? "
+                + "AND EXTRACT(YEAR FROM dp.record_date) = ? "
+                + "GROUP BY d.driver_id";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+             PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            String sql = "SELECT * FROM driver";
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            ResultSet res = prepS.executeQuery();
+            deleteStmt.executeUpdate();            
             
-            while(res.next())
+            prepS.setDate(1, java.sql.Date.valueOf(today));
+            prepS.setInt(2, today.getMonthValue());
+            prepS.setInt(3, today.getYear());
+            prepS.setInt(4, today.getMonthValue());
+            prepS.setInt(5, today.getYear());
+            
+            prepS.executeUpdate();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    public List<Driver> getAllActiveDrivers()
+    {
+        List<Driver> list = new ArrayList<>();
+        
+        String sql = "SELECT driver_id, public_driver_id "
+                + "FROM driver WHERE status = 'ACTIVE'";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ResultSet rs = ps.executeQuery();
+            
+            while(rs.next())
             {
-                d.set
+                Driver d = new Driver();
+                d.setdriverID(rs.getInt("driver_id"));
+                d.setpublic_driver_id(rs.getString("public_driver_id"));
+                
+                list.add(d);
             }
         }
-    }*/
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return list;
+    }
+}
 

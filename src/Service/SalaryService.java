@@ -1,8 +1,11 @@
 package Service;
 
+import Model.Driver;
 import Repository.DriverRepo;
 import Repository.SalaryRepo;
 import Repository.DriverAttendanceRepo;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SalaryService
 {
@@ -10,33 +13,35 @@ public class SalaryService
     private final SalaryRepo salaryRepo = new SalaryRepo();
     private final DriverAttendanceRepo attendanceRepo = new DriverAttendanceRepo();
     
-    public boolean processDailySalary(String publicId, double revenue)
+    public void processDailySalary()
     {
-        int driverId = driverRepo.getDriverIdByPublicID(publicId);
+        List<Driver> drivers = driverRepo.getAllActiveDrivers();
         
-        if (driverId == -1)
+        for (Driver d : drivers)
         {
-            return false;
+            int driverId = d.getdriverID();
+            
+            double todayRevenue = salaryRepo.getTodayRevenue(driverId);
+            
+            String salaryType;
+            double salaryAmount;
+            
+            if (todayRevenue > 10000)
+            {
+                salaryType = "COMMISSION";
+                salaryAmount = todayRevenue * 0.079; 
+            }
+            
+            else
+            {
+                salaryType = "REGULAR";
+                salaryAmount = 500;
+            }
+            
+            if (!salaryRepo.salaryExists(driverId))
+            {
+                salaryRepo.insertSalary(driverId, todayRevenue, salaryType, salaryAmount);
+            }
         }
-        
-        double todayRevenue = salaryRepo.getTodayRevenue(driverId);
-        
-        
-        String salaryType;
-        double salaryAmount;
-        
-        if (revenue > 10000)
-        {
-            salaryType = "COMMISSION";
-            salaryAmount = revenue * 0.079;
-        }
-        else
-        {
-            salaryType = "REGULAR";
-            salaryAmount = 500;
-        }
-        
-        return salaryRepo.insertSalary(driverId, revenue, salaryType, salaryAmount);
     }
-    
 }
