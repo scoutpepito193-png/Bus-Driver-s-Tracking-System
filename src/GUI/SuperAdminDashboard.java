@@ -16,10 +16,16 @@ import java.util.List;
 
 public class SuperAdminDashboard extends JFrame {
 
-    DriverService ds = new DriverService();
-    SubAdminService subs = new SubAdminService();
-    SuperAdminService sas = new SuperAdminService();
+    private DriverService ds = new DriverService();
+    private SubAdminService subs = new SubAdminService();
+    private SuperAdminService sas = new SuperAdminService();
     private SuperAdmin superAdmin;
+    
+    // Track which tabs have been loaded
+    private boolean overviewLoaded = false;
+    private boolean driversLoaded = false;
+    private boolean subAdminsLoaded = false;
+    private boolean requestsLoaded = false;
 
     public SuperAdminDashboard(SuperAdmin superAdmin, SuperAdminService superAdminService,
                            DriverService driverService, SubAdminService subAdminService) {
@@ -71,21 +77,50 @@ public class SuperAdminDashboard extends JFrame {
         headerPanel.add(logoutBtn, BorderLayout.EAST);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         
-        // Tabbed Panel
+        // ✓ LAZY LOAD TABS: Only load when tab is clicked
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         
-        // Overview Tab
-        tabbedPane.addTab("Overview", createOverviewPanel());
+        // Add empty panels first
+        tabbedPane.addTab("Overview", new JPanel());
+        tabbedPane.addTab("Drivers", new JPanel());
+        tabbedPane.addTab("Sub Admins", new JPanel());
+        tabbedPane.addTab("Requests", new JPanel());
         
-        // Drivers Tab
-        tabbedPane.addTab("Drivers", createDriversPanel());
+        // Add listener to load tab content only when clicked
+        tabbedPane.addChangeListener(e -> {
+            int selectedIndex = tabbedPane.getSelectedIndex();
+            
+            switch(selectedIndex) {
+                case 0: // Overview tab
+                    if (!overviewLoaded) {
+                        tabbedPane.setComponentAt(0, createOverviewPanel());
+                        overviewLoaded = true;
+                    }
+                    break;
+                case 1: // Drivers tab
+                    if (!driversLoaded) {
+                        tabbedPane.setComponentAt(1, createDriversPanel());
+                        driversLoaded = true;
+                    }
+                    break;
+                case 2: // Sub Admins tab
+                    if (!subAdminsLoaded) {
+                        tabbedPane.setComponentAt(2, createSubAdminsPanel());
+                        subAdminsLoaded = true;
+                    }
+                    break;
+                case 3: // Requests tab
+                    if (!requestsLoaded) {
+                        tabbedPane.setComponentAt(3, createRequestsPanel());
+                        requestsLoaded = true;
+                    }
+                    break;
+            }
+        });
         
-        // Sub Admins Tab
-        tabbedPane.addTab("Sub Admins", createSubAdminsPanel());
-        
-        // Requests Tab
-        tabbedPane.addTab("Requests", createRequestsPanel());
+        // Trigger first tab load
+        tabbedPane.setSelectedIndex(0);
         
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
         
@@ -97,17 +132,22 @@ public class SuperAdminDashboard extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         panel.setBackground(Color.WHITE);
         
-        // Total Drivers Card
-        panel.add(createStatCard("Total Drivers", String.valueOf(ds.totalDriver()), new Color(52, 152, 219)));
-        
-        // Total Sub Admins Card
-        panel.add(createStatCard("Total Sub Admins", String.valueOf(subs.totalSubAdmin()), new Color(46, 204, 113)));
-        
-        // Pending Requests Card
-        panel.add(createStatCard("Pending Requests", String.valueOf(sas.totalPending()), new Color(241, 196, 15)));
-        
-        // Approved Requests Card
-        panel.add(createStatCard("Approved Requests", String.valueOf(sas.totalApproved()), new Color(155, 89, 182)));
+        try {
+            // Total Drivers Card
+            panel.add(createStatCard("Total Drivers", String.valueOf(ds.totalDriver()), new Color(52, 152, 219)));
+            
+            // Total Sub Admins Card
+            panel.add(createStatCard("Total Sub Admins", String.valueOf(subs.totalSubAdmin()), new Color(46, 204, 113)));
+            
+            // Pending Requests Card
+            panel.add(createStatCard("Pending Requests", String.valueOf(sas.totalPending()), new Color(241, 196, 15)));
+            
+            // Approved Requests Card
+            panel.add(createStatCard("Approved Requests", String.valueOf(sas.totalApproved()), new Color(155, 89, 182)));
+        } catch (Exception e) {
+            System.err.println("Error loading overview panel: " + e.getMessage());
+            panel.add(new JLabel("Error loading overview data"));
+        }
         
         return panel;
     }
@@ -142,29 +182,34 @@ public class SuperAdminDashboard extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        List<DriverPerformance> list = ds.getPerformance();
-        String[] columns = {"Driver ID", "Name", "Tickets", "Revenue", "KM/L"};
-        Object[][] data = new Object[list.size()][5];
-        
-        for (int i = 0; i < list.size(); i++) {
-            DriverPerformance dp = list.get(i);
-            data[i][0] = dp.getdriver().getpublic_driver_id();
-            data[i][1] = dp.getdriver().getfirstName() + " " + dp.getdriver().getlastName();
-            data[i][2] = dp.gettotalTickets();
-            data[i][3] = dp.gettotalRevenue();
-            data[i][4] = String.format("%.2f", dp.getaverageKMPL());
-        }
-        
-        JTable table = new JTable(new DefaultTableModel(data, columns) {
-            public boolean isCellEditable(int row, int column) {
-                return false;
+        try {
+            List<DriverPerformance> list = ds.getPerformance();
+            String[] columns = {"Driver ID", "Name", "Tickets", "Revenue", "KM/L"};
+            Object[][] data = new Object[list.size()][5];
+            
+            for (int i = 0; i < list.size(); i++) {
+                DriverPerformance dp = list.get(i);
+                data[i][0] = dp.getdriver().getpublic_driver_id();
+                data[i][1] = dp.getdriver().getfirstName() + " " + dp.getdriver().getlastName();
+                data[i][2] = dp.gettotalTickets();
+                data[i][3] = dp.gettotalRevenue();
+                data[i][4] = String.format("%.2f", dp.getaverageKMPL());
             }
-        });
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        table.setRowHeight(25);
-        
-        JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
+            
+            JTable table = new JTable(new DefaultTableModel(data, columns) {
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            });
+            table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            table.setRowHeight(25);
+            
+            JScrollPane scrollPane = new JScrollPane(table);
+            panel.add(scrollPane, BorderLayout.CENTER);
+        } catch (Exception e) {
+            System.err.println("Error loading drivers panel: " + e.getMessage());
+            panel.add(new JLabel("Error loading drivers data"));
+        }
         
         return panel;
     }
@@ -173,28 +218,33 @@ public class SuperAdminDashboard extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        List<SubAdmin> list = subs.getSubAdmins();
-        String[] columns = {"Sub Admin ID", "Name", "Contact", "Position"};
-        Object[][] data = new Object[list.size()][4];
-        
-        for (int i = 0; i < list.size(); i++) {
-            SubAdmin sa = list.get(i);
-            data[i][0] = sa.getpublic_sub_id();
-            data[i][1] = sa.getfirstName() + " " + sa.getlastName();
-            data[i][2] = sa.getcontactNum();
-            data[i][3] = sa.getposition();
-        }
-        
-        JTable table = new JTable(new DefaultTableModel(data, columns) {
-            public boolean isCellEditable(int row, int column) {
-                return false;
+        try {
+            List<SubAdmin> list = subs.getSubAdmins();
+            String[] columns = {"Sub Admin ID", "Name", "Contact", "Position"};
+            Object[][] data = new Object[list.size()][4];
+            
+            for (int i = 0; i < list.size(); i++) {
+                SubAdmin sa = list.get(i);
+                data[i][0] = sa.getpublic_sub_id();
+                data[i][1] = sa.getfirstName() + " " + sa.getlastName();
+                data[i][2] = sa.getcontactNum();
+                data[i][3] = sa.getposition();
             }
-        });
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        table.setRowHeight(25);
-        
-        JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
+            
+            JTable table = new JTable(new DefaultTableModel(data, columns) {
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            });
+            table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            table.setRowHeight(25);
+            
+            JScrollPane scrollPane = new JScrollPane(table);
+            panel.add(scrollPane, BorderLayout.CENTER);
+        } catch (Exception e) {
+            System.err.println("Error loading sub admins panel: " + e.getMessage());
+            panel.add(new JLabel("Error loading sub admins data"));
+        }
         
         return panel;
     }
@@ -203,53 +253,58 @@ public class SuperAdminDashboard extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        List<Request> list = sas.getAllRequest();
-        String[] columns = {"Request Code", "Type", "Status"};
-        Object[][] data = new Object[list.size()][3];
-        
-        for (int i = 0; i < list.size(); i++) {
-            Request r = list.get(i);
-            data[i][0] = r.getRequestCode();
-            data[i][1] = r.getRequestInfo();
-            data[i][2] = r.getStatus();
+        try {
+            List<Request> list = sas.getAllRequest();
+            String[] columns = {"Request Code", "Type", "Status"};
+            Object[][] data = new Object[list.size()][3];
+            
+            for (int i = 0; i < list.size(); i++) {
+                Request r = list.get(i);
+                data[i][0] = r.getRequestCode();
+                data[i][1] = r.getRequestInfo();
+                data[i][2] = r.getStatus();
+            }
+            
+            JTable table = new JTable(new DefaultTableModel(data, columns) {
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            });
+            table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            table.setRowHeight(25);
+            
+            JScrollPane scrollPane = new JScrollPane(table);
+            panel.add(scrollPane, BorderLayout.CENTER);
+            
+            // Button Panel
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+            
+            JButton approveBtn = new JButton("APPROVE");
+            approveBtn.setBackground(new Color(46, 204, 113));
+            approveBtn.setForeground(Color.WHITE);
+            approveBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            approveBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            approveBtn.addActionListener(e -> {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow >= 0) {
+                    String requestCode = (String) table.getValueAt(selectedRow, 0);
+                    boolean approved = sas.approveRequest(requestCode);
+                    JOptionPane.showMessageDialog(panel,
+                        approved ? "Request Approved Successfully" : "Approval Failed",
+                        "Result", JOptionPane.INFORMATION_MESSAGE);
+                    // Refresh table
+                    ((DefaultTableModel) table.getModel()).setRowCount(0);
+                } else {
+                    JOptionPane.showMessageDialog(panel, "Please select a request", "Warning", JOptionPane.WARNING_MESSAGE);
+                }
+            });
+            
+            btnPanel.add(approveBtn);
+            panel.add(btnPanel, BorderLayout.SOUTH);
+        } catch (Exception e) {
+            System.err.println("Error loading requests panel: " + e.getMessage());
+            panel.add(new JLabel("Error loading requests data"));
         }
-        
-        JTable table = new JTable(new DefaultTableModel(data, columns) {
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        });
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        table.setRowHeight(25);
-        
-        JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
-        
-        // Button Panel
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        
-        JButton approveBtn = new JButton("APPROVE");
-        approveBtn.setBackground(new Color(46, 204, 113));
-        approveBtn.setForeground(Color.WHITE);
-        approveBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        approveBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        approveBtn.addActionListener(e -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow >= 0) {
-                String requestCode = (String) table.getValueAt(selectedRow, 0);
-                boolean approved = sas.approveRequest(requestCode);
-                JOptionPane.showMessageDialog(panel,
-                    approved ? "Request Approved Successfully" : "Approval Failed",
-                    "Result", JOptionPane.INFORMATION_MESSAGE);
-                // Refresh table
-                ((DefaultTableModel) table.getModel()).setRowCount(0);
-            } else {
-                JOptionPane.showMessageDialog(panel, "Please select a request", "Warning", JOptionPane.WARNING_MESSAGE);
-            }
-        });
-        
-        btnPanel.add(approveBtn);
-        panel.add(btnPanel, BorderLayout.SOUTH);
         
         return panel;
     }
