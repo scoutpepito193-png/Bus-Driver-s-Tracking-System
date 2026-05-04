@@ -1,7 +1,9 @@
-package Service;
+    package Service;
 
 import Repository.DriverAttendanceRepo;
 import Repository.DriverRepo;
+import java.time.LocalDate;
+    import util.TimeProvider;
 
 public class DriverAttendanceService
 {
@@ -30,4 +32,14 @@ public class DriverAttendanceService
         int driverId = getDriverId(publicId);
         return attendanceRepo.countAbsences(driverId);
     }
+
+    public boolean isFullAttendance(int driverId)
+    {
+         LocalDate today = TimeProvider.now();
+         
+        int presentDays = attendanceRepo.countMonthlyPresent(driverId, today);
+        int expectedDays = attendanceRepo.getExpectedDutyDays(today);
+        
+        return presentDays == expectedDays;
+    }    
 }

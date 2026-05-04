@@ -136,5 +136,10 @@ public DriverProfile getDriverProfile(String publicID)
     public void updateRanking()
     {
         dRepo.updateRanking();
-    }   
+    }
+    
+    public int getDriverId(String publicID)
+    {
+        return dRepo.getDriverIdByPublicID(publicID);
+    }
 }

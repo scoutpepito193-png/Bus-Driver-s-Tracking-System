@@ -1,11 +1,14 @@
 package Service;
 
 import Model.Driver;
+import Service.DriverAttendanceService;
 import Repository.DriverRepo;
 import Repository.SalaryRepo;
 import Repository.DriverAttendanceRepo;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
+import util.TimeProvider;
 
 public class SalaryService
 {
@@ -26,7 +29,7 @@ public class SalaryService
             String salaryType;
             double salaryAmount;
             
-            if (todayRevenue > 10000)
+            if (todayRevenue >= 10000)
             {
                 salaryType = "COMMISSION";
                 salaryAmount = todayRevenue * 0.079; 
@@ -43,5 +46,32 @@ public class SalaryService
                 salaryRepo.insertSalary(driverId, todayRevenue, salaryType, salaryAmount);
             }
         }
+    }
+    
+    public double getMonthlySalary(int driverId)
+    {
+        LocalDate today = TimeProvider.now();
+        
+        return salaryRepo.getTotalSalary(driverId, today.getMonthValue(), today.getYear());
+    }
+    
+    public double computeBonus(int driverId)
+    {
+        DriverAttendanceService das = new DriverAttendanceService();
+        LocalDate today = TimeProvider.now();
+        
+        boolean isFull = das.isFullAttendance(driverId);
+        
+        if (!isFull)
+        {
+            return 0;
+        }
+        
+        double monthlySalary = salaryRepo.getTotalSalary(driverId, today.getMonthValue(), today.getYear());
+        
+        double bonusRate = 0.10;
+        
+        
+        return monthlySalary * bonusRate;
     }
 }

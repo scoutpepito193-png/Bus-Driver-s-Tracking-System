@@ -1,6 +1,8 @@
 package Repository;
 
 import java.sql.*;
+import java.time.LocalDate;
+import util.TimeProvider;
 
 public class SalaryRepo
 {
@@ -78,5 +80,37 @@ public class SalaryRepo
         }
         
         return false;
+    }
+    
+    public double getTotalSalary(int driverId, int month, int year)
+
+    {        
+        String sql = "SELECT COALESCE(SUM(salary_amount), 0) "
+                + "FROM driver_salary "
+                + "WHERE driver_id = ? "
+                + "AND EXTRACT(MONTH FROM date) = ? "
+                + "AND EXTRACT(YEAR FROM date) = ?";
+       
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setInt(1, driverId);
+            ps.setInt(2, month);
+            ps.setInt(3, year);
+            
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next())
+            {
+                return rs.getDouble(1);
+            }
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return 0;
     }
 }
