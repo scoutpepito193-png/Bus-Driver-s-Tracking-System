@@ -880,9 +880,12 @@ public class ConsoleTest
                                 System.out.println("ID#: " + driver.getpublic_driver_id());
 
                                 boolean inDriverDashboard = true;
+                                SalaryService salaryService = new SalaryService();
+                                DriverAttendanceService attendanceService2 = new DriverAttendanceService();
+                                
                                 while (inDriverDashboard)
                                 {
-                                    System.out.println("\n[1] Profile  [2] Records  [3] Leaderboard  [0] Sign Out");
+                                    System.out.println("\n[1] Profile  [2] Records  [3] Leaderboard  [4] Salary     [0] Sign Out");
                                     System.out.print("Enter Choice: ");
                                     int driverChoice = scan.nextInt();
                                     scan.nextLine();
@@ -924,6 +927,32 @@ public class ConsoleTest
                                             {
                                                 System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
                                             }
+                                        }
+                                        
+                                        case 4 ->
+                                        {
+                                            int driverID = ds.getDriverId(driver.getpublic_driver_id());
+                                            
+                                            double salary = salaryService.getMonthlySalary(driverID);
+                                            double bonus = salaryService.computeBonus(driverID);
+                                            boolean fullAttendance = attendanceService2.isFullAttendance(driverID);
+                                            
+                                            System.out.println("\n===== SALARY DASHBOARD =====");
+                                            
+                                            System.out.println("Monthly Salary : ₱" + salary);
+                                            
+                                            if (fullAttendance)
+                                            {
+                                                System.out.println("Bonus          : ₱" + bonus + " (Full Attendance ✅)");
+                                            }
+                                            
+                                            else
+                                            {
+                                                System.out.println("Bonus          : ₱0 (Not Eligible ❌)");
+                                            }
+                                            
+                                            System.out.println("-----------------------------");
+                                            System.out.println("Total Pay      : ₱" + (salary + bonus));
                                         }
                                         case 0 ->
                                         {

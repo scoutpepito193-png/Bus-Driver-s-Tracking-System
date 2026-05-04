@@ -10,7 +10,7 @@ public class DriverAttendanceRepo
     {
         LocalDate today = TimeProvider.now();
         
-        String sql = "INSERT INTO driver_attendance (driver_id, status) "
+        String sql = "INSERT INTO driver_attendance (driver_id, date, status) "
                 + "VALUES (?, ?, 'PRESENT') "
                 + "ON CONFLICT (driver_id, date) DO NOTHING";
         
@@ -80,4 +80,42 @@ public class DriverAttendanceRepo
         return 0;
     }
     
+    public int countMonthlyPresent(int driverId, LocalDate date)
+    {   
+        String sql = "SELECT COUNT(*) FROM driver_attendance "
+                + "WHERE driver_id = ? "
+                + "AND status = 'PRESENT' "
+                + "AND EXTRACT(MONTH FROM date) = ? "
+                + "AND EXTRACT(YEAR FROM date) = ?";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setInt(1, driverId);
+            ps.setInt(2, date.getMonthValue());
+            ps.setInt(3, date.getYear());
+
+            
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next())
+            {
+                return rs.getInt(1);
+            }
+        }
+        
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return 0;
+    }
+    
+    public int getExpectedDutyDays(LocalDate date)
+    {
+        int daysInMonth = date.lengthOfMonth();
+        
+        return (int) Math.round(daysInMonth * (6.0 / 7.0));
+    }
 }
