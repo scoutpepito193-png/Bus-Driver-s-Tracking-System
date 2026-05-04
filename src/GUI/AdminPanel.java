@@ -35,12 +35,12 @@ public class AdminPanel extends JFrame {
         superAdmin.addActionListener(e -> {
             
 
-        boolean exists = sas.checkAccout(); // ALWAYS check database fresh
+        boolean exists = sas.checkAccount(); // ALWAYS check database fresh
 
        if (exists) {
            new SuperAdminLogin();
        } else {
-           new SuperAdminSignup();
+           new SuperAdminSignupPanel();
        }
 
        dispose();

@@ -17,7 +17,7 @@ public class SuperAdminService
     private final SuperAdminRepo saRepo = new SuperAdminRepo();
     private final TraccarService traccarService = new TraccarService();
     
-    public boolean checkAccout()
+    public boolean checkAccount()
     {
         return saRepo.checkExistingSA();
     }

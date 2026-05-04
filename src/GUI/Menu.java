@@ -14,6 +14,7 @@ public class Menu extends JFrame {
     
     public Menu() {
         setTitle("BDTracker");
+        setExtendedState(JFrame.MAXIMIZED_BOTH); 
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);

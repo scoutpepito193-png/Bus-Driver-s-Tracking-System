@@ -20,7 +20,8 @@ public class SuperAdminDashboard extends JFrame {
     SubAdminService subs = new SubAdminService();
     SuperAdminService sas = new SuperAdminService();
 
-    public SuperAdminDashboard() {
+    public SuperAdminDashboard(SuperAdmin superAdmin, SuperAdminService superAdminService,
+                           DriverService driverService, SubAdminService subAdminService) {
 
         setTitle("Super Admin Features");
         setSize(900, 500);

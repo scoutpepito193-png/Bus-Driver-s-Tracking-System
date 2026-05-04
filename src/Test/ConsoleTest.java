@@ -45,7 +45,7 @@ public class ConsoleTest
             {
                case 1 ->
                {
-                   boolean verify = sas.checkAccout();
+                   boolean verify = sas.checkAccount();
                    
                    if (verify == false)
                    {
