@@ -9,10 +9,13 @@ import Model.Driver;
 import Model.DriverPerformance;
 import Model.SubAdmin;
 import Model.Request;
+import Model.DriverProfile;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 import java.util.Map;
+import util.Session;
+import org.json.JSONObject;
 
 public class ConsoleTest
 {   
@@ -42,6 +45,7 @@ public class ConsoleTest
             {
                case 1 ->
                {
+                   // FIX: Changed method name from checkAccount() to checkAccout() to match SuperAdminService
                    boolean verify = sas.checkAccout();
                    
                    if (verify == false)
@@ -351,9 +355,6 @@ public class ConsoleTest
                                                         
                                             }                                            
                                             
-                                            
-                                            
-                                            
                                             break;
                                             
                                         case 0:
@@ -393,6 +394,7 @@ public class ConsoleTest
                         
                         if(sub != null)
                         {
+                            Session.currentSubAdmin = sub;
                             loggedIn = true;
                             
                             System.out.println("Sub-Admin Dashboard");
@@ -566,13 +568,100 @@ public class ConsoleTest
                                             }
                                         }
                                         
+                                        System.out.println("View Driver Profile [y/n]: ");
+                                        char viewDriverProfile = scan.next().charAt(0);
+                                        scan.nextLine();
+                                        
+                                        if(viewDriverProfile == 'y' || 'Y' == viewDriverProfile)
+                                        {
+                                            System.out.println("Enter Driver ID: ");
+                                            String dID = scan.nextLine();
+                                            
+                                            DriverProfile profile = ds.getDriverProfile(dID);
+                                            
+                                            if(profile != null)
+                                            {
+                                                Driver d = profile.getDriver();
+                                                DriverPerformance p = profile.getPerformance();
+                                                
+                                                System.out.println("\n===== DRIVER PROFILE =====");
+                                                System.out.println("Name: " + d.getfirstName() + " " + d.getlastName());
+                                                System.out.println("ID: " + d.getpublic_driver_id());
+                                                System.out.println("Gender: " + d.getgender());
+                                                System.out.println("DOB: " + d.getdateOfBirth());
+                                                System.out.println("Address: " + d.getaddress());
+                                                System.out.println("Contact: " + d.getcontactNumber());
+                                                
+                                                System.out.println("\n--- PERFORMANCE ---");
+                                                System.out.println("Tickets: " + p.gettotalTickets());
+                                                System.out.println("Revenue: " + p.gettotalRevenue());
+                                                System.out.println("KM/L: " + p.getaverageKMPL());
+                                            }
+                                            
+                                            else
+                                            {
+                                                System.out.println("Driver not found.");
+                                            }
+                                        }
+                                            
+                                        System.out.println("View Driver Location [y/n]: ");
+                                        char viewDriverLoc = scan.next().charAt(0);
+                                        scan.nextLine();
+                                        
+                                        if(viewDriverLoc == 'y' || 'Y' == viewDriverLoc)
+                                        {
+                                            System.out.println("Enter Driver ID: ");
+                                            String publicId = scan.nextLine();
+                                            
+                                            subs.startTracking(publicId, (lat, lng) ->
+                                            {
+                                                if (Double.isNaN(lat) || Double.isNaN(lng))
+                                                {
+                                                    System.out.println("No location found (driver not linked or offline).");
+                                                    return;
+                                                }
+                                                    
+                                                System.out.println("=== DRIVER LOCATION ===");
+                                                System.out.println("Latitude: " + lat);
+                                                System.out.println("Longitude: " + lng);
+                                            });
+                                        }
+                                        else
+                                        {
+                                            break;
+                                        }
+                                         
                                         break;
                                         
                                     case 3:
                                         
-                                        System.out.println("My Request");
+                                        System.out.println("\n===== MY REQUESTS =====");
                                         
+                                        List<Request> myList = subs.getMyRequests();
                                         
+                                        if (myList.isEmpty())
+                                        {
+                                            System.out.println("No pending requests.");
+                                        }
+                                        
+                                        else
+                                        {
+                                            System.out.println("Request Code\tInfo\tStatus");
+                                            
+                                            for (Request req : myList)
+                                            {
+                                                System.out.println(req.getRequestCode() + "\t" + req.getRequestInfo() + "\t" + req.getStatus());
+                                            }
+                                        }
+                                        break;
+                                        
+                                    case 4:
+                                        break;
+                                        
+                                    case 0:
+                                        
+                                        inDashboard = false;
+                                        break;
                                 }
                             }
                             

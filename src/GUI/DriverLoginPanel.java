@@ -191,8 +191,10 @@ public class DriverLoginPanel extends JFrame {
             if (driver != null) {
                 // Login successful — open the Driver Dashboard
                 new DriverDashboard(driver, driverService);
-                // Hide the Menu (grandparent window) — no longer needed during the session
+                
+                // Hide the Menu (parent window) — no longer needed during the session
                 parentFrame.setVisible(false);
+                
                 // Close this login window
                 dispose();
             } else {

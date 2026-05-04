@@ -169,6 +169,7 @@ public class SubAdminLogin extends JFrame {
             }
 
             // Call the service layer to verify credentials.
+            // Uses login() method which calls subAdminLogIn() from the repository
             // Returns a SubAdmin object if credentials are valid, or null if not found / wrong password
             SubAdmin subAdmin = subAdminService.login(adminId, password);
 

@@ -4,6 +4,8 @@ import java.time.LocalDate;
         
 public class SubAdmin
 {    
+    private int sub_id;
+    
     private String public_sub_id;
     private String firstName;
     private String lastName;
@@ -15,6 +17,9 @@ public class SubAdmin
     private String password;
     private String position;
     private int age;  // ADD THIS FIELD
+    
+    public int getSubID() { return sub_id; }
+    public void setSubID(int sub_id) { this.sub_id = sub_id; }
     
     public String getpublic_sub_id() { return public_sub_id; }
     public void setpublic_sub_id(String public_sub_id) { this.public_sub_id = public_sub_id; }

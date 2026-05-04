@@ -7,6 +7,7 @@ public class Driver
     private int unitNum;
     private int ranking;
     private int driverID;
+    private int traccarID;
     
     private double salary;
     
@@ -21,6 +22,7 @@ public class Driver
     private LocalDate licenseExpiry;
     private String photoURL;
     private String password;
+    private String status;
     
    public int getunitNum() { return unitNum; }
    public void setunitNum(int unitNum) { this.unitNum = unitNum; }
@@ -30,6 +32,9 @@ public class Driver
    
    public int getdriverID() { return driverID; }
    public void setdriverID(int driverID) { this.driverID = driverID; }
+   
+   public int getTracerID() { return traccarID; }
+   public void setTraccarID(int traccarID) { this.traccarID = traccarID; }
    
    public double getsalary() { return salary; }
    public void setsalary(double salary) { this.salary = salary; }
@@ -67,16 +72,8 @@ public class Driver
    public String getpassword() { return password; }
    public void setpassword(String password) { this.password = password; }
    
-   // ADD THIS METHOD HERE
-   public boolean isProfileComplete() {
-       return firstName != null && !firstName.isEmpty() &&
-              lastName != null && !lastName.isEmpty() &&
-              gender != null && !gender.isEmpty() &&
-              dateOfBirth != null &&
-              address != null && !address.isEmpty() &&
-              contactNumber != null && !contactNumber.isEmpty() &&
-              licenseNum != null && !licenseNum.isEmpty() &&
-              licenseExpiry != null &&
-              photoURL != null && !photoURL.isEmpty();
-   }
+   public String getStatus() { return status; }
+   public void setStatus(String status) { this.status = status; }
+   
+   
 }
