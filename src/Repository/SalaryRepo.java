@@ -32,7 +32,7 @@ public class SalaryRepo
     {
         String sql = "SELECT COALESCE(SUM(total_revenue), 0) "
                 + "FROM driver_performance "
-                + "WHERE driver_id = ? AND date = CURRENT_DATE";
+                + "WHERE driver_id = ? AND record_date = CURRENT_DATE";
         
         try (Connection conn = dbConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql))

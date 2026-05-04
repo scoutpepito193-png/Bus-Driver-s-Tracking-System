@@ -347,7 +347,9 @@ public class DriverRepo
                 + "SUM (p.total_revenue) AS total_revenue "
                 + "FROM driver d "
                 + "LEFT JOIN driver_performance p ON d.driver_id = p.driver_id "
-                + "WHERE status = 'ACTIVE'"
+                + "WHERE status = 'ACTIVE' "
+                + "AND EXTRACT(MONTH FROM p.record_date) = EXTRACT(MONTH FROM CURRENT_DATE) "
+                + "AND EXTRACT(YEAR FROM p.record_date) = EXTRACT(YEAR FROM CURRENT_DATE) "
                 + "GROUP BY d.driver_id, d.first_name, d.last_name "
                 + "ORDER BY d.last_name ASC";        
         
