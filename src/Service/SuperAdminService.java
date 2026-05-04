@@ -270,13 +270,13 @@ public class SuperAdminService
            
                 // Create device in Traccar API to track this driver's GPS location
                 int deviceID = TraccarAPI.creationDeviceID(deviceName, uniqueId);
-            
+             
                 if(deviceID == -1)
                 {
                     System.err.println("Failed to create Traccar device for driver: " + d.getpublic_driver_id());
                     return false;
                 }
-            
+             
                 // Store Traccar device ID in driver object for future reference
                 d.setTraccarID(deviceID);
                 

@@ -28,9 +28,9 @@ import java.util.List;
  */
 public class SuperAdminDashboard extends JFrame {
 
-    private DriverService ds = new DriverService();
-    private SubAdminService subs = new SubAdminService();
-    private SuperAdminService sas = new SuperAdminService();
+    private DriverService ds;
+    private SubAdminService subs;
+    private SuperAdminService sas;
     private SuperAdmin superAdmin;
 
     // Flags to track loaded tabs for lazy loading
@@ -44,6 +44,9 @@ public class SuperAdminDashboard extends JFrame {
     public SuperAdminDashboard(SuperAdmin superAdmin, SuperAdminService superAdminService,
                            DriverService driverService, SubAdminService subAdminService) {
         this.superAdmin = superAdmin;
+        this.ds = driverService;
+        this.subs = subAdminService;
+        this.sas = superAdminService;
 
         // FIX: Set session so downstream repos can access current super admin
         util.Session.currentSuperAdmin = superAdmin;
@@ -246,12 +249,25 @@ public class SuperAdminDashboard extends JFrame {
 
         try {
             List<DriverPerformance> list = ds.getPerformance();
+            if (list == null || list.isEmpty()) {
+                JLabel noData = new JLabel("No driver performance data available");
+                noData.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                noData.setForeground(new Color(100, 100, 100));
+                noData.setHorizontalAlignment(JLabel.CENTER);
+                panel.add(noData, BorderLayout.CENTER);
+                return panel;
+            }
+
             String[] columns = {"Driver Name", "Tickets", "Revenue (₱)", "KM/L", "Status"};
             Object[][] data = new Object[list.size()][5];
 
             for (int i = 0; i < list.size(); i++) {
                 DriverPerformance dp = list.get(i);
-                data[i][0] = dp.getdriver().getfirstName() + " " + dp.getdriver().getlastName();
+                if (dp == null || dp.getdriver() == null) continue;
+                
+                String firstName = (dp.getdriver().getfirstName() != null) ? dp.getdriver().getfirstName() : "";
+                String lastName = (dp.getdriver().getlastName() != null) ? dp.getdriver().getlastName() : "";
+                data[i][0] = (firstName + " " + lastName).trim();
                 data[i][1] = dp.gettotalTickets();
                 data[i][2] = String.format("₱ %.2f", dp.gettotalRevenue());
                 data[i][3] = String.format("%.2f", dp.getaverageKMPL());
@@ -301,10 +317,14 @@ public class SuperAdminDashboard extends JFrame {
 
             for (int i = 0; i < list.size(); i++) {
                 SubAdmin sa = list.get(i);
+                if (sa == null) continue;
+                
                 // FIX: Safe null-checks; show actual value or fallback message
                 data[i][0] = (sa.getpublic_sub_id() != null && !sa.getpublic_sub_id().isEmpty())
                         ? sa.getpublic_sub_id() : "(no ID)";
-                data[i][1] = sa.getfirstName() + " " + sa.getlastName();
+                String fn = (sa.getfirstName() != null) ? sa.getfirstName() : "";
+                String ln = (sa.getlastName() != null) ? sa.getlastName() : "";
+                data[i][1] = (fn + " " + ln).trim();
                 // FIX: Contact — use getcontactNum(); if empty show "(not set)"
                 data[i][2] = (sa.getcontactNum() != null && !sa.getcontactNum().isEmpty())
                         ? sa.getcontactNum() : "(not set)";
@@ -340,11 +360,21 @@ public class SuperAdminDashboard extends JFrame {
 
         try {
             List<Request> list = sas.getAllRequest();
+            if (list == null || list.isEmpty()) {
+                JLabel noData = new JLabel("No pending requests");
+                noData.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                noData.setForeground(new Color(100, 100, 100));
+                noData.setHorizontalAlignment(JLabel.CENTER);
+                panel.add(noData, BorderLayout.CENTER);
+                return panel;
+            }
+
             String[] columns = {"Request Code", "Type", "Status"};
             Object[][] data = new Object[list.size()][3];
 
             for (int i = 0; i < list.size(); i++) {
                 Request r = list.get(i);
+                if (r == null) continue;
                 data[i][0] = r.getRequestCode();
                 data[i][1] = r.getRequestInfo();
                 data[i][2] = r.getStatus();
@@ -393,7 +423,6 @@ public class SuperAdminDashboard extends JFrame {
                     showInfoDialog(title, message);
                     if (approved) {
                         tableModel.removeRow(selectedRow);
-                        // Mark requests as needing reload next time
                         requestsLoaded = false;
                     }
                 } else {
@@ -443,7 +472,7 @@ public class SuperAdminDashboard extends JFrame {
                     // FIX: Always show real name even if score is 0
                     String firstName = (d.getfirstName() != null) ? d.getfirstName() : "";
                     String lastName  = (d.getlastName()  != null) ? d.getlastName()  : "";
-                    data[i][1] = (firstName + " " + lastName).trim();
+                    data[i][1] = (firstName + " " + lastName).trim().isEmpty() ? "(Unknown)" : (firstName + " " + lastName).trim();
                     // FIX: Show 0 explicitly if ranking is null, not "N/A"
                     Object rank = d.getranking();
                     data[i][2] = (rank != null) ? rank : 0;
@@ -572,7 +601,6 @@ public class SuperAdminDashboard extends JFrame {
             }
 
             // FIX: Pass position (pos) as a real argument.
-            // registerSubAdmin signature: (id, fn, ln, gender, dob, address, contact, position, pw, cpw)
             boolean success = subs.registerSubAdmin(id, fn, ln, "M", LocalDate.now(), "", ct, pos, pw, cpw);
 
             if (success) {
@@ -580,7 +608,6 @@ public class SuperAdminDashboard extends JFrame {
                 idField.setText(""); fnField.setText(""); lnField.setText("");
                 ctField.setText(""); posField.setText("");
                 pwField.setText(""); cpwField.setText("");
-                // Force overview and sub-admins panels to reload fresh data
                 overviewLoaded = false;
                 subAdminsLoaded = false;
             } else {

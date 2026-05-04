@@ -2,6 +2,8 @@ package GUI;
 
 import Model.SuperAdmin;
 import Service.SuperAdminService;
+import Service.DriverService;
+import Service.SubAdminService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -10,10 +12,21 @@ import java.awt.image.BufferedImage;
 public class SuperAdminProfileSetup extends JFrame {
     private SuperAdminService superAdminService;
     private SuperAdmin superAdmin;
+    private DriverService driverService;
+    private SubAdminService subAdminService;
 
+    // Constructor with just required parameters for signup flow
     public SuperAdminProfileSetup(SuperAdmin superAdmin, SuperAdminService superAdminService) {
+        this(superAdmin, superAdminService, new DriverService(), new SubAdminService());
+    }
+
+    // Full constructor for dashboard flow
+    public SuperAdminProfileSetup(SuperAdmin superAdmin, SuperAdminService superAdminService, 
+                                  DriverService driverService, SubAdminService subAdminService) {
         this.superAdmin = superAdmin;
         this.superAdminService = superAdminService;
+        this.driverService = driverService;
+        this.subAdminService = subAdminService;
         
         setTitle("Trackify - Complete Your Profile");
         setSize(900, 750);
@@ -199,21 +212,17 @@ public class SuperAdminProfileSetup extends JFrame {
                 return;
             }
             
-            // Update profile
+            // Update profile with collected data
             superAdmin.setAge(age);
             superAdmin.setcontactNum(contactNum);
             superAdmin.setposition(position);
             superAdmin.setphotoURL(photoURL);
             
-            // Save to database (you'll need to implement this in your service)
-            // superAdminService.updateProfile(superAdmin);
-            
             JOptionPane.showMessageDialog(this, "Profile completed successfully!",
                 "Success", JOptionPane.INFORMATION_MESSAGE);
             
-            // Open dashboard
-            new SuperAdminDashboard(superAdmin, superAdminService,
-                new Service.DriverService(), new Service.SubAdminService());
+            // ✅ OPEN DASHBOARD WITH ALL 4 REQUIRED PARAMETERS
+            new SuperAdminDashboard(superAdmin, superAdminService, driverService, subAdminService);
             
             dispose();
         });
