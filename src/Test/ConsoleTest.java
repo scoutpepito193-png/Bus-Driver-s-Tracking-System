@@ -603,7 +603,7 @@ public class ConsoleTest
                                         
                                         if (addORrecordChoice == 2)
                                         {
-                                            SalaryService salaryService = new SalaryService();
+                                            
                                             boolean flag = false;
                                             
                                             while(flag == false)
@@ -622,19 +622,7 @@ public class ConsoleTest
                                                 
                                                 flag = ds.recordDriverPerformance(d_ID, aveKMPL, totalTickets, totalRevenue);
                                                 
-                                                if(flag != false)
-                                                {
-                                                    boolean salarySaved = salaryService.processDailySalary(d_ID, totalRevenue);
-                                                    if (salarySaved)
-                                                    {
-                                                        System.out.println("Performance recorded and salary computed.");
-                                                    }
-                                                    else
-                                                    {
-                                                        System.out.println("Performance saved but salary failed.");
-                                                    }
-                                                }
-                                                else
+                                                if(flag == false)
                                                 {
                                                     System.out.println("Driver not Found");
                                                 }
@@ -711,6 +699,21 @@ public class ConsoleTest
                                             {
                                                 System.out.println("Driver not found.");
                                             }
+                                        }
+                                        
+                                        System.out.print("Update Driver Salary [y/n]: ");
+                                        char updateSalary = scan.next().charAt(0);
+                                        scan.nextLine();
+                                        
+                                        if(updateSalary == 'y' || 'Y' == updateSalary)
+                                        {
+                                            SalaryService salaryService = new SalaryService();
+                                            salaryService.processDailySalary();
+                                        }
+                                            
+                                        else
+                                        {
+                                            System.out.println("Failed");
                                         }
                                             
                                         System.out.println("View Driver Location [y/n]: ");
@@ -875,9 +878,12 @@ public class ConsoleTest
                                 System.out.println("ID#: " + driver.getpublic_driver_id());
 
                                 boolean inDriverDashboard = true;
+                                SalaryService salaryService = new SalaryService();
+                                DriverAttendanceService attendanceService2 = new DriverAttendanceService();
+                                
                                 while (inDriverDashboard)
                                 {
-                                    System.out.println("\n[1] Profile  [2] Records  [3] Leaderboard  [0] Sign Out");
+                                    System.out.println("\n[1] Profile  [2] Records  [3] Leaderboard  [4] Salary     [0] Sign Out");
                                     System.out.print("Enter Choice: ");
                                     int driverChoice = scan.nextInt();
                                     scan.nextLine();
@@ -919,6 +925,32 @@ public class ConsoleTest
                                             {
                                                 System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
                                             }
+                                        }
+                                        
+                                        case 4 ->
+                                        {
+                                            int driverID = ds.getDriverId(driver.getpublic_driver_id());
+                                            
+                                            double salary = salaryService.getMonthlySalary(driverID);
+                                            double bonus = salaryService.computeBonus(driverID);
+                                            boolean fullAttendance = attendanceService2.isFullAttendance(driverID);
+                                            
+                                            System.out.println("\n===== SALARY DASHBOARD =====");
+                                            
+                                            System.out.println("Monthly Salary : ₱" + salary);
+                                            
+                                            if (fullAttendance)
+                                            {
+                                                System.out.println("Bonus          : ₱" + bonus + " (Full Attendance ✅)");
+                                            }
+                                            
+                                            else
+                                            {
+                                                System.out.println("Bonus          : ₱0 (Not Eligible ❌)");
+                                            }
+                                            
+                                            System.out.println("-----------------------------");
+                                            System.out.println("Total Pay      : ₱" + (salary + bonus));
                                         }
                                         case 0 ->
                                         {

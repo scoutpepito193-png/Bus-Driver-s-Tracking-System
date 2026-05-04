@@ -12,17 +12,13 @@ public class SuperAdminRepo
 {
     public boolean checkExistingSA()
     {
-        String sql = "SELECT * FROM super_admin";
+        String sql = "SELECT 1 FROM super_admin";
         
         try(Connection conn = dbConnection.getConnection();
                 PreparedStatement prepS = conn.prepareStatement(sql);)
         {   
             ResultSet res = prepS.executeQuery();
-            
-            if (res.next())
-            {
-                return res.getInt(1) > 0;
-            }
+            return res.next();
         }
         
         catch (Exception e)
