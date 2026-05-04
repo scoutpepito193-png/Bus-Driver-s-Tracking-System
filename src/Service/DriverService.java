@@ -133,4 +133,8 @@ public DriverProfile getDriverProfile(String publicID)
     {
         return dRepo.requestDriverRemoval(publicDriverID, details);
     }
+    public void updateRanking()
+    {
+        dRepo.updateRanking();
+    }   
 }

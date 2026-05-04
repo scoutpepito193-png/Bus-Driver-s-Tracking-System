@@ -15,16 +15,13 @@ public class DriverRepo
 {   
     
     public boolean requestDriverRegistrastion(Driver d, String requestCode)
-    {
-        Connection conn = dbConnection.getConnection();
-        
+    {   
         String sql = "INSERT INTO request (request_code, request_info, details, sub_admin_id) "
                 + "VALUES (?,?::request_type,?::jsonb,?)";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             int subAdminID = Session.currentSubAdmin.getSubID();
             
             String details = "{"
@@ -62,12 +59,11 @@ public class DriverRepo
     public boolean requestDriverRemoval(String publicDriverID, String details)
     {
         DriverService ds = new DriverService();
-        Connection conn = dbConnection.getConnection();
+        String getIDsql = "SELECT driver_id FROM driver WHERE public_driver_id = ?";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(getIDsql))
         {
-            String getIDsql = "SELECT driver_id FROM driver WHERE public_driver_id = ?";
-            PreparedStatement prepS = conn.prepareStatement(getIDsql);
             prepS.setString(1, publicDriverID.trim());
             
             ResultSet res = prepS.executeQuery();
@@ -106,15 +102,13 @@ public class DriverRepo
     
     public boolean insertApprovedDriver(Driver d)
     {
-        Connection conn = dbConnection.getConnection();
         String sql = "INSERT INTO driver "
                 + "(public_driver_id, first_name, last_name, gender, date_of_birth, address, contact_number, license_number, license_expiry_date, photo_url, driver_password, traccar_device_id) "
                 + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             prepS.setString(1, d.getpublic_driver_id());
             prepS.setString(2, d.getfirstName());
             prepS.setString(3, d.getlastName());
@@ -141,13 +135,11 @@ public class DriverRepo
     
     public boolean deactivateDriver(int driverId)
     {
-        Connection conn = dbConnection.getConnection();
-        
         String sql = "UPDATE driver SET status = 'INACTIVE' WHERE driver_id = ?";
 
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql))
         {
-            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, driverId);
 
             return ps.executeUpdate() > 0;
@@ -162,14 +154,12 @@ public class DriverRepo
     
     public int countDrivers()
     {
-        Connection conn = dbConnection.getConnection();
         int count = 0;
+        String sql = "SELECT COUNT(*) FROM driver WHERE status = 'ACTIVE'";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {            
-            String sql = "SELECT COUNT(*) FROM driver WHERE status = 'ACTIVE'";
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             ResultSet res = prepS.executeQuery();
             
             if (res.next())
@@ -187,17 +177,15 @@ public class DriverRepo
     
     public List<Driver> driverRanking()
     {
-        Connection conn = dbConnection.getConnection();
         List<Driver> list = new ArrayList<>();
         
-        try
+        String sql = " SELECT d.first_name, d.last_name, r.driver_rank "
+                + "FROM ranking r "
+                + "JOIN driver d ON d.driver_id = r.driver_id "
+                + "ORDER BY r.driver_rank ASC";
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            String sql = " SELECT d.first_name, d.last_name, r.driver_rank "
-                    + "FROM ranking r "
-                    + "JOIN driver d ON d.driver_id = r.driver_id "
-                    + "ORDER BY r.driver_rank ASC";
-            
-            PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
             while(res.next())
@@ -223,13 +211,11 @@ public class DriverRepo
     
     public int getDriverIdByPublicID(String publicID)
     {
-        Connection conn = dbConnection.getConnection();
-        
         String sql = "SELECT driver_id FROM driver WHERE public_driver_id = ?";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
             prepS.setString(1, publicID);
             
             ResultSet res = prepS.executeQuery();
@@ -255,8 +241,8 @@ public class DriverRepo
                     + "license_expiry_date, photo_url, status"
                     + "FROM driver WHERE driver_id = ?";
 
-        try     (Connection conn = dbConnection.getConnection();
-             PreparedStatement prepS = conn.prepareStatement(sql))
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
             prepS.setInt(1, driverID);
 
@@ -298,16 +284,13 @@ public class DriverRepo
     
     public boolean enterDriverPerformance(DriverPerformance dp)
     {
-        Connection conn = dbConnection.getConnection();
-        
         String sql = "INSERT INTO driver_performance "
                 + "(driver_id, average_kmpl, total_tickets, total_revenue, record_date) "
                 + "VALUES (?,?,?,?, CURRENT_DATE)";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             prepS.setInt(1, dp.getdriver().getdriverID());
             prepS.setDouble(2, dp.getaverageKMPL());
             prepS.setInt(3, dp.gettotalTickets());
@@ -356,22 +339,21 @@ public class DriverRepo
     
     public List<DriverPerformance> driverPerformance()
     {
-        Connection conn = dbConnection.getConnection();
         List<DriverPerformance> list = new ArrayList<>();
         
-        try
+        String sql = "SELECT d.public_driver_id, d.first_name, d.last_name, "
+                + "AVG (p.average_kmpl) AS average_kmpl, "
+                + "SUM (p.total_tickets) AS total_tickets, "
+                + "SUM (p.total_revenue) AS total_revenue "
+                + "FROM driver d "
+                + "LEFT JOIN driver_performance p ON d.driver_id = p.driver_id "
+                + "WHERE status = 'ACTIVE'"
+                + "GROUP BY d.driver_id, d.first_name, d.last_name "
+                + "ORDER BY d.last_name ASC";        
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            String sql = "SELECT d.public_driver_id, d.first_name, d.last_name, "
-                    + "AVG (p.average_kmpl) AS average_kmpl, "
-                    + "SUM (p.total_tickets) AS total_tickets, "
-                    + "SUM (p.total_revenue) AS total_revenue "
-                    + "FROM driver d "
-                    + "LEFT JOIN driver_performance p ON d.driver_id = p.driver_id "
-                    + "WHERE status = 'ACTIVE'"
-                    + "GROUP BY d.driver_id, d.first_name, d.last_name "
-                    + "ORDER BY d.last_name ASC";
-            
-            PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
             while(res.next())
@@ -399,131 +381,172 @@ public class DriverRepo
         
         return list;
     }
+    
     public Driver driverLogin(String publicDriverId, String password)
-{
-    Connection conn = dbConnection.getConnection();
-
-    try
     {
         String sql = "SELECT * FROM driver WHERE public_driver_id = ? AND driver_password = ? AND status = 'ACTIVE'";
-        PreparedStatement prepS = conn.prepareStatement(sql);
-        prepS.setString(1, publicDriverId);
-        prepS.setString(2, password);
 
-        ResultSet res = prepS.executeQuery();
-
-        if (res.next())
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            Driver d = new Driver();
-            d.setpublic_driver_id(res.getString("public_driver_id"));
-            d.setfirstName(res.getString("first_name"));
-            d.setlastName(res.getString("last_name"));
-            d.setgender(res.getString("gender"));
-            d.setdateOfBirth(res.getObject("date_of_birth", LocalDate.class));
-            d.setaddress(res.getString("address"));
-            d.setcontactNumber(res.getString("contact_number"));
-            d.setlicenseNum(res.getString("license_number"));
-            d.setlicenseExpiry(res.getObject("license_expiry_date", LocalDate.class));
-            return d;
+            prepS.setString(1, publicDriverId);
+            prepS.setString(2, password);
+
+            ResultSet res = prepS.executeQuery();
+
+            if(res.next())
+            {
+                Driver d = new Driver();
+                d.setpublic_driver_id(res.getString("public_driver_id"));
+                d.setfirstName(res.getString("first_name"));
+                d.setlastName(res.getString("last_name"));
+                d.setgender(res.getString("gender"));
+                d.setdateOfBirth(res.getObject("date_of_birth", LocalDate.class));
+                d.setaddress(res.getString("address"));
+                d.setcontactNumber(res.getString("contact_number"));
+                d.setlicenseNum(res.getString("license_number"));
+                d.setlicenseExpiry(res.getObject("license_expiry_date", LocalDate.class));
+                return d;
+            }
         }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
     }
-    catch (Exception e)
+    
+    public List<DriverPerformance> driverRecords(String publicDriverId)
     {
-        e.printStackTrace();
-    }
-
-    return null;
-}
-
-public List<DriverPerformance> driverRecords(String publicDriverId)
-{
-    Connection conn = dbConnection.getConnection();
-    List<DriverPerformance> list = new ArrayList<>();
-
-    try
-    {
+        List<DriverPerformance> list = new ArrayList<>();
+        
         String sql = "SELECT dp.* FROM driver_performance dp "
                 + "JOIN driver d ON dp.driver_id = d.driver_id "
                 + "WHERE d.public_driver_id = ? "
-                + "ORDER BY dp.record_date DESC";
+                + "ORDER BY dp.record_date DESC";        
 
-        PreparedStatement prepS = conn.prepareStatement(sql);
-        prepS.setString(1, publicDriverId);
-
-        ResultSet res = prepS.executeQuery();
-
-        while (res.next())
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            DriverPerformance dp = new DriverPerformance();
-            dp.setaverageKMPL(res.getDouble("average_kmpl"));
-            dp.settotalTickets(res.getInt("total_tickets"));
-            dp.settotalRevenue(res.getDouble("total_revenue"));
-            list.add(dp);
+            prepS.setString(1, publicDriverId);
+
+            ResultSet res = prepS.executeQuery();
+
+            while (res.next())
+            {
+                DriverPerformance dp = new DriverPerformance();
+                dp.setaverageKMPL(res.getDouble("average_kmpl"));
+                dp.settotalTickets(res.getInt("total_tickets"));
+                dp.settotalRevenue(res.getDouble("total_revenue"));
+                list.add(dp);
+            }
         }
-    }
-    catch (Exception e)
-    {
-        e.printStackTrace();
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return list;
     }
 
-    return list;
-}
-
-public boolean updateDriverStatus(int driverID, String status)
-{
-    Connection conn = dbConnection.getConnection();
-    
-    try
+    public boolean updateDriverStatus(int driverID, String status)
     {
         String sql = "UPDATE driver SET status = ? WHERE driver_id = ?";
-        PreparedStatement prepS = conn.prepareStatement(sql);
-        
-        prepS.setString(1, status);
-        prepS.setInt(2, driverID);
-        
-        return prepS.executeUpdate() > 0;
-    }
-    
-    catch(Exception e)
-    {
-        e.printStackTrace();
-    }
-    
-    return false;
-}
 
-public Integer getTraccarDeviceId(int driverID)
-{
-    String sql = "SELECT traccar_device_id FROM driver WHERE driver_id = ?";
-
-    try (Connection conn = dbConnection.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql))
-    {
-        ps.setInt(1, driverID);
-
-        ResultSet rs = ps.executeQuery();
-
-        if (rs.next())
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            int deviceId = rs.getInt("traccar_device_id");
+        
+        
+        
+            prepS.setString(1, status);
+            prepS.setInt(2, driverID);
+        
+            return prepS.executeUpdate() > 0;
+        }
+    
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    
+        return false;
+    }
 
-            // IMPORTANT: handle SQL NULL properly
-            if (rs.wasNull())
+    public Integer getTraccarDeviceId(int driverID)
+    {
+        String sql = "SELECT traccar_device_id FROM driver WHERE driver_id = ?";
+
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql))
+        {
+            ps.setInt(1, driverID);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next())
             {
-                return null;
-            }
+                int deviceId = rs.getInt("traccar_device_id");
 
-            return deviceId;
+                if (rs.wasNull())
+                {
+                    return null;
+                }
+
+                return deviceId;
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    
+
+        public void updateRanking()
+    {
+        Connection conn = dbConnection.getConnection();
+
+        try
+        {
+            String deleteSql = "DELETE FROM ranking";
+            PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+            deleteStmt.executeUpdate();
+
+            String sql = "INSERT INTO ranking (driver_id, driver_rank, rank_date) "
+            + "SELECT d.driver_id, "
+            + "ROW_NUMBER() OVER (ORDER BY "
+            + "SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 "
+            + "         WHEN a.status = 'HALF DAY' THEN 0.5 "
+            + "         ELSE 0.0 END) DESC, "
+            + "SUM(dp.total_tickets) DESC, "
+            + "SUM(dp.total_revenue) DESC, "
+            + "SUM(dp.violations) ASC "
+            + ") AS driver_rank, "
+            + "CURRENT_DATE as rank_date "
+            + "FROM driver d "
+            + "JOIN driver_performance dp ON d.driver_id = dp.driver_id "
+            + "JOIN driver_attendance a ON d.driver_id = a.driver_id "
+            + "WHERE EXTRACT(MONTH FROM a.date) = EXTRACT(MONTH FROM CURRENT_DATE) "
+            + "AND EXTRACT(YEAR FROM a.date) = EXTRACT(YEAR FROM CURRENT_DATE) "
+            + "GROUP BY d.driver_id";
+
+            PreparedStatement prepS = conn.prepareStatement(sql);
+            prepS.executeUpdate();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+        try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace(); }
         }
     }
-    catch (Exception e)
-    {
-        e.printStackTrace();
-    }
-
-    return null;
 }
-    
     /*public List<Driver> listofDrivers()
     {
         List<Driver> d = new ArrayList<>();
@@ -540,4 +563,4 @@ public Integer getTraccarDeviceId(int driverID)
             }
         }
     }*/
-}
+

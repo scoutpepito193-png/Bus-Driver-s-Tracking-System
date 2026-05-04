@@ -10,6 +10,8 @@ import Model.DriverPerformance;
 import Model.SubAdmin;
 import Model.Request;
 import Model.DriverProfile;
+import Service.DriverAttendanceService;
+import Service.SalaryService;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
@@ -398,7 +400,7 @@ public class ConsoleTest
                             loggedIn = true;
                             
                             System.out.println("Sub-Admin Dashboard");
-                            System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard]    [0] Sign-Out");
+                            System.out.print("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard    [5] Search    [0] Sign-Out");
                             System.out.println();
                             
                             boolean inDashboard = true;
@@ -507,6 +509,7 @@ public class ConsoleTest
                                         
                                         if (addORrecordChoice == 2)
                                         {
+                                            SalaryService salaryService = new SalaryService();
                                             boolean flag = false;
                                             
                                             while(flag == false)
@@ -525,7 +528,19 @@ public class ConsoleTest
                                                 
                                                 flag = ds.recordDriverPerformance(d_ID, aveKMPL, totalTickets, totalRevenue);
                                                 
-                                                if(flag == false)
+                                                if(flag != false)
+                                                {
+                                                    boolean salarySaved = salaryService.processDailySalary(d_ID, totalRevenue);
+                                                    if (salarySaved)
+                                                    {
+                                                        System.out.println("Performance recorded and salary computed.");
+                                                    }
+                                                    else
+                                                    {
+                                                        System.out.println("Performance saved but salary failed.");
+                                                    }
+                                                }
+                                                else
                                                 {
                                                     System.out.println("Driver not Found");
                                                 }
@@ -613,6 +628,8 @@ public class ConsoleTest
                                             System.out.println("Enter Driver ID: ");
                                             String publicId = scan.nextLine();
                                             
+                                            System.out.println("Starting live tracking... (Press Ctrl + C to stop)");
+                                            
                                             subs.startTracking(publicId, (lat, lng) ->
                                             {
                                                 if (Double.isNaN(lat) || Double.isNaN(lng))
@@ -654,8 +671,70 @@ public class ConsoleTest
                                             }
                                         }
                                         break;
-                                        
                                     case 4:
+                                        {
+                                            ds.updateRanking();
+                                            List<Driver> ranking = ds.getDriverRanking();
+                                            System.out.println("\n===== Leaderboard =====");
+                                            for (Driver d : ranking)
+                                        {
+                                            System.out.println("Rank [" + d.getranking() + "] - " + d.getfirstName() + " " + d.getlastName());
+                                        }
+                                    }
+                                        break;
+                                        
+                                    case 5:
+                                        {
+                                            System.out.println("\n[1] Search by Name");
+                                            System.out.println("[2] Search by ID");
+                                            System.out.print("Choose: ");
+                                            int searchChoice = scan.nextInt();
+                                            scan.nextLine();
+
+                                            Driver foundDriver = null;
+        
+                                            if (searchChoice == 1)
+                                            {
+                                                System.out.print("Enter Driver Name: ");
+                                                String name = scan.nextLine();
+                                                foundDriver = subs.searchDriverByName(name);
+                                            }
+                                            else if (searchChoice == 2)
+                                            {
+                                                System.out.print("Enter Driver ID: ");
+                                                String id = scan.nextLine();
+                                                foundDriver = subs.searchDriverById(id);
+                                            }
+
+                                            if (foundDriver != null)
+                                            {
+                                                System.out.println("\n===== Driver Info =====");
+                                                System.out.println("Name          : " + foundDriver.getfirstName() + " " + foundDriver.getlastName());
+                                                System.out.println("ID#           : " + foundDriver.getpublic_driver_id());
+                                                System.out.println("Gender        : " + foundDriver.getgender());
+                                                System.out.println("Date of Birth : " + foundDriver.getdateOfBirth());
+                                                System.out.println("Address       : " + foundDriver.getaddress());
+                                                System.out.println("Contact       : " + foundDriver.getcontactNumber());
+                                                System.out.println("License No.   : " + foundDriver.getlicenseNum());
+                                                System.out.println("License Expiry: " + foundDriver.getlicenseExpiry());
+
+                                                List<DriverPerformance> records = subs.searchDriverRecords(foundDriver.getpublic_driver_id());
+                                                System.out.println("\n===== Driver Records =====");
+                                                System.out.printf("%-15s %-15s %-15s%n", "Tickets", "Revenue", "Avg KMPL");
+                                                System.out.println("=".repeat(45));
+                                                for (DriverPerformance dp : records)
+                                                {
+                                                    System.out.printf("%-15d %-15.2f %-15.2f%n",
+                                                        dp.gettotalTickets(),
+                                                        dp.gettotalRevenue(),
+                                                        dp.getaverageKMPL());
+                                                }
+                                            }
+                                            else
+                                            {
+                                                System.out.println("Driver not found.");
+                                            }
+                                        }
                                         break;
                                         
                                     case 0:
@@ -694,6 +773,8 @@ public class ConsoleTest
                             if (driver != null)
                             {
                                 loggedIn = true;
+                                DriverAttendanceService attendanceService = new DriverAttendanceService();
+                                attendanceService.markDriverPresent(driver.getpublic_driver_id());
 
                                 System.out.println("\nDriver Dashboard");
                                 System.out.println("Name: " + driver.getfirstName() + " " + driver.getlastName());
@@ -737,6 +818,7 @@ public class ConsoleTest
                                         }
                                         case 3 ->
                                         {
+                                            ds.updateRanking();
                                             List<Driver> ranking = ds.getDriverRanking();
                                             System.out.println("\n===== Leaderboard =====");
                                             for (Driver d : ranking)
