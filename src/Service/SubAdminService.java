@@ -149,4 +149,13 @@ public class SubAdminService
     {
         return subARepo.searchDriverRecords(publicDriverId);
     }
+    public SubAdmin searchSubAdminByName(String name)
+    {
+        return subARepo.searchSubAdminByName(name);
+    }
+
+    public SubAdmin searchSubAdminById(String id)
+    {
+        return subARepo.searchSubAdminById(id);
+    }
 }

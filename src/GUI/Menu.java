@@ -11,7 +11,7 @@ public class Menu extends JFrame {
     }
     
     public Menu() {
-        setTitle("BDTracker");
+        setTitle("Trackify");
         setExtendedState(JFrame.MAXIMIZED_BOTH); 
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -77,7 +77,7 @@ public class Menu extends JFrame {
         logoSection.add(logoPanel);
         
         // Title
-        JLabel titleLabel = new JLabel("BDTracker");
+        JLabel titleLabel = new JLabel("Trackify");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 72));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -137,7 +137,7 @@ public class Menu extends JFrame {
         footerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         footerPanel.setLayout(new BorderLayout());
         
-        JLabel footerLabel = new JLabel("(c) 2026 BDTracker. All rights reserved. | Secure Bus Fleet Management");
+        JLabel footerLabel = new JLabel("(c) 2026 Trackify. All rights reserved. | Secure Bus Fleet Management");
         footerLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         footerLabel.setForeground(new Color(150, 170, 190));
         footerLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -153,7 +153,7 @@ public class Menu extends JFrame {
         navBar.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(52, 152, 219)));
         navBar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         
-        JLabel logo = new JLabel("[ BUS ] BDTracker");
+        JLabel logo = new JLabel("Trackify");
         logo.setFont(new Font("Segoe UI", Font.BOLD, 22));
         logo.setForeground(new Color(52, 152, 219));
         

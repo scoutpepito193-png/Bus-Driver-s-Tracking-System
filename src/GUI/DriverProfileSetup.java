@@ -12,7 +12,7 @@ public class DriverProfileSetup extends JFrame {
         this.driver = driver;
         this.driverService = driverService;
         
-        setTitle("BDTracker - Complete Your Profile");
+        setTitle("Trackify - Complete Your Profile");
         setSize(600, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -15,7 +15,7 @@ public class SubAdminLogin extends JFrame {
         this.parentFrame = parentFrame;
         this.subAdminService = new SubAdminService();
         
-        setTitle("BDTracker - Sub Admin Login");
+        setTitle("Trackify - Sub Admin Login");
         setSize(900, 650);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

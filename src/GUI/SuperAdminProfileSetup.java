@@ -15,7 +15,7 @@ public class SuperAdminProfileSetup extends JFrame {
         this.superAdmin = superAdmin;
         this.superAdminService = superAdminService;
         
-        setTitle("BDTracker - Complete Your Profile");
+        setTitle("Trackify - Complete Your Profile");
         setSize(900, 750);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -58,7 +58,7 @@ public class SuperAdminProfileSetup extends JFrame {
         headerPanel.setPreferredSize(new Dimension(0, 80));
         
         // Logo Label
-        JLabel logoLabel = new JLabel("[ BUS ] BDTracker");
+        JLabel logoLabel = new JLabel("Trackify");
         logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         logoLabel.setForeground(Color.WHITE);
         

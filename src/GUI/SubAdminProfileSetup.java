@@ -12,7 +12,7 @@ public class SubAdminProfileSetup extends JFrame {
         this.subAdmin = subAdmin;
         this.subAdminService = subAdminService;
         
-        setTitle("BDTracker - Complete Your Profile");
+        setTitle("Trackify - Complete Your Profile");
         setSize(600, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

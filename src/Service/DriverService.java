@@ -52,7 +52,7 @@ public class DriverService
         
         String requestCode = generateReqCode();
         
-        boolean success = dRepo.requestDriverRegistrastion(d, requestCode);
+        boolean success = dRepo.requestDriverRegistration(d, requestCode);
     
         if(!success)
         {

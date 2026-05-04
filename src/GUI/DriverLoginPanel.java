@@ -15,7 +15,7 @@ public class DriverLoginPanel extends JFrame {
         this.parentFrame = parentFrame;
         this.driverService = new DriverService();
         
-        setTitle("BDTracker - Driver Login");
+        setTitle("Trackify - Driver Login");
         setSize(900, 650);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

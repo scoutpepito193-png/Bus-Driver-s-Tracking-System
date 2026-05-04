@@ -15,7 +15,7 @@ public class SuperAdminSignupPanel extends JFrame {
         this.parentFrame = parentFrame;
         this.superAdminService = new SuperAdminService();
         
-        setTitle("BDTracker - Super Admin Signup");
+        setTitle("Trackify - Super Admin Signup");
         setSize(900, 750);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
