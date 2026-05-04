@@ -3,25 +3,314 @@ package GUI;
 import Model.Driver;
 import Service.DriverService;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.time.LocalDate;
 
+/**
+ * DriverProfileSetup - Driver profile configuration UI
+ * Collects: Contact, License, Address, Gender, DOB, Photo
+ * Data flows to DriverDashboard - database integration done by coworker's repo
+ */
 public class DriverProfileSetup extends JFrame {
     private DriverService driverService;
     private Driver driver;
+    
+    private JTextField contactField;
+    private JTextField licenseField;
+    private JTextField addressField;
+    private JComboBox<String> genderCombo;
+    private JSpinner dobSpinner;
+    private JLabel photoPreview;
+    private File selectedPhotoFile;
     
     public DriverProfileSetup(Driver driver, DriverService driverService) {
         this.driver = driver;
         this.driverService = driverService;
         
-        setTitle("BDTracker - Complete Your Profile");
-        setSize(600, 700);
+        setTitle("Trackify - Complete Your Profile");
+        setSize(900, 750);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setResizable(true);
+        setMinimumSize(new Dimension(700, 600));
+        setIconImage(createAppIcon());
         
-        // Add your profile setup UI components here
-        JPanel mainPanel = new JPanel();
-        mainPanel.add(new JLabel("Complete your profile information"));
+        JPanel mainPanel = new BackgroundPanel();
+        mainPanel.setLayout(new BorderLayout(0, 0));
         add(mainPanel);
         
+        addComponents(mainPanel);
         setVisible(true);
+    }
+    
+    private Image createAppIcon() {
+        BufferedImage icon = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = icon.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setColor(new Color(52, 152, 219));
+        g2d.fillRoundRect(0, 0, 64, 64, 10, 10);
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Segoe UI", Font.BOLD, 40));
+        g2d.drawString("D", 16, 50);
+        g2d.dispose();
+        return icon;
+    }
+    
+    private void addComponents(JPanel mainPanel) {
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(52, 152, 219));
+        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(25, 103, 210)));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
+        headerPanel.setPreferredSize(new Dimension(0, 80));
+        
+        JLabel logoLabel = new JLabel("Trackify");
+        logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        logoLabel.setForeground(Color.WHITE);
+        
+        JLabel titleLabel = new JLabel("Complete Your Driver Profile");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(Color.WHITE);
+        
+        JPanel leftHeader = new JPanel();
+        leftHeader.setLayout(new BoxLayout(leftHeader, BoxLayout.Y_AXIS));
+        leftHeader.setOpaque(false);
+        leftHeader.add(logoLabel);
+        leftHeader.add(titleLabel);
+        
+        headerPanel.add(leftHeader, BorderLayout.WEST);
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Center Panel
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setOpaque(false);
+        
+        // Form Container
+        JPanel formContainer = new JPanel(new GridBagLayout());
+        formContainer.setBackground(Color.WHITE);
+        formContainer.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
+            BorderFactory.createEmptyBorder(30, 40, 30, 40)
+        ));
+        formContainer.setMaximumSize(new Dimension(650, 600));
+        formContainer.setPreferredSize(new Dimension(650, 600));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 0, 10, 0);
+        gbc.weightx = 1.0;
+        
+        // Contact Number
+        gbc.gridy = 0;
+        JLabel contactLabel = new JLabel("Contact Number:");
+        contactLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        contactLabel.setForeground(new Color(60, 60, 60));
+        formContainer.add(contactLabel, gbc);
+        
+        gbc.gridy = 1;
+        contactField = makeTextField();
+        formContainer.add(contactField, gbc);
+        
+        // License Number
+        gbc.gridy = 2;
+        JLabel licenseLabel = new JLabel("License Number:");
+        licenseLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        licenseLabel.setForeground(new Color(60, 60, 60));
+        formContainer.add(licenseLabel, gbc);
+        
+        gbc.gridy = 3;
+        licenseField = makeTextField();
+        formContainer.add(licenseField, gbc);
+        
+        // Address
+        gbc.gridy = 4;
+        JLabel addressLabel = new JLabel("Address:");
+        addressLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        addressLabel.setForeground(new Color(60, 60, 60));
+        formContainer.add(addressLabel, gbc);
+        
+        gbc.gridy = 5;
+        addressField = makeTextField();
+        formContainer.add(addressField, gbc);
+        
+        // Gender
+        gbc.gridy = 6;
+        JLabel genderLabel = new JLabel("Gender:");
+        genderLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        genderLabel.setForeground(new Color(60, 60, 60));
+        formContainer.add(genderLabel, gbc);
+        
+        gbc.gridy = 7;
+        genderCombo = new JComboBox<>(new String[]{"Male", "Female", "Other"});
+        genderCombo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        genderCombo.setMaximumSize(new Dimension(400, 35));
+        genderCombo.setPreferredSize(new Dimension(400, 35));
+        formContainer.add(genderCombo, gbc);
+        
+        // Date of Birth
+        gbc.gridy = 8;
+        JLabel dobLabel = new JLabel("Date of Birth:");
+        dobLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        dobLabel.setForeground(new Color(60, 60, 60));
+        formContainer.add(dobLabel, gbc);
+        
+        gbc.gridy = 9;
+        dobSpinner = new JSpinner(new javax.swing.SpinnerDateModel());
+        JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dobSpinner, "yyyy-MM-dd");
+        dobSpinner.setEditor(dateEditor);
+        dobSpinner.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dobSpinner.setMaximumSize(new Dimension(400, 35));
+        dobSpinner.setPreferredSize(new Dimension(400, 35));
+        formContainer.add(dobSpinner, gbc);
+        
+        // Photo Upload
+        gbc.gridy = 10;
+        JLabel photoLabel = new JLabel("Profile Photo:");
+        photoLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        photoLabel.setForeground(new Color(60, 60, 60));
+        formContainer.add(photoLabel, gbc);
+        
+        gbc.gridy = 11;
+        JPanel photoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        photoPanel.setOpaque(false);
+        
+        JButton uploadBtn = new JButton("CHOOSE PHOTO");
+        uploadBtn.setBackground(new Color(52, 152, 219));
+        uploadBtn.setForeground(Color.WHITE);
+        uploadBtn.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        uploadBtn.setFocusPainted(false);
+        uploadBtn.setPreferredSize(new Dimension(150, 35));
+        uploadBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        uploadBtn.addActionListener(e -> choosePhoto());
+        photoPanel.add(uploadBtn);
+        
+        photoPreview = new JLabel("No photo selected");
+        photoPreview.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        photoPreview.setForeground(new Color(100, 100, 100));
+        photoPanel.add(photoPreview);
+        
+        formContainer.add(photoPanel, gbc);
+        
+        // Complete Button
+        gbc.gridy = 12;
+        gbc.insets = new Insets(25, 0, 0, 0);
+        JButton completeBtn = new JButton("COMPLETE PROFILE");
+        completeBtn.setBackground(new Color(52, 152, 219));
+        completeBtn.setForeground(Color.WHITE);
+        completeBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        completeBtn.setFocusPainted(false);
+        completeBtn.setPreferredSize(new Dimension(400, 45));
+        completeBtn.setMaximumSize(new Dimension(400, 45));
+        completeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        completeBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                completeBtn.setBackground(new Color(25, 103, 210));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                completeBtn.setBackground(new Color(52, 152, 219));
+            }
+        });
+        
+        completeBtn.addActionListener(e -> saveProfile());
+        formContainer.add(completeBtn, gbc);
+        
+        GridBagConstraints centerGbc = new GridBagConstraints();
+        centerGbc.weightx = 1.0;
+        centerGbc.weighty = 1.0;
+        centerPanel.add(formContainer, centerGbc);
+        
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
+    }
+    
+    private JTextField makeTextField() {
+        JTextField f = new JTextField(25);
+        f.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        f.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(8, 8, 8, 8)
+        ));
+        f.setMaximumSize(new Dimension(400, 35));
+        f.setPreferredSize(new Dimension(400, 35));
+        return f;
+    }
+    
+    private void choosePhoto() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+            "Image files", "jpg", "jpeg", "png", "gif"
+        ));
+        
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            selectedPhotoFile = fileChooser.getSelectedFile();
+            photoPreview.setText("✓ " + selectedPhotoFile.getName());
+            photoPreview.setForeground(new Color(46, 204, 113));
+        }
+    }
+    
+    private void saveProfile() {
+        String contact = contactField.getText().trim();
+        String license = licenseField.getText().trim();
+        String address = addressField.getText().trim();
+        String gender = (String) genderCombo.getSelectedItem();
+        
+        if (contact.isEmpty() || license.isEmpty() || address.isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                "Please fill in all required fields",
+                "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        try {
+            // Get DOB from spinner
+            java.util.Date selectedDate = (java.util.Date) dobSpinner.getValue();
+            LocalDate dob = selectedDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+            
+            // Update driver object
+            driver.setcontactNumber(contact);
+            driver.setlicenseNum(license);
+            driver.setaddress(address);
+            driver.setgender(gender);
+            driver.setdateOfBirth(dob);
+            
+            // Handle photo if selected
+            if (selectedPhotoFile != null) {
+                String photoPath = "photos/driver_" + driver.getpublic_driver_id() + "_" + System.currentTimeMillis() + ".jpg";
+                driver.setphotoURL(photoPath);
+            }
+            
+            // Show success - coworker's repo will handle database save
+            JOptionPane.showMessageDialog(this, 
+                "Profile completed successfully!",
+                "Success", JOptionPane.INFORMATION_MESSAGE);
+            
+            // Open driver dashboard
+            new DriverDashboard(driver, driverService);
+            dispose();
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "An error occurred: " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    class BackgroundPanel extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            GradientPaint gradient = new GradientPaint(0, 0, new Color(240, 245, 250),
+                    getWidth(), getHeight(), new Color(220, 235, 250));
+            g2d.setPaint(gradient);
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+            g2d.setColor(new Color(52, 152, 219, 30));
+            g2d.fillOval(-100, -100, 400, 400);
+            g2d.fillOval(getWidth() - 200, getHeight() - 300, 500, 500);
+        }
     }
 }

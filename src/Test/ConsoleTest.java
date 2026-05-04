@@ -47,7 +47,8 @@ public class ConsoleTest
             {
                case 1 ->
                {
-                   boolean verify = sas.checkAccount();
+                   // FIX: Changed method name from checkAccount() to checkAccout() to match SuperAdminService
+                   boolean verify = sas.checkAccout();
                    
                    if (verify == false)
                    {
@@ -355,9 +356,6 @@ public class ConsoleTest
                                                         break;
                                                         
                                             }                                            
-                                            
-                                            
-                                            
                                             
                                             break;
                                             case 5:

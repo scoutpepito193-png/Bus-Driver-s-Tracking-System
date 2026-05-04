@@ -15,7 +15,7 @@ import util.TimeProvider;
 public class DriverRepo
 {   
     
-    public boolean requestDriverRegistrastion(Driver d, String requestCode)
+    public boolean requestDriverRegistration(Driver d, String requestCode)
     {   
         String sql = "INSERT INTO request (request_code, request_info, details, sub_admin_id) "
                 + "VALUES (?,?::request_type,?::jsonb,?)";

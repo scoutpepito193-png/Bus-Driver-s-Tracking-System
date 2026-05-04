@@ -23,7 +23,7 @@ public class SubAdminService
     public boolean registerSubAdmin(String id, String fname, String lname,
                                     String gender, LocalDate dateOfBirth,
                                     String address, String contactNum, 
-                                    String photoURL, String password,
+                                    String position, String password,
                                     String confirmPass)
     {
         SubAdmin subA = new SubAdmin();
@@ -40,7 +40,7 @@ public class SubAdminService
         subA.setdateOfBirth(dateOfBirth);
         subA.setaddress(address);
         subA.setcontactnum(contactNum);
-        subA.setphotoURL(photoURL);
+        subA.setposition(position);
         subA.setpassword(password);
         
         subARepo.registerSubAdmin(subA);

@@ -2,9 +2,7 @@ package GUI;
 
 import javax.swing.*;
 import java.awt.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.image.BufferedImage;
-import java.awt.geom.RoundRectangle2D;
 
 public class Menu extends JFrame {
     
@@ -13,7 +11,7 @@ public class Menu extends JFrame {
     }
     
     public Menu() {
-        setTitle("BDTracker");
+        setTitle("Trackify");
         setExtendedState(JFrame.MAXIMIZED_BOTH); 
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -79,7 +77,7 @@ public class Menu extends JFrame {
         logoSection.add(logoPanel);
         
         // Title
-        JLabel titleLabel = new JLabel("BDTracker");
+        JLabel titleLabel = new JLabel("Trackify");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 72));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -111,7 +109,10 @@ public class Menu extends JFrame {
             new Color(155, 89, 182), new Color(108, 52, 131));
         adminBtn.setPreferredSize(new Dimension(350, 120));
         adminBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        adminBtn.addActionListener(e -> showAdminChoice());
+        adminBtn.addActionListener(e -> {
+            this.setVisible(false);
+            new AdminRoleSelection(this);
+        });
         buttonsPanel.add(adminBtn);
         
         // Driver Button
@@ -119,7 +120,10 @@ public class Menu extends JFrame {
             new Color(52, 152, 219), new Color(25, 103, 210));
         driverBtn.setPreferredSize(new Dimension(350, 120));
         driverBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        driverBtn.addActionListener(e -> goToDriverLogin());
+        driverBtn.addActionListener(e -> {
+            this.setVisible(false);
+            new DriverLoginPanel(this);
+        });
         buttonsPanel.add(driverBtn);
         
         mainPanel.add(buttonsPanel);
@@ -133,7 +137,7 @@ public class Menu extends JFrame {
         footerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         footerPanel.setLayout(new BorderLayout());
         
-        JLabel footerLabel = new JLabel("(c) 2026 BDTracker. All rights reserved. | Secure Bus Fleet Management");
+        JLabel footerLabel = new JLabel("(c) 2026 Trackify. All rights reserved. | Secure Bus Fleet Management");
         footerLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         footerLabel.setForeground(new Color(150, 170, 190));
         footerLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -149,7 +153,7 @@ public class Menu extends JFrame {
         navBar.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(52, 152, 219)));
         navBar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         
-        JLabel logo = new JLabel("[ BUS ] BDTracker");
+        JLabel logo = new JLabel("Trackify");
         logo.setFont(new Font("Segoe UI", Font.BOLD, 22));
         logo.setForeground(new Color(52, 152, 219));
         
@@ -209,16 +213,6 @@ public class Menu extends JFrame {
         return panel;
     }
     
-    private void showAdminChoice() {
-        new AdminRoleSelection(this);
-        this.dispose();
-    }
-    
-    private void goToDriverLogin() {
-        new DriverLoginPanel();
-        this.dispose();
-    }
-    
     class GradientPanel extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
@@ -252,8 +246,8 @@ public class Menu extends JFrame {
             this.endColor = endColor;
             setOpaque(false);
             setContentAreaFilled(false);
-            setBorderPainted(false);
-            setFocusPainted(false);
+            setBorderPainted(false);  // ✓ Remove border
+            setFocusPainted(false);   // ✓ Remove focus outline
             setCursor(new Cursor(Cursor.HAND_CURSOR));
         }
         
@@ -294,12 +288,12 @@ public class Menu extends JFrame {
             g2.setPaint(gradient);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
             
-            g2.setColor(new Color(0, 0, 0, 30));
-            g2.setStroke(new BasicStroke(1));
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
+            // ✓ REMOVED: Border lines that created white rectangle
+            // No border drawing = cleaner look
             
-            g2.setColor(new Color(255, 255, 255, 80));
-            g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() / 2 - 1, arc, arc);
+            // Optional: Add subtle shadow effect
+            g2.setColor(new Color(0, 0, 0, 20));
+            g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, arc, arc);
             
             super.paintComponent(g);
         }

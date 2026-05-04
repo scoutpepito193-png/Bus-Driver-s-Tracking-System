@@ -9,14 +9,16 @@ import java.awt.image.BufferedImage;
 public class DriverLoginPanel extends JFrame {
     
     private DriverService driverService;
-    
-    public DriverLoginPanel() {
+    private JFrame parentFrame;
+
+    public DriverLoginPanel(JFrame parentFrame) {
+        this.parentFrame = parentFrame;
         this.driverService = new DriverService();
         
-        setTitle("BDTracker - Driver Login");
+        setTitle("Trackify - Driver Login");
         setSize(900, 650);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setResizable(true);
         setMinimumSize(new Dimension(700, 500));
         setIconImage(createAppIcon());
@@ -67,8 +69,11 @@ public class DriverLoginPanel extends JFrame {
         backBtn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backBtn.addActionListener(e -> {
-            new Menu();
+            // Close this login window
             dispose();
+            // Restore the Menu window (it was hidden with setVisible(false), not disposed,
+            // so it is still alive in memory and can be made visible again)
+            parentFrame.setVisible(true);
         });
         
         headerPanel.add(headerLabel, BorderLayout.WEST);
@@ -171,24 +176,33 @@ public class DriverLoginPanel extends JFrame {
             String driverId = driverIdField.getText().trim();
             String password = new String(passwordField.getPassword());
             
+            // Validate: both fields must be filled before attempting login
             if (driverId.isEmpty() || password.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields",
                     "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             
-            // Call backend to login
+            // Call the service layer to verify credentials.
+            // Returns a Driver object if credentials are valid AND the account has been
+            // approved by an admin, or null if not found / wrong password / pending approval
             Driver driver = driverService.loginDriver(driverId, password);
             
             if (driver != null) {
-                    // Profile complete, go to dashboard
-                    new DriverDashboard(driver, driverService);
+                // Login successful — open the Driver Dashboard
+                new DriverDashboard(driver, driverService);
+                
+                // Hide the Menu (parent window) — no longer needed during the session
+                parentFrame.setVisible(false);
+                
+                // Close this login window
                 dispose();
             } else {
+                // Invalid credentials or the driver account has not been approved yet
                 JOptionPane.showMessageDialog(this,
                     "Invalid Credentials or Account Not Approved",
                     "Login Failed", JOptionPane.ERROR_MESSAGE);
-                passwordField.setText("");
+                passwordField.setText(""); // Clear the password field so user can retry
             }
         });
         
