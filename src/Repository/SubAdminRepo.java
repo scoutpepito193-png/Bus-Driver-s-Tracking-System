@@ -14,16 +14,13 @@ public class SubAdminRepo
 
     public void registerSubAdmin(SubAdmin subA)
     {
-        Connection conn = dbConnection.getConnection();
-        
         String sql = "INSERT INTO sub_admin (public_sub_id, first_name, last_name, gender, "
                 + "date_of_birth, address, contact_number, photo_url, password)"
                 + "VALUES (?,?,?,?,?,?,?,?,?)";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             prepS.setString(1, subA.getpublic_sub_id());
             prepS.setString(2, subA.getfirstName());
             prepS.setString(3, subA.getlastName());
@@ -45,12 +42,11 @@ public class SubAdminRepo
     
     public SubAdmin subAdminLogIn(String publicID, String password)
     {
-        Connection conn = dbConnection.getConnection();
-        
-        try
+        String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ? AND password = ?";
+
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ? AND password = ?";
-            PreparedStatement prepS = conn.prepareStatement(sql);
             prepS.setString(1, publicID);
             prepS.setString(2, password);
             
@@ -85,16 +81,14 @@ public class SubAdminRepo
     
     public List<SubAdmin> getSubAdmins()
     {
-        
-        Connection conn = dbConnection.getConnection();
         List<SubAdmin> list = new ArrayList<>();
         
-        try
+        String sql = "SELECT public_sub_id, first_name, last_name, position_role "
+                + "FROM sub_admin";      
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            String sql = "SELECT public_sub_id, first_name, last_name, position_role "
-                    + "FROM sub_admin";
-            
-            PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
             while(res.next())
@@ -120,14 +114,13 @@ public class SubAdminRepo
     
     public int countSubAdmin()
     {
-        Connection conn = dbConnection.getConnection();
         int count = 0;
         
-        try
+        String sql = "SELECT * FROM sub_admin";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            String sql = "SELECT * FROM sub_admin";
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             ResultSet res = prepS.executeQuery();
             
             if (res.next())

@@ -10,15 +10,13 @@ import Model.Request;
 
 public class SuperAdminRepo
 {
-    Connection conn = dbConnection.getConnection();
-    
     public boolean checkExistingSA()
     {
-        try
+        String sql = "SELECT * FROM super_admin";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {   
-            String sql = "SELECT * FROM super_admin";
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             ResultSet res = prepS.executeQuery();
             
             if (res.next())
@@ -42,10 +40,9 @@ public class SuperAdminRepo
                 + "last_name, contact_number, position_role, photo_url)"
                 + "VALUES (?,?,?,?,?,?,?)";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             prepS.setString(1, sa.getPublicID());
             prepS.setString(2, sa.getPassword());
             prepS.setString(3, sa.getfirstName());
@@ -68,9 +65,9 @@ public class SuperAdminRepo
         
         String sql = "SELECT * FROM super_admin WHERE public_id = ?";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
             prepS.setString(1, publicID);
             
             ResultSet res = prepS.executeQuery();
@@ -98,9 +95,9 @@ public class SuperAdminRepo
     {
         String sql = "SELECT * FROM super_admin LIMIT 1";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
             if (res.next())
@@ -136,9 +133,9 @@ public class SuperAdminRepo
                 + "WHERE status = 'PENDING' "
                 + "ORDER BY created_at DESC";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
             ResultSet res = prepS.executeQuery();
             
             while(res.next())
@@ -166,9 +163,9 @@ public class SuperAdminRepo
     {
         String sql = "SELECT * FROM request WHERE request_code = ?";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
             prepS.setString(1,reqCode);
             
             ResultSet res = prepS.executeQuery();
@@ -212,9 +209,9 @@ public class SuperAdminRepo
                 + "FROM request "
                 + "WHERE request_code = ?";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
             prepS.setString(1, reqCode);
             
             ResultSet res = prepS.executeQuery();
@@ -240,9 +237,9 @@ public class SuperAdminRepo
                 + "SET status = ?::request_status "
                 + "WHERE request_code = ?";
         
-        try
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql);)
         {
-            PreparedStatement prepS = conn.prepareStatement(sql);
             prepS.setString(1, status);
             prepS.setString(2, reqCode);
             
@@ -261,11 +258,11 @@ public class SuperAdminRepo
     {
         int count = 0;
         
-        try
+        String sql = "SELECT COUNT(*) FROM request WHERE status = 'PENDING'";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {           
-            String sql = "SELECT COUNT(*) FROM request WHERE status = 'PENDING'";
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             ResultSet res = prepS.executeQuery();
             
             if (res.next())
@@ -285,11 +282,11 @@ public class SuperAdminRepo
     {
         int count = 0;
         
-        try
+        String sql = "SELECT COUNT(*) FROM request WHERE status = 'APPROVED'";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {           
-            String sql = "SELECT COUNT(*) FROM request WHERE status = 'APPROVED'";
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             ResultSet res = prepS.executeQuery();
             
             if (res.next())
@@ -309,11 +306,11 @@ public class SuperAdminRepo
     {
         int count = 0;
         
-        try
+        String sql = "SELECT COUNT(*) FROM request WHERE status = 'REJECTED'";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
         {           
-            String sql = "SELECT COUNT(*) FROM request WHERE status = 'REJECTED'";
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            
             ResultSet res = prepS.executeQuery();
             
             if (res.next())

@@ -10,6 +10,8 @@ import Model.DriverPerformance;
 import Model.SubAdmin;
 import Model.Request;
 import Model.DriverProfile;
+import Service.DriverAttendanceService;
+import Service.SalaryService;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
@@ -509,6 +511,7 @@ public class ConsoleTest
                                         
                                         if (addORrecordChoice == 2)
                                         {
+                                            SalaryService salaryService = new SalaryService();
                                             boolean flag = false;
                                             
                                             while(flag == false)
@@ -527,7 +530,19 @@ public class ConsoleTest
                                                 
                                                 flag = ds.recordDriverPerformance(d_ID, aveKMPL, totalTickets, totalRevenue);
                                                 
-                                                if(flag == false)
+                                                if(flag != false)
+                                                {
+                                                    boolean salarySaved = salaryService.processDailySalary(d_ID, totalRevenue);
+                                                    if (salarySaved)
+                                                    {
+                                                        System.out.println("Performance recorded and salary computed.");
+                                                    }
+                                                    else
+                                                    {
+                                                        System.out.println("Performance saved but salary failed.");
+                                                    }
+                                                }
+                                                else
                                                 {
                                                     System.out.println("Driver not Found");
                                                 }
@@ -615,6 +630,8 @@ public class ConsoleTest
                                             System.out.println("Enter Driver ID: ");
                                             String publicId = scan.nextLine();
                                             
+                                            System.out.println("Starting live tracking... (Press Ctrl + C to stop)");
+                                            
                                             subs.startTracking(publicId, (lat, lng) ->
                                             {
                                                 if (Double.isNaN(lat) || Double.isNaN(lng))
@@ -696,6 +713,8 @@ public class ConsoleTest
                             if (driver != null)
                             {
                                 loggedIn = true;
+                                DriverAttendanceService attendanceService = new DriverAttendanceService();
+                                attendanceService.markDriverPresent(driver.getpublic_driver_id());
 
                                 System.out.println("\nDriver Dashboard");
                                 System.out.println("Name: " + driver.getfirstName() + " " + driver.getlastName());
