@@ -9,14 +9,16 @@ import java.awt.image.BufferedImage;
 public class SubAdminLogin extends JFrame {
     
     private SubAdminService subAdminService;
-    
-    public SubAdminLogin() {
+    private JFrame parentFrame;
+
+    public SubAdminLogin(JFrame parentFrame) {
+        this.parentFrame = parentFrame;
         this.subAdminService = new SubAdminService();
         
         setTitle("BDTracker - Sub Admin Login");
         setSize(900, 650);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setResizable(true);
         setMinimumSize(new Dimension(700, 500));
         setIconImage(createAppIcon());
@@ -67,8 +69,11 @@ public class SubAdminLogin extends JFrame {
         backBtn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backBtn.addActionListener(e -> {
-            new AdminRoleSelection(new Menu());
+            // Close this login window
             dispose();
+            // Restore AdminRoleSelection (it was hidden with setVisible(false), not disposed,
+            // so it is still alive in memory and can be made visible again)
+            parentFrame.setVisible(true);
         });
         
         headerPanel.add(headerLabel, BorderLayout.WEST);
@@ -155,31 +160,32 @@ public class SubAdminLogin extends JFrame {
         loginBtn.addActionListener(e -> {
             String adminId = adminIdField.getText().trim();
             String password = new String(passwordField.getPassword());
-            
+
+            // Validate: both fields must be filled before attempting login
             if (adminId.isEmpty() || password.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields",
                     "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
-            // Call backend to login
+
+            // Call the service layer to verify credentials.
+            // Returns a SubAdmin object if credentials are valid, or null if not found / wrong password
             SubAdmin subAdmin = subAdminService.login(adminId, password);
-            
+
             if (subAdmin != null) {
-                if (subAdmin.getAge() == 0) {
-                    // Profile not complete, go to profile setup
-                    new SubAdminProfileSetup(subAdmin, subAdminService);
-                } else {
-                    // Profile complete, go to dashboard
-                    JOptionPane.showMessageDialog(this, "Login Successful!",
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
-                    // TODO: Open SubAdminDashboard when available
-                }
+                // Login successful — open the Sub Admin Dashboard
+                new SubAdminDashboard(subAdmin, subAdminService);
+
+                // Hide AdminRoleSelection (the parent of this window) — no longer needed
+                parentFrame.setVisible(false);
+
+                // Close this login window
                 dispose();
             } else {
+                // No account found or password mismatch
                 JOptionPane.showMessageDialog(this, "Invalid Credentials",
                     "Login Failed", JOptionPane.ERROR_MESSAGE);
-                passwordField.setText("");
+                passwordField.setText(""); // Clear the password field so user can retry
             }
         });
         

@@ -9,14 +9,16 @@ import java.awt.image.BufferedImage;
 public class SuperAdminLogin extends JFrame {
     
     private SuperAdminService superAdminService;
-    
-    public SuperAdminLogin() {
+    private JFrame parentFrame;
+
+    public SuperAdminLogin(JFrame parentFrame) {
+        this.parentFrame = parentFrame;
         this.superAdminService = new SuperAdminService();
         
         setTitle("BDTracker - Super Admin Login");
         setSize(900, 650);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setResizable(true);
         setMinimumSize(new Dimension(700, 500));
         setIconImage(createAppIcon());
@@ -48,16 +50,27 @@ public class SuperAdminLogin extends JFrame {
     
     private void addComponents(JPanel mainPanel) {
         
-        // Header
+        // Header with Logo
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(155, 89, 182));
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(108, 52, 131)));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
         headerPanel.setPreferredSize(new Dimension(0, 80));
         
+        // Logo Label
+        JLabel logoLabel = new JLabel("[ BUS ] BDTracker");
+        logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        logoLabel.setForeground(Color.WHITE);
+        
         JLabel headerLabel = new JLabel("SUPER ADMIN LOGIN");
-        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         headerLabel.setForeground(Color.WHITE);
+        
+        JPanel leftHeader = new JPanel();
+        leftHeader.setLayout(new BoxLayout(leftHeader, BoxLayout.Y_AXIS));
+        leftHeader.setOpaque(false);
+        leftHeader.add(logoLabel);
+        leftHeader.add(headerLabel);
         
         JButton backBtn = new JButton("BACK");
         backBtn.setBackground(new Color(231, 76, 60));
@@ -67,11 +80,14 @@ public class SuperAdminLogin extends JFrame {
         backBtn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backBtn.addActionListener(e -> {
-            new AdminRoleSelection(new Menu());
+            // Close this login window
             dispose();
+            // Restore AdminRoleSelection (it was hidden with setVisible(false), not disposed,
+            // so it is still alive in memory and can be made visible again)
+            parentFrame.setVisible(true);
         });
         
-        headerPanel.add(headerLabel, BorderLayout.WEST);
+        headerPanel.add(leftHeader, BorderLayout.WEST);
         headerPanel.add(backBtn, BorderLayout.EAST);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         
@@ -170,34 +186,45 @@ public class SuperAdminLogin extends JFrame {
         loginBtn.addActionListener(e -> {
             String adminId = adminIdField.getText().trim();
             String password = new String(passwordField.getPassword());
-            
+
+            // Validate: both fields must be filled before attempting login
             if (adminId.isEmpty() || password.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields",
                     "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
-            // Call backend to login
+
+            // Call the service layer to verify credentials.
+            // Returns: 1 = success, 2 = wrong password, 0 = account not found
             int result = superAdminService.logIn(adminId, password);
-            
+
             if (result == 1) {
-                // Login successful
+                // Login successful — fetch the full SuperAdmin profile from the database
+                // This retrieves the existing SuperAdmin data (since they already have an account)
                 SuperAdmin superAdmin = superAdminService.getSAData();
-                
-                if (superAdmin.getAge() == 0) {
-                    // Profile not complete, go to profile setup
-                    new SuperAdminProfileSetup(superAdmin, superAdminService);
-                } else {
-                    // Profile complete, go to dashboard
+
+                if (superAdmin != null) {
+                    // Open the Super Admin Dashboard, passing all required services
+                    // FIX: Pass instances of the services (not class names) as parameters
                     new SuperAdminDashboard(superAdmin, superAdminService,
                         new Service.DriverService(), new Service.SubAdminService());
+
+                    // Hide AdminRoleSelection (the parent of this window) — no longer needed
+                    parentFrame.setVisible(false);
+
+                    // Close this login window
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to load profile data",
+                        "Error", JOptionPane.ERROR_MESSAGE);
                 }
-                dispose();
             } else if (result == 2) {
+                // Credentials found but password is wrong
                 JOptionPane.showMessageDialog(this, "Invalid Credentials",
                     "Login Failed", JOptionPane.ERROR_MESSAGE);
-                passwordField.setText("");
+                passwordField.setText(""); // Clear the password field so user can retry
             } else {
+                // No account found matching the given Admin ID (result == 0)
                 JOptionPane.showMessageDialog(this, "Account not found",
                     "Login Failed", JOptionPane.ERROR_MESSAGE);
             }

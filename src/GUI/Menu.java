@@ -2,9 +2,7 @@ package GUI;
 
 import javax.swing.*;
 import java.awt.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.image.BufferedImage;
-import java.awt.geom.RoundRectangle2D;
 
 public class Menu extends JFrame {
     
@@ -111,7 +109,15 @@ public class Menu extends JFrame {
             new Color(155, 89, 182), new Color(108, 52, 131));
         adminBtn.setPreferredSize(new Dimension(350, 120));
         adminBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        adminBtn.addActionListener(e -> showAdminChoice());
+        adminBtn.addActionListener(e -> {
+            // FIX: Hide Menu before opening AdminRoleSelection.
+            // Previously Menu stayed open behind the next screen, causing window
+            // stacking issues that made child windows appear hidden or unfocused.
+            // setVisible(false) keeps the Menu instance alive so AdminRoleSelection's
+            // BACK button can call parentFrame.setVisible(true) to restore it.
+            this.setVisible(false);
+            new AdminRoleSelection(this); // Pass 'this' so BACK button can restore Menu
+        });
         buttonsPanel.add(adminBtn);
         
         // Driver Button
@@ -119,7 +125,13 @@ public class Menu extends JFrame {
             new Color(52, 152, 219), new Color(25, 103, 210));
         driverBtn.setPreferredSize(new Dimension(350, 120));
         driverBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        driverBtn.addActionListener(e -> goToDriverLogin());
+        driverBtn.addActionListener(e -> {
+            // FIX: Same pattern as Admin button — hide Menu before opening
+            // DriverLoginPanel so windows don't stack. Pass 'this' so
+            // DriverLoginPanel's BACK button can restore Menu via setVisible(true).
+            this.setVisible(false);
+            new DriverLoginPanel(this); // Pass 'this' so BACK button can restore Menu
+        });
         buttonsPanel.add(driverBtn);
         
         mainPanel.add(buttonsPanel);
@@ -207,16 +219,6 @@ public class Menu extends JFrame {
         };
         panel.setOpaque(false);
         return panel;
-    }
-    
-    private void showAdminChoice() {
-        new AdminRoleSelection(this);
-        this.dispose();
-    }
-    
-    private void goToDriverLogin() {
-        new DriverLoginPanel();
-        this.dispose();
     }
     
     class GradientPanel extends JPanel {

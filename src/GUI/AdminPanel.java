@@ -33,21 +33,16 @@ public class AdminPanel extends JFrame {
         subAdmin.setBounds(300, 200, 200, 40);
 
         superAdmin.addActionListener(e -> {
-            
+            // Go to SuperAdminLogin with parent reference
+            new SuperAdminLogin(this);
+            dispose();
+        });
 
-        boolean exists = sas.checkAccout(); // ALWAYS check database fresh
-
-       if (exists) {
-           new SuperAdminLogin();
-       } else {
-           new SuperAdminSignup();
-       }
-
-       dispose();
-   });
-
-       
-       
+        subAdmin.addActionListener(e -> {
+            // Go to SubAdminLogin with parent reference
+            new SubAdminLogin(this);
+            dispose();
+        });
 
         add(back);
         add(superAdmin);

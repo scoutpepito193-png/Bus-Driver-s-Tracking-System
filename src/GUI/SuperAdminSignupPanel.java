@@ -9,8 +9,10 @@ import java.awt.image.BufferedImage;
 public class SuperAdminSignupPanel extends JFrame {
     
     private SuperAdminService superAdminService;
-    
-    public SuperAdminSignupPanel() {
+    private JFrame parentFrame;
+
+    public SuperAdminSignupPanel(JFrame parentFrame) {
+        this.parentFrame = parentFrame;
         this.superAdminService = new SuperAdminService();
         
         setTitle("BDTracker - Super Admin Signup");

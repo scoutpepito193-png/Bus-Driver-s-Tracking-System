@@ -10,172 +10,261 @@ import Service.SubAdminService;
 import Service.SuperAdminService;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
-import java.util.Map;
 
 public class SuperAdminDashboard extends JFrame {
 
     DriverService ds = new DriverService();
     SubAdminService subs = new SubAdminService();
     SuperAdminService sas = new SuperAdminService();
+    private SuperAdmin superAdmin;
 
     public SuperAdminDashboard(SuperAdmin superAdmin, SuperAdminService superAdminService,
                            DriverService driverService, SubAdminService subAdminService) {
-
-        setTitle("Super Admin Features");
-        setSize(900, 500);
+        this.superAdmin = superAdmin;
+        
+        setTitle("Super Admin Dashboard");
+        setSize(1400, 900);
         setLocationRelativeTo(null);
-        setLayout(null);
-        getContentPane().setBackground(new Color(255, 192, 0));
-
-        JLabel title = new JLabel("SUPER ADMIN FEATURES");
-        title.setBounds(300, 20, 400, 30);
-        title.setFont(new Font("Arial", Font.BOLD, 24));
-        add(title);
-
-        JButton overviewBtn = new JButton("OVERVIEW");
-        JButton driverBtn = new JButton("DRIVERS");
-        JButton subAdminBtn = new JButton("SUB ADMINS");
-        JButton requestBtn = new JButton("REQUESTS");
-        JButton backBtn = new JButton("BACK");
-
-        overviewBtn.setBounds(50, 100, 200, 40);
-        driverBtn.setBounds(50, 160, 200, 40);
-        subAdminBtn.setBounds(50, 220, 200, 40);
-        requestBtn.setBounds(50, 280, 200, 40);
-        backBtn.setBounds(700, 400, 150, 40);
-
-        add(overviewBtn);
-        add(driverBtn);
-        add(subAdminBtn);
-        add(requestBtn);
-        add(backBtn);
-
-        // ================= OVERVIEW =================
-        overviewBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this,
-                    "Total Drivers: " + ds.totalDriver() +
-                    "\nTotal SubAdmins: " + subs.totalSubAdmin() +
-                    "\nPending Requests: " + sas.totalPending()
-            );
-        });
-
-        // ================= DRIVERS =================
-        driverBtn.addActionListener(e -> {
-
-            List<DriverPerformance> list = ds.getPerformance();
-            StringBuilder sb = new StringBuilder();
-
-            sb.append("ID | Name | Tickets | Revenue | KM/L\n\n");
-
-            for (DriverPerformance dp : list) {
-                sb.append(dp.getdriver().getpublic_driver_id())
-                        .append(" | ")
-                        .append(dp.getdriver().getfirstName())
-                        .append(" ")
-                        .append(dp.getdriver().getlastName())
-                        .append(" | ")
-                        .append(dp.gettotalTickets())
-                        .append(" | ")
-                        .append(dp.gettotalRevenue())
-                        .append(" | ")
-                        .append(dp.getaverageKMPL())
-                        .append("\n");
-            }
-
-            JOptionPane.showMessageDialog(this, sb.toString());
-        });
-
-        // ================= SUB ADMINS =================
-        subAdminBtn.addActionListener(e -> {
-
-            List<SubAdmin> list = subs.getSubAdmins();
-            StringBuilder sb = new StringBuilder();
-
-            for (SubAdmin s : list) {
-                sb.append(s.getpublic_sub_id())
-                        .append(" - ")
-                        .append(s.getfirstName())
-                        .append(" ")
-                        .append(s.getlastName())
-                        .append(" | ")
-                        .append(s.getposition())
-                        .append("\n");
-            }
-
-            JOptionPane.showMessageDialog(this, sb.toString());
-        });
-
-        // ================= REQUESTS =================
-        requestBtn.addActionListener(e -> {
-
-            List<Request> listReq = sas.getAllRequest();
-
-            StringBuilder sb = new StringBuilder();
-
-            for (Request r : listReq) {
-                sb.append(r.getRequestCode())
-                        .append(" | ")
-                        .append(r.getRequestInfo())
-                        .append(" | ")
-                        .append(r.getStatus())
-                        .append("\n");
-            }
-
-            String input = JOptionPane.showInputDialog(
-                    this,
-                    sb.toString() + "\n\nEnter Request Code:"
-            );
-
-            if (input == null || input.isEmpty()) return;
-
-            Request req = sas.getRequest(input);
-
-            if (req == null) {
-                JOptionPane.showMessageDialog(this, "Request not found!");
-                return;
-            }
-
-            if ("DRIVER REGISTRATION".equals(req.getRequestInfo())) {
-
-                Driver d = (Driver) sas.getReqDetails(input);
-
-                JOptionPane.showMessageDialog(this,
-                        "ID: " + d.getpublic_driver_id() +
-                        "\nName: " + d.getfirstName() + " " + d.getlastName() +
-                        "\nContact: " + d.getcontactNumber()
-                );
-
-            } else if ("REMOVE DRIVER".equals(req.getRequestInfo())) {
-
-                Map<String, String> data = (Map<String, String>) sas.getReqDetails(input);
-
-                JOptionPane.showMessageDialog(this,
-                        "Reason: " + data.get("reason")
-                );
-            }
-
-            String choice = JOptionPane.showInputDialog(
-                    this,
-                    "[1] Approve\n[2] Reject\n[0] Back"
-            );
-
-            if ("1".equals(choice)) {
-                boolean approved = sas.approveRequest(input);
-
-                JOptionPane.showMessageDialog(this,
-                        approved ? "Request Approved" : "Approval Failed"
-                );
-            }
-        });
-
-        // ================= BACK =================
-        backBtn.addActionListener(e -> {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(true);
+        
+        JPanel mainPanel = new BackgroundPanel();
+        mainPanel.setLayout(new BorderLayout());
+        add(mainPanel);
+        
+        // Header
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(155, 89, 182));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
+        headerPanel.setPreferredSize(new Dimension(0, 80));
+        
+        JLabel titleLabel = new JLabel("SUPER ADMIN DASHBOARD");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        titleLabel.setForeground(Color.WHITE);
+        
+        JLabel userLabel = new JLabel("Welcome, " + superAdmin.getfirstName() + " " + superAdmin.getlastName());
+        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        userLabel.setForeground(new Color(220, 220, 220));
+        
+        JPanel leftHeader = new JPanel();
+        leftHeader.setLayout(new BoxLayout(leftHeader, BoxLayout.Y_AXIS));
+        leftHeader.setOpaque(false);
+        leftHeader.add(titleLabel);
+        leftHeader.add(userLabel);
+        
+        JButton logoutBtn = new JButton("LOGOUT");
+        logoutBtn.setBackground(new Color(231, 76, 60));
+        logoutBtn.setForeground(Color.WHITE);
+        logoutBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        logoutBtn.setFocusPainted(false);
+        logoutBtn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        logoutBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        logoutBtn.addActionListener(e -> {
             new Menu();
             dispose();
         });
-
+        
+        headerPanel.add(leftHeader, BorderLayout.WEST);
+        headerPanel.add(logoutBtn, BorderLayout.EAST);
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Tabbed Panel
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        
+        // Overview Tab
+        tabbedPane.addTab("Overview", createOverviewPanel());
+        
+        // Drivers Tab
+        tabbedPane.addTab("Drivers", createDriversPanel());
+        
+        // Sub Admins Tab
+        tabbedPane.addTab("Sub Admins", createSubAdminsPanel());
+        
+        // Requests Tab
+        tabbedPane.addTab("Requests", createRequestsPanel());
+        
+        mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        
         setVisible(true);
+    }
+    
+    private JPanel createOverviewPanel() {
+        JPanel panel = new JPanel(new GridLayout(2, 2, 15, 15));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBackground(Color.WHITE);
+        
+        // Total Drivers Card
+        panel.add(createStatCard("Total Drivers", String.valueOf(ds.totalDriver()), new Color(52, 152, 219)));
+        
+        // Total Sub Admins Card
+        panel.add(createStatCard("Total Sub Admins", String.valueOf(subs.totalSubAdmin()), new Color(46, 204, 113)));
+        
+        // Pending Requests Card
+        panel.add(createStatCard("Pending Requests", String.valueOf(sas.totalPending()), new Color(241, 196, 15)));
+        
+        // Approved Requests Card
+        panel.add(createStatCard("Approved Requests", String.valueOf(sas.totalApproved()), new Color(155, 89, 182)));
+        
+        return panel;
+    }
+    
+    private JPanel createStatCard(String title, String value, Color color) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(color, 2),
+            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
+        
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        titleLabel.setForeground(new Color(100, 100, 100));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel valueLabel = new JLabel(value);
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        valueLabel.setForeground(color);
+        valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        card.add(titleLabel);
+        card.add(Box.createVerticalStrut(10));
+        card.add(valueLabel);
+        
+        return card;
+    }
+    
+    private JPanel createDriversPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        List<DriverPerformance> list = ds.getPerformance();
+        String[] columns = {"Driver ID", "Name", "Tickets", "Revenue", "KM/L"};
+        Object[][] data = new Object[list.size()][5];
+        
+        for (int i = 0; i < list.size(); i++) {
+            DriverPerformance dp = list.get(i);
+            data[i][0] = dp.getdriver().getpublic_driver_id();
+            data[i][1] = dp.getdriver().getfirstName() + " " + dp.getdriver().getlastName();
+            data[i][2] = dp.gettotalTickets();
+            data[i][3] = dp.gettotalRevenue();
+            data[i][4] = String.format("%.2f", dp.getaverageKMPL());
+        }
+        
+        JTable table = new JTable(new DefaultTableModel(data, columns) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setRowHeight(25);
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private JPanel createSubAdminsPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        List<SubAdmin> list = subs.getSubAdmins();
+        String[] columns = {"Sub Admin ID", "Name", "Contact", "Position"};
+        Object[][] data = new Object[list.size()][4];
+        
+        for (int i = 0; i < list.size(); i++) {
+            SubAdmin sa = list.get(i);
+            data[i][0] = sa.getpublic_sub_id();
+            data[i][1] = sa.getfirstName() + " " + sa.getlastName();
+            data[i][2] = sa.getcontactNum();
+            data[i][3] = sa.getposition();
+        }
+        
+        JTable table = new JTable(new DefaultTableModel(data, columns) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setRowHeight(25);
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        return panel;
+    }
+    
+    private JPanel createRequestsPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        List<Request> list = sas.getAllRequest();
+        String[] columns = {"Request Code", "Type", "Status"};
+        Object[][] data = new Object[list.size()][3];
+        
+        for (int i = 0; i < list.size(); i++) {
+            Request r = list.get(i);
+            data[i][0] = r.getRequestCode();
+            data[i][1] = r.getRequestInfo();
+            data[i][2] = r.getStatus();
+        }
+        
+        JTable table = new JTable(new DefaultTableModel(data, columns) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        table.setRowHeight(25);
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Button Panel
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        
+        JButton approveBtn = new JButton("APPROVE");
+        approveBtn.setBackground(new Color(46, 204, 113));
+        approveBtn.setForeground(Color.WHITE);
+        approveBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        approveBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        approveBtn.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow >= 0) {
+                String requestCode = (String) table.getValueAt(selectedRow, 0);
+                boolean approved = sas.approveRequest(requestCode);
+                JOptionPane.showMessageDialog(panel,
+                    approved ? "Request Approved Successfully" : "Approval Failed",
+                    "Result", JOptionPane.INFORMATION_MESSAGE);
+                // Refresh table
+                ((DefaultTableModel) table.getModel()).setRowCount(0);
+            } else {
+                JOptionPane.showMessageDialog(panel, "Please select a request", "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+        
+        btnPanel.add(approveBtn);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    class BackgroundPanel extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            GradientPaint gradient = new GradientPaint(0, 0, new Color(245, 245, 245),
+                    getWidth(), getHeight(), new Color(235, 235, 235));
+            g2d.setPaint(gradient);
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+        }
     }
 }

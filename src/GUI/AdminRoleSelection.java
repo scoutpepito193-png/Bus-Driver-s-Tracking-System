@@ -6,6 +6,8 @@ import java.awt.image.BufferedImage;
 
 public class AdminRoleSelection extends JFrame {
     
+    // Holds a reference to the Menu window so the BACK button can restore it.
+    // We store it as JFrame (not Menu) to keep this class loosely coupled.
     private JFrame parentFrame;
     
     public AdminRoleSelection(JFrame parentFrame) {
@@ -90,7 +92,7 @@ public class AdminRoleSelection extends JFrame {
             },
             new Color(155, 89, 182),
             new Color(108, 52, 131),
-            e -> goToSuperAdminOptions()
+            e -> goToSuperAdminLogin()
         );
         contentPanel.add(superAdminCard);
         
@@ -139,40 +141,33 @@ public class AdminRoleSelection extends JFrame {
             }
         });
         backBtn.addActionListener(e -> {
+            // Dispose this AdminRoleSelection window completely (we're going all the way back)
             dispose();
+            // Restore the Menu window that was hidden when this screen was opened
             parentFrame.setVisible(true);
         });
         backPanel.add(backBtn);
         mainPanel.add(backPanel);
     }
     
-    private void goToSuperAdminOptions() {
-        // Show dialog to choose between Login or Signup
-        String[] options = {"LOGIN", "SIGNUP", "CANCEL"};
-        int choice = JOptionPane.showOptionDialog(this,
-            "Do you want to Login or Signup?",
-            "Super Admin Options",
-            JOptionPane.YES_NO_CANCEL_OPTION,
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            options,
-            options[0]);
-        
-        if (choice == 0) {
-            // Login
-            new SuperAdminLogin();
-        } else if (choice == 1) {
-            // Signup
-            new SuperAdminSignupPanel();
-        }
-        dispose();
-        parentFrame.dispose();
+    private void goToSuperAdminLogin() {
+        // FIX: Use setVisible(false) instead of dispose().
+        // The old code called dispose() immediately after constructing SuperAdminLogin,
+        // which destroyed this window's native peer while SuperAdminLogin was still
+        // initializing — causing SuperAdminLogin to not appear on screen.
+        // setVisible(false) hides this window but keeps it alive in memory,
+        // so SuperAdminLogin's BACK button can call parentFrame.setVisible(true)
+        // to properly return the user here.
+        this.setVisible(false);
+        new SuperAdminLogin(this); // Pass 'this' so BACK button can restore this window
     }
     
     private void goToSubAdminLogin() {
-        dispose();
-        parentFrame.dispose();
-        new SubAdminLogin();
+        // FIX: Same reason as goToSuperAdminLogin() — use setVisible(false) instead
+        // of dispose() to keep this window alive for BACK navigation.
+        // SubAdminLogin's BACK button calls parentFrame.setVisible(true) to return here.
+        this.setVisible(false);
+        new SubAdminLogin(this); // Pass 'this' so BACK button can restore this window
     }
     
     private JPanel createRoleCard(String title, String subtitle, String[] features,
