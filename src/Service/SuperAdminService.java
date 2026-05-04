@@ -23,17 +23,14 @@ import Service.TraccarService;
 
 public class SuperAdminService
 {
+    private final SuperAdminRepo saRepo = new SuperAdminRepo();
     private final TraccarService traccarService = new TraccarService();
-    
-    // REMOVED: private final SuperAdminRepo saRepo = new SuperAdminRepo();
-    // Instead, create fresh instances in each method
     
     // Check if a SuperAdmin account already exists in the database
     // Returns true if account exists, false if no account found or error occurs
     public boolean checkAccout()
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
             return saRepo.checkExistingSA();
         } catch (Exception e) {
             System.err.println("Error checking SuperAdmin account existence: " + e.getMessage());
@@ -47,8 +44,6 @@ public class SuperAdminService
     public int logIn(String publicID, String password)
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
-            
             // Attempt to retrieve SuperAdmin by their public ID from the database
             SuperAdmin sa = saRepo.logInRepo(publicID);
             
@@ -80,7 +75,6 @@ public class SuperAdminService
                               String password, String confirmPass)
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
             SuperAdmin sa = new SuperAdmin();
             
             // Validate that passwords match
@@ -115,7 +109,6 @@ public class SuperAdminService
     public SuperAdmin getSAData()
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
             return saRepo.getSuperAdminData();
         } catch (Exception e) {
             System.err.println("Error fetching SuperAdmin data: " + e.getMessage());
@@ -128,7 +121,6 @@ public class SuperAdminService
     public int totalPending()
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
             int total = saRepo.countPendingReq();
             return total;
         } catch (Exception e) {
@@ -142,7 +134,6 @@ public class SuperAdminService
     public int totalApproved()
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
             int total = saRepo.countApprovedReq();
             return total;
         } catch (Exception e) {
@@ -156,7 +147,6 @@ public class SuperAdminService
     public int totalRejected()
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
             int total = saRepo.countRejectedReq();
             return total;
         } catch (Exception e) {
@@ -170,7 +160,6 @@ public class SuperAdminService
     public List<Request> getAllRequest()
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
             return saRepo.getAllRequest();
         } catch (Exception e) {
             System.err.println("Error fetching all requests: " + e.getMessage());
@@ -183,7 +172,6 @@ public class SuperAdminService
     public Request getRequest(String reqCode)
     {
         try {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
             return saRepo.getRequest(reqCode);
         } catch (Exception e) {
             System.err.println("Error fetching request: " + e.getMessage());
@@ -199,8 +187,6 @@ public class SuperAdminService
     {
         try
         {
-            SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
-            
             // Fetch the request from database
             Request req = saRepo.getRequest(reqCode);
             if(req == null) return null;
@@ -239,8 +225,7 @@ public class SuperAdminService
     // For REMOVE DRIVER: Deactivates driver from system
     public boolean approveRequest(String reqCode)
     {
-        DriverRepo dRepo = new DriverRepo();  // Fresh instance
-        SuperAdminRepo saRepo = new SuperAdminRepo();  // ← Fresh instance
+        DriverRepo dRepo = new DriverRepo();
         
         try
         {
