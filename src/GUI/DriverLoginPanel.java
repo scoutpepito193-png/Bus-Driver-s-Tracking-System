@@ -181,13 +181,8 @@ public class DriverLoginPanel extends JFrame {
             Driver driver = driverService.loginDriver(driverId, password);
             
             if (driver != null) {
-                if (!driver.isProfileComplete()) {
-                    // Profile not complete, go to profile setup
-                    new DriverProfileSetup(driver, driverService);
-                } else {
                     // Profile complete, go to dashboard
                     new DriverDashboard(driver, driverService);
-                }
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(this,

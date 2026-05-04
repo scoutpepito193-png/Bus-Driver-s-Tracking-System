@@ -163,7 +163,7 @@ public class SubAdminLogin extends JFrame {
             }
             
             // Call backend to login
-            SubAdmin subAdmin = subAdminService.login(adminId, password);
+            SubAdmin subAdmin = subAdminService.subAdminLogIn(adminId, password);
             
             if (subAdmin != null) {
                 if (subAdmin.getAge() == 0) {

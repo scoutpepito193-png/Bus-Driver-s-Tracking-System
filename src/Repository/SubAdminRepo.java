@@ -1,5 +1,6 @@
 package Repository;
 
+import Model.Request;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -59,6 +60,7 @@ public class SubAdminRepo
             {
                 SubAdmin sub = new SubAdmin();
                 
+                sub.setSubID(res.getInt("sub_admin_id"));
                 sub.setpublic_sub_id(res.getString("public_sub_id"));
                 sub.setfirstName(res.getString("first_name"));
                 sub.setlastName(res.getString("last_name"));
@@ -140,6 +142,44 @@ public class SubAdminRepo
         }
         
         return count;
+    }
+    
+    public List<Request> getAllMyRequest(int subAdminID)
+    {
+        List<Request> list = new ArrayList<>();
+        
+        
+        String sql = "SELECT * FROM request "
+                + "WHERE sub_admin_id = ? "
+                + "ORDER BY created_at DESC";
+        
+        try(Connection conn = dbConnection.getConnection();
+            PreparedStatement prepS = conn.prepareStatement(sql))
+        {
+            prepS.setInt(1, subAdminID);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            while(res.next())
+            {
+                Request req = new Request();
+                
+                req.setRequestCode(res.getString("request_code"));
+                req.setRequestInfo(res.getString("request_info"));
+                req.setDetails(res.getString("details"));
+                req.setStatus(res.getString("status"));
+                
+                list.add(req);
+            }
+        }
+       
+     
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return list;
     }
     
 }

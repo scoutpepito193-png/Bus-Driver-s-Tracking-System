@@ -9,12 +9,15 @@ import Model.Request;
 import Model.SuperAdmin;
 import Repository.SuperAdminRepo;
 import Repository.DriverRepo;
+import util.TraccarAPI;
+import util.APIResponse;
 
 public class SuperAdminService
 {
     private final SuperAdminRepo saRepo = new SuperAdminRepo();
+    private final TraccarService traccarService = new TraccarService();
     
-    public boolean checkAccout()
+    public boolean checkAccount()
     {
         return saRepo.checkExistingSA();
     }
@@ -172,6 +175,26 @@ public class SuperAdminService
                 Driver d =(Driver) getReqDetails(reqCode);
                 
                 if(d == null) return false;
+                
+                APIResponse res = traccarService.initSession();
+
+                if (!res.isSuccess())
+                {
+                    return false;
+                }
+                
+                String deviceName = d.getpublic_driver_id() + " - " + d.getfirstName() + " - " + d.getlastName();
+                
+                String uniqueId = d.getpublic_driver_id();
+           
+                int deviceID = TraccarAPI.creationDeviceID(deviceName, uniqueId);
+            
+                if(deviceID == -1)
+                {
+                    return false;
+                }
+            
+                d.setTraccarID(deviceID);
                 
                 success = dRepo.insertApprovedDriver(d);
             }
