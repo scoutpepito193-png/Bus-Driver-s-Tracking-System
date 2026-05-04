@@ -353,6 +353,9 @@ public class SuperAdminDashboard extends JFrame {
     /**
      * Creates Requests Panel with approval functionality
      */
+    /**
+     * Creates Requests Panel with approval AND rejection functionality
+     */
     private JPanel createRequestsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
@@ -391,19 +394,20 @@ public class SuperAdminDashboard extends JFrame {
             scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
             panel.add(scrollPane, BorderLayout.CENTER);
 
-            // Button Panel
+            // ✅ Button Panel - APPROVE & REJECT
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
             btnPanel.setBackground(new Color(240, 242, 245));
             btnPanel.setPreferredSize(new Dimension(0, 70));
 
-            JButton approveBtn = new JButton("APPROVE REQUEST");
+            // ✅ APPROVE BUTTON
+            JButton approveBtn = new JButton("✓ APPROVE REQUEST");
             approveBtn.setBackground(new Color(46, 204, 113));
             approveBtn.setForeground(Color.WHITE);
             approveBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
             approveBtn.setFocusPainted(false);
             approveBtn.setBorderPainted(false);
             approveBtn.setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
-            approveBtn.setPreferredSize(new Dimension(240, 50));
+            approveBtn.setPreferredSize(new Dimension(220, 50));
             approveBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
             approveBtn.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
@@ -417,20 +421,83 @@ public class SuperAdminDashboard extends JFrame {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow >= 0) {
                     String requestCode = (String) table.getValueAt(selectedRow, 0);
-                    boolean approved = sas.approveRequest(requestCode);
-                    String message = approved ? "Request Approved Successfully!" : "Approval Failed";
-                    String title = approved ? "Success" : "Error";
-                    showInfoDialog(title, message);
-                    if (approved) {
-                        tableModel.removeRow(selectedRow);
-                        requestsLoaded = false;
+                    System.out.println("DEBUG: Attempting to approve request: " + requestCode);
+                    
+                    try {
+                        boolean approved = sas.approveRequest(requestCode);
+                        System.out.println("DEBUG: Approval result: " + approved);
+                        
+                        if (approved) {
+                            showInfoDialog("Success", "✓ Request Approved Successfully!");
+                            tableModel.removeRow(selectedRow);
+                            requestsLoaded = false;
+                        } else {
+                            showErrorDialog("Error", "Approval failed. Request may be invalid or driver data incomplete.");
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Exception during approval: " + ex.getMessage());
+                        ex.printStackTrace();
+                        showErrorDialog("Error", "An error occurred: " + ex.getMessage());
                     }
                 } else {
                     showErrorDialog("Warning", "Please select a request to approve");
                 }
             });
 
+            // ✅ NEW REJECT BUTTON
+            JButton rejectBtn = new JButton("✗ REJECT REQUEST");
+            rejectBtn.setBackground(new Color(231, 76, 60));
+            rejectBtn.setForeground(Color.WHITE);
+            rejectBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            rejectBtn.setFocusPainted(false);
+            rejectBtn.setBorderPainted(false);
+            rejectBtn.setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
+            rejectBtn.setPreferredSize(new Dimension(220, 50));
+            rejectBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            rejectBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    rejectBtn.setBackground(new Color(192, 57, 43));
+                }
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    rejectBtn.setBackground(new Color(231, 76, 60));
+                }
+            });
+            rejectBtn.addActionListener(e -> {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow >= 0) {
+                    String requestCode = (String) table.getValueAt(selectedRow, 0);
+                    
+                    // ✅ Show dialog to get rejection reason
+                    String reason = showRejectReasonDialog();
+                    
+                    if (reason != null) {  // User clicked OK
+                        System.out.println("DEBUG: Attempting to reject request: " + requestCode);
+                        System.out.println("DEBUG: Rejection reason: " + reason);
+                        
+                        try {
+                            boolean rejected = sas.rejectRequest(requestCode, reason);
+                            System.out.println("DEBUG: Rejection result: " + rejected);
+                            
+                            if (rejected) {
+                                showInfoDialog("Success", "✗ Request Rejected!\nReason: " + reason);
+                                tableModel.removeRow(selectedRow);
+                                requestsLoaded = false;
+                            } else {
+                                showErrorDialog("Error", "Rejection failed. Please try again.");
+                            }
+                        } catch (Exception ex) {
+                            System.err.println("Exception during rejection: " + ex.getMessage());
+                            ex.printStackTrace();
+                            showErrorDialog("Error", "An error occurred: " + ex.getMessage());
+                        }
+                    }
+                } else {
+                    showErrorDialog("Warning", "Please select a request to reject");
+                }
+            });
+
             btnPanel.add(approveBtn);
+            btnPanel.add(rejectBtn);
             panel.add(btnPanel, BorderLayout.SOUTH);
         } catch (Exception e) {
             System.err.println("Error loading requests panel: " + e.getMessage());
@@ -735,6 +802,91 @@ public class SuperAdminDashboard extends JFrame {
 
         dlg.add(p);
         dlg.setVisible(true);
+    }
+    
+    /**
+     * ✅ NEW: Shows dialog to get rejection reason from user
+     */
+    private String showRejectReasonDialog() {
+        JDialog dlg = new JDialog(this, "Reject Request", true);
+        dlg.setSize(450, 280);
+        dlg.setLocationRelativeTo(this);
+        dlg.setResizable(false);
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.setBackground(Color.WHITE);
+
+        // Title
+        JLabel titleLabel = new JLabel("Why are you rejecting this request?");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        titleLabel.setForeground(new Color(231, 76, 60));
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        contentPanel.add(titleLabel);
+        contentPanel.add(Box.createVerticalStrut(10));
+
+        // Text Area for reason
+        JTextArea reasonArea = new JTextArea(5, 40);
+        reasonArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        reasonArea.setLineWrap(true);
+        reasonArea.setWrapStyleWord(true);
+        reasonArea.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        JScrollPane scrollPane = new JScrollPane(reasonArea);
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        contentPanel.add(scrollPane);
+        contentPanel.add(Box.createVerticalStrut(15));
+
+        // Button Panel
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        btnPanel.setOpaque(false);
+        btnPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+        JButton okBtn = new JButton("REJECT");
+        okBtn.setBackground(new Color(231, 76, 60));
+        okBtn.setForeground(Color.WHITE);
+        okBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        okBtn.setFocusPainted(false);
+        okBtn.setBorderPainted(false);
+        okBtn.setPreferredSize(new Dimension(100, 35));
+        okBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JButton cancelBtn = new JButton("CANCEL");
+        cancelBtn.setBackground(new Color(150, 150, 150));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        cancelBtn.setFocusPainted(false);
+        cancelBtn.setBorderPainted(false);
+        cancelBtn.setPreferredSize(new Dimension(100, 35));
+        cancelBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Store result
+        String[] result = {null};
+
+        okBtn.addActionListener(e -> {
+            String reason = reasonArea.getText().trim();
+            if (reason.isEmpty()) {
+                JOptionPane.showMessageDialog(dlg, "Please provide a reason for rejection", 
+                    "Empty Reason", JOptionPane.WARNING_MESSAGE);
+            } else {
+                result[0] = reason;
+                dlg.dispose();
+            }
+        });
+
+        cancelBtn.addActionListener(e -> {
+            result[0] = null;
+            dlg.dispose();
+        });
+
+        btnPanel.add(cancelBtn);
+        btnPanel.add(okBtn);
+        contentPanel.add(btnPanel);
+
+        dlg.add(contentPanel);
+        dlg.setVisible(true);
+
+        return result[0];
     }
 
     class BackgroundPanel extends JPanel {

@@ -328,6 +328,38 @@ public class SuperAdminService
         
         return false;
     }
+    
+    public boolean rejectRequest(String reqCode, String reason)
+    {
+        try
+        {
+            // Get the request from database
+            Request req = saRepo.getRequest(reqCode);
+            
+            if(req == null) {
+                System.err.println("Request not found: " + reqCode);
+                return false;
+            }
+            
+            // Update request status to REJECTED
+            boolean statusUpdated = saRepo.updateRequestStatus(reqCode, "REJECTED");
+            
+            if(statusUpdated) {
+                System.out.println("Request rejected: " + reqCode + " | Reason: " + reason);
+                return true;
+            }
+            
+            return false;
+        }
+        catch(Exception e)
+        {
+            System.err.println("Error rejecting request: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
 }
     
     /*public boolean approveRequest(String reqCode)
