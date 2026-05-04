@@ -50,14 +50,14 @@ public class SuperAdminLogin extends JFrame {
     
     private void addComponents(JPanel mainPanel) {
         
-        // Header with Logo
+        // Header with Logo (SAME AS MENU)
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(155, 89, 182));
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(108, 52, 131)));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
         headerPanel.setPreferredSize(new Dimension(0, 80));
         
-        // Logo Label
+        // Logo Label (SAME AS MENU)
         JLabel logoLabel = new JLabel("[ BUS ] BDTracker");
         logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         logoLabel.setForeground(Color.WHITE);
@@ -72,18 +72,16 @@ public class SuperAdminLogin extends JFrame {
         leftHeader.add(logoLabel);
         leftHeader.add(headerLabel);
         
-        JButton backBtn = new JButton("BACK");
+        JButton backBtn = new JButton("← BACK");
         backBtn.setBackground(new Color(231, 76, 60));
         backBtn.setForeground(Color.WHITE);
         backBtn.setFont(new Font("Segoe UI", Font.BOLD, 11));
         backBtn.setFocusPainted(false);
+        backBtn.setBorderPainted(false);
         backBtn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backBtn.addActionListener(e -> {
-            // Close this login window
             dispose();
-            // Restore AdminRoleSelection (it was hidden with setVisible(false), not disposed,
-            // so it is still alive in memory and can be made visible again)
             parentFrame.setVisible(true);
         });
         
@@ -107,7 +105,7 @@ public class SuperAdminLogin extends JFrame {
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(15, 0, 15, 0);
+        gbc.insets = new Insets(12, 0, 12, 0);
         gbc.weightx = 1.0;
         
         // Admin ID Label
@@ -150,7 +148,7 @@ public class SuperAdminLogin extends JFrame {
         
         // Forgot Password Link
         gbc.gridy = 4;
-        gbc.insets = new Insets(5, 0, 20, 0);
+        gbc.insets = new Insets(5, 0, 15, 0);
         JButton forgotBtn = new JButton("Forgot Password?");
         forgotBtn.setOpaque(false);
         forgotBtn.setContentAreaFilled(false);
@@ -163,14 +161,15 @@ public class SuperAdminLogin extends JFrame {
             "Password Reset", JOptionPane.INFORMATION_MESSAGE));
         formContainer.add(forgotBtn, gbc);
         
-        // Login Button
+        // Login Button (MOVED HIGHER - Less spacing)
         gbc.gridy = 5;
-        gbc.insets = new Insets(20, 0, 0, 0);
+        gbc.insets = new Insets(10, 0, 0, 0);
         JButton loginBtn = new JButton("LOGIN");
         loginBtn.setBackground(new Color(155, 89, 182));
         loginBtn.setForeground(Color.WHITE);
         loginBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
         loginBtn.setFocusPainted(false);
+        loginBtn.setBorderPainted(false);
         loginBtn.setPreferredSize(new Dimension(400, 50));
         loginBtn.setMaximumSize(new Dimension(400, 50));
         loginBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -187,44 +186,32 @@ public class SuperAdminLogin extends JFrame {
             String adminId = adminIdField.getText().trim();
             String password = new String(passwordField.getPassword());
 
-            // Validate: both fields must be filled before attempting login
             if (adminId.isEmpty() || password.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields",
                     "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            // Call the service layer to verify credentials.
-            // Returns: 1 = success, 2 = wrong password, 0 = account not found
             int result = superAdminService.logIn(adminId, password);
 
             if (result == 1) {
-                // Login successful — fetch the full SuperAdmin profile from the database
-                // This retrieves the existing SuperAdmin data (since they already have an account)
                 SuperAdmin superAdmin = superAdminService.getSAData();
 
                 if (superAdmin != null) {
-                    // Open the Super Admin Dashboard, passing all required services
-                    // FIX: Pass instances of the services (not class names) as parameters
                     new SuperAdminDashboard(superAdmin, superAdminService,
                         new Service.DriverService(), new Service.SubAdminService());
 
-                    // Hide AdminRoleSelection (the parent of this window) — no longer needed
                     parentFrame.setVisible(false);
-
-                    // Close this login window
                     dispose();
                 } else {
                     JOptionPane.showMessageDialog(this, "Failed to load profile data",
                         "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } else if (result == 2) {
-                // Credentials found but password is wrong
                 JOptionPane.showMessageDialog(this, "Invalid Credentials",
                     "Login Failed", JOptionPane.ERROR_MESSAGE);
-                passwordField.setText(""); // Clear the password field so user can retry
+                passwordField.setText("");
             } else {
-                // No account found matching the given Admin ID (result == 0)
                 JOptionPane.showMessageDialog(this, "Account not found",
                     "Login Failed", JOptionPane.ERROR_MESSAGE);
             }

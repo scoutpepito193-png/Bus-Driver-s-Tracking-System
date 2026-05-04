@@ -110,13 +110,8 @@ public class Menu extends JFrame {
         adminBtn.setPreferredSize(new Dimension(350, 120));
         adminBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
         adminBtn.addActionListener(e -> {
-            // FIX: Hide Menu before opening AdminRoleSelection.
-            // Previously Menu stayed open behind the next screen, causing window
-            // stacking issues that made child windows appear hidden or unfocused.
-            // setVisible(false) keeps the Menu instance alive so AdminRoleSelection's
-            // BACK button can call parentFrame.setVisible(true) to restore it.
             this.setVisible(false);
-            new AdminRoleSelection(this); // Pass 'this' so BACK button can restore Menu
+            new AdminRoleSelection(this);
         });
         buttonsPanel.add(adminBtn);
         
@@ -126,11 +121,8 @@ public class Menu extends JFrame {
         driverBtn.setPreferredSize(new Dimension(350, 120));
         driverBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
         driverBtn.addActionListener(e -> {
-            // FIX: Same pattern as Admin button — hide Menu before opening
-            // DriverLoginPanel so windows don't stack. Pass 'this' so
-            // DriverLoginPanel's BACK button can restore Menu via setVisible(true).
             this.setVisible(false);
-            new DriverLoginPanel(this); // Pass 'this' so BACK button can restore Menu
+            new DriverLoginPanel(this);
         });
         buttonsPanel.add(driverBtn);
         
@@ -254,8 +246,8 @@ public class Menu extends JFrame {
             this.endColor = endColor;
             setOpaque(false);
             setContentAreaFilled(false);
-            setBorderPainted(false);
-            setFocusPainted(false);
+            setBorderPainted(false);  // ✓ Remove border
+            setFocusPainted(false);   // ✓ Remove focus outline
             setCursor(new Cursor(Cursor.HAND_CURSOR));
         }
         
@@ -296,12 +288,12 @@ public class Menu extends JFrame {
             g2.setPaint(gradient);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
             
-            g2.setColor(new Color(0, 0, 0, 30));
-            g2.setStroke(new BasicStroke(1));
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
+            // ✓ REMOVED: Border lines that created white rectangle
+            // No border drawing = cleaner look
             
-            g2.setColor(new Color(255, 255, 255, 80));
-            g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() / 2 - 1, arc, arc);
+            // Optional: Add subtle shadow effect
+            g2.setColor(new Color(0, 0, 0, 20));
+            g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, arc, arc);
             
             super.paintComponent(g);
         }

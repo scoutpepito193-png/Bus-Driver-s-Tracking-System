@@ -12,8 +12,12 @@ import java.util.List;
 
 public class DriverDashboard extends JFrame {
 
-    DriverService ds = new DriverService();
+    private DriverService ds = new DriverService();
     private Driver driver;
+    
+    private boolean profileLoaded = false;
+    private boolean performanceLoaded = false;
+    private boolean rankingLoaded = false;
 
     public DriverDashboard(Driver driver, DriverService driverService) {
         this.driver = driver;
@@ -28,7 +32,7 @@ public class DriverDashboard extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         add(mainPanel);
         
-        // Header
+        // Header (IMPROVED)
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(52, 152, 219));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
@@ -38,21 +42,12 @@ public class DriverDashboard extends JFrame {
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
         titleLabel.setForeground(Color.WHITE);
         
-        JLabel userLabel = new JLabel("Welcome, " + driver.getfirstName() + " " + driver.getlastName());
-        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        userLabel.setForeground(new Color(220, 220, 220));
-        
-        JPanel leftHeader = new JPanel();
-        leftHeader.setLayout(new BoxLayout(leftHeader, BoxLayout.Y_AXIS));
-        leftHeader.setOpaque(false);
-        leftHeader.add(titleLabel);
-        leftHeader.add(userLabel);
-        
         JButton logoutBtn = new JButton("LOGOUT");
         logoutBtn.setBackground(new Color(231, 76, 60));
         logoutBtn.setForeground(Color.WHITE);
         logoutBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         logoutBtn.setFocusPainted(false);
+        logoutBtn.setBorderPainted(false);
         logoutBtn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
         logoutBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         logoutBtn.addActionListener(e -> {
@@ -60,22 +55,47 @@ public class DriverDashboard extends JFrame {
             dispose();
         });
         
-        headerPanel.add(leftHeader, BorderLayout.WEST);
+        headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(logoutBtn, BorderLayout.EAST);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         
-        // Tabbed Panel
+        // Tabbed Panel with Lazy Loading
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         
-        // Profile Tab
-        tabbedPane.addTab("Profile", createProfilePanel());
+        // Add empty panels first
+        tabbedPane.addTab("Profile", new JPanel());
+        tabbedPane.addTab("Performance", new JPanel());
+        tabbedPane.addTab("Rankings", new JPanel());
         
-        // Performance Tab
-        tabbedPane.addTab("Performance", createPerformancePanel());
+        // Add listener to load tab content only when clicked
+        tabbedPane.addChangeListener(e -> {
+            int selectedIndex = tabbedPane.getSelectedIndex();
+            
+            switch(selectedIndex) {
+                case 0:
+                    if (!profileLoaded) {
+                        tabbedPane.setComponentAt(0, createProfilePanel());
+                        profileLoaded = true;
+                    }
+                    break;
+                case 1:
+                    if (!performanceLoaded) {
+                        tabbedPane.setComponentAt(1, createPerformancePanel());
+                        performanceLoaded = true;
+                    }
+                    break;
+                case 2:
+                    if (!rankingLoaded) {
+                        tabbedPane.setComponentAt(2, createRankingPanel());
+                        rankingLoaded = true;
+                    }
+                    break;
+            }
+        });
         
-        // Requests Tab
-        tabbedPane.addTab("Requests", createRequestsPanel());
+        // Trigger first tab load
+        tabbedPane.setSelectedIndex(0);
         
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
         
@@ -85,17 +105,24 @@ public class DriverDashboard extends JFrame {
     private JPanel createProfilePanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBackground(Color.WHITE);
         
-        JPanel infoPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+        JPanel infoPanel = new JPanel(new GridLayout(4, 2, 20, 15));
         infoPanel.setBackground(Color.WHITE);
-        infoPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+        infoPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
+            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
+        infoPanel.setMaximumSize(new Dimension(600, 400));
         
         addInfoRow(infoPanel, "Driver ID:", driver.getpublic_driver_id());
-        addInfoRow(infoPanel, "Name:", driver.getfirstName() + " " + driver.getlastName());
+        addInfoRow(infoPanel, "Full Name:", driver.getfirstName() + " " + driver.getlastName());
         addInfoRow(infoPanel, "Contact:", driver.getcontactNumber());
         addInfoRow(infoPanel, "Address:", driver.getaddress());
         addInfoRow(infoPanel, "License Number:", driver.getlicenseNum());
         addInfoRow(infoPanel, "Gender:", driver.getgender());
+        addInfoRow(infoPanel, "Status:", driver.getStatus() != null ? driver.getStatus() : "Active");
+        addInfoRow(infoPanel, "Date of Birth:", driver.getdateOfBirth() != null ? driver.getdateOfBirth().toString() : "N/A");
         
         panel.add(infoPanel, BorderLayout.WEST);
         
@@ -104,9 +131,12 @@ public class DriverDashboard extends JFrame {
     
     private void addInfoRow(JPanel panel, String label, String value) {
         JLabel labelComponent = new JLabel(label);
-        labelComponent.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        labelComponent.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        labelComponent.setForeground(new Color(52, 152, 219));
+        
         JLabel valueComponent = new JLabel(value);
-        valueComponent.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        valueComponent.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        valueComponent.setForeground(new Color(60, 60, 60));
         
         panel.add(labelComponent);
         panel.add(valueComponent);
@@ -115,71 +145,135 @@ public class DriverDashboard extends JFrame {
     private JPanel createPerformancePanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setBackground(Color.WHITE);
         
-        List<DriverPerformance> records = ds.getDriverRecords(driver.getpublic_driver_id());
-        String[] columns = {"Tickets", "Revenue", "KM/L"};
-        Object[][] data = new Object[records.size()][3];
-        
-        for (int i = 0; i < records.size(); i++) {
-            DriverPerformance dp = records.get(i);
-            data[i][0] = dp.gettotalTickets();
-            data[i][1] = String.format("%.2f", dp.gettotalRevenue());
-            data[i][2] = String.format("%.2f", dp.getaverageKMPL());
-        }
-        
-        JTable table = new JTable(new DefaultTableModel(data, columns) {
-            public boolean isCellEditable(int row, int column) {
-                return false;
+        try {
+            List<DriverPerformance> records = ds.getDriverRecords(driver.getpublic_driver_id());
+            String[] columns = {"Tickets", "Revenue", "KM/L", "Date"};
+            Object[][] data = new Object[records.size()][4];
+            
+            for (int i = 0; i < records.size(); i++) {
+                DriverPerformance dp = records.get(i);
+                data[i][0] = dp.gettotalTickets();
+                data[i][1] = String.format("%.2f", dp.gettotalRevenue());
+                data[i][2] = String.format("%.2f", dp.getaverageKMPL());
+                data[i][3] = "Today";
             }
-        });
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        table.setRowHeight(25);
-        
-        JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
+            
+            JTable table = new JTable(new DefaultTableModel(data, columns) {
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            });
+            table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            table.setRowHeight(25);
+            table.getTableHeader().setBackground(new Color(52, 152, 219));
+            table.getTableHeader().setForeground(Color.WHITE);
+            table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+            
+            JScrollPane scrollPane = new JScrollPane(table);
+            panel.add(scrollPane, BorderLayout.CENTER);
+        } catch (Exception e) {
+            System.err.println("Error loading performance panel: " + e.getMessage());
+            panel.add(new JLabel("Error loading performance data"));
+        }
         
         return panel;
     }
     
-    private JPanel createRequestsPanel() {
+    private JPanel createRankingPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBackground(Color.WHITE);
         
-        JPanel requestPanel = new JPanel(new GridBagLayout());
-        requestPanel.setBackground(Color.WHITE);
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.weightx = 1.0;
-        
-        // Request Reason
-        gbc.gridy = 0;
-        requestPanel.add(new JLabel("Request Reason:"), gbc);
-        gbc.gridy = 1;
-        JTextArea reasonArea = new JTextArea(5, 30);
-        reasonArea.setLineWrap(true);
-        reasonArea.setWrapStyleWord(true);
-        requestPanel.add(new JScrollPane(reasonArea), gbc);
-        
-        // Submit Button
-        gbc.gridy = 2;
-        JButton submitBtn = new JButton("SUBMIT REQUEST");
-        submitBtn.setBackground(new Color(52, 152, 219));
-        submitBtn.setForeground(Color.WHITE);
-        submitBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        submitBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        submitBtn.addActionListener(e -> {
-            if (reasonArea.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(panel, "Please enter a reason", "Validation", JOptionPane.WARNING_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(panel, "Request submitted successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
-                reasonArea.setText("");
+        try {
+            List<Driver> rankings = ds.getDriverRanking();
+            
+            // Find current driver's rank
+            int currentRank = -1;
+            for (int i = 0; i < rankings.size(); i++) {
+                if (rankings.get(i).getpublic_driver_id().equals(driver.getpublic_driver_id())) {
+                    currentRank = i + 1;
+                    break;
+                }
             }
-        });
-        requestPanel.add(submitBtn, gbc);
-        
-        panel.add(requestPanel, BorderLayout.WEST);
+            
+            JPanel statsPanel = new JPanel(new GridLayout(1, 2, 20, 20));
+            statsPanel.setBackground(Color.WHITE);
+            statsPanel.setMaximumSize(new Dimension(600, 150));
+            
+            // Current Rank Card
+            JPanel rankCard = new JPanel(new BorderLayout());
+            rankCard.setBackground(Color.WHITE);
+            rankCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)
+            ));
+            
+            JLabel rankLabel = new JLabel("Your Rank");
+            rankLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            rankLabel.setForeground(new Color(100, 100, 100));
+            
+            JLabel rankValue = new JLabel(currentRank != -1 ? "#" + currentRank : "N/A");
+            rankValue.setFont(new Font("Segoe UI", Font.BOLD, 48));
+            rankValue.setForeground(new Color(52, 152, 219));
+            rankValue.setHorizontalAlignment(JLabel.CENTER);
+            
+            rankCard.add(rankLabel, BorderLayout.NORTH);
+            rankCard.add(rankValue, BorderLayout.CENTER);
+            statsPanel.add(rankCard);
+            
+            // Total Drivers Card
+            JPanel totalCard = new JPanel(new BorderLayout());
+            totalCard.setBackground(Color.WHITE);
+            totalCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(46, 204, 113), 2),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)
+            ));
+            
+            JLabel totalLabel = new JLabel("Total Drivers");
+            totalLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            totalLabel.setForeground(new Color(100, 100, 100));
+            
+            JLabel totalValue = new JLabel(String.valueOf(rankings.size()));
+            totalValue.setFont(new Font("Segoe UI", Font.BOLD, 48));
+            totalValue.setForeground(new Color(46, 204, 113));
+            totalValue.setHorizontalAlignment(JLabel.CENTER);
+            
+            totalCard.add(totalLabel, BorderLayout.NORTH);
+            totalCard.add(totalValue, BorderLayout.CENTER);
+            statsPanel.add(totalCard);
+            
+            panel.add(statsPanel, BorderLayout.NORTH);
+            
+            // Rankings Table
+            String[] columns = {"Rank", "Driver Name", "Score"};
+            Object[][] data = new Object[Math.min(rankings.size(), 10)][3];
+            
+            for (int i = 0; i < Math.min(rankings.size(), 10); i++) {
+                Driver d = rankings.get(i);
+                data[i][0] = (i + 1) + "";
+                data[i][1] = d.getfirstName() + " " + d.getlastName();
+                data[i][2] = d.getranking();
+            }
+            
+            JTable table = new JTable(new DefaultTableModel(data, columns) {
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            });
+            table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            table.setRowHeight(25);
+            table.getTableHeader().setBackground(new Color(52, 152, 219));
+            table.getTableHeader().setForeground(Color.WHITE);
+            table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+            
+            JScrollPane scrollPane = new JScrollPane(table);
+            panel.add(scrollPane, BorderLayout.CENTER);
+        } catch (Exception e) {
+            System.err.println("Error loading ranking panel: " + e.getMessage());
+            panel.add(new JLabel("Error loading ranking data"));
+        }
         
         return panel;
     }

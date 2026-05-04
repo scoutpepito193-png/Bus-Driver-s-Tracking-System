@@ -6,8 +6,6 @@ import java.awt.image.BufferedImage;
 
 public class AdminRoleSelection extends JFrame {
     
-    // Holds a reference to the Menu window so the BACK button can restore it.
-    // We store it as JFrame (not Menu) to keep this class loosely coupled.
     private JFrame parentFrame;
     
     public AdminRoleSelection(JFrame parentFrame) {
@@ -70,7 +68,7 @@ public class AdminRoleSelection extends JFrame {
         mainPanel.add(headerPanel);
         
         // Spacer
-        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(Box.createVerticalStrut(30));
         
         // Content Panel
         JPanel contentPanel = new JPanel();
@@ -79,16 +77,17 @@ public class AdminRoleSelection extends JFrame {
         contentPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 350));
         contentPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        // Super Admin Card
+        // Super Admin Card (IMPROVED)
         JPanel superAdminCard = createRoleCard(
             "SUPER ADMIN",
-            "Full System Control",
+            "Full System Control & Management",
             new String[]{
-                "  >> Manage all sub admins",
-                "  >> Approve/reject requests",
-                "  >> View system reports",
-                "  >> Monitor all drivers",
-                "  >> System configuration"
+                "-Manage all sub admins and drivers",
+                "-Approve/reject driver requests",
+                "-View comprehensive system reports",
+                "-Monitor all drivers in real-time",
+                "-Configure system settings",
+                "-Track GPS locations"
             },
             new Color(155, 89, 182),
             new Color(108, 52, 131),
@@ -96,16 +95,17 @@ public class AdminRoleSelection extends JFrame {
         );
         contentPanel.add(superAdminCard);
         
-        // Sub Admin Card
+        // Sub Admin Card (IMPROVED)
         JPanel subAdminCard = createRoleCard(
             "SUB ADMIN",
-            "Fleet Management",
+            "Fleet & Driver Management",
             new String[]{
-                "  >> Manage assigned drivers",
-                "  >> Track GPS locations",
-                "  >> Handle driver requests",
-                "  >> Generate driver reports",
-                "  >> Request driver approval"
+                "-Manage assigned drivers",
+                "-Track GPS locations in real-time",
+                "-Handle driver requests & issues",
+                "-Generate detailed driver reports",
+                "-Request driver approval",
+                "-Monitor driver performance"
             },
             new Color(46, 204, 113),
             new Color(25, 138, 68),
@@ -124,11 +124,12 @@ public class AdminRoleSelection extends JFrame {
         backPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
         backPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 50, 10));
         
-        JButton backBtn = new JButton("BACK TO MAIN");
+        JButton backBtn = new JButton("← BACK TO MAIN");
         backBtn.setBackground(new Color(220, 220, 220));
         backBtn.setForeground(new Color(40, 40, 40));
         backBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         backBtn.setFocusPainted(false);
+        backBtn.setBorderPainted(false);
         backBtn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backBtn.setPreferredSize(new Dimension(150, 45));
@@ -141,9 +142,7 @@ public class AdminRoleSelection extends JFrame {
             }
         });
         backBtn.addActionListener(e -> {
-            // Dispose this AdminRoleSelection window completely (we're going all the way back)
             dispose();
-            // Restore the Menu window that was hidden when this screen was opened
             parentFrame.setVisible(true);
         });
         backPanel.add(backBtn);
@@ -151,23 +150,13 @@ public class AdminRoleSelection extends JFrame {
     }
     
     private void goToSuperAdminLogin() {
-        // FIX: Use setVisible(false) instead of dispose().
-        // The old code called dispose() immediately after constructing SuperAdminLogin,
-        // which destroyed this window's native peer while SuperAdminLogin was still
-        // initializing — causing SuperAdminLogin to not appear on screen.
-        // setVisible(false) hides this window but keeps it alive in memory,
-        // so SuperAdminLogin's BACK button can call parentFrame.setVisible(true)
-        // to properly return the user here.
         this.setVisible(false);
-        new SuperAdminLogin(this); // Pass 'this' so BACK button can restore this window
+        new SuperAdminLogin(this);
     }
     
     private void goToSubAdminLogin() {
-        // FIX: Same reason as goToSuperAdminLogin() — use setVisible(false) instead
-        // of dispose() to keep this window alive for BACK navigation.
-        // SubAdminLogin's BACK button calls parentFrame.setVisible(true) to return here.
         this.setVisible(false);
-        new SubAdminLogin(this); // Pass 'this' so BACK button can restore this window
+        new SubAdminLogin(this);
     }
     
     private JPanel createRoleCard(String title, String subtitle, String[] features,
@@ -175,26 +164,26 @@ public class AdminRoleSelection extends JFrame {
                                    java.awt.event.ActionListener actionListener) {
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setPreferredSize(new Dimension(300, 320));
+        card.setPreferredSize(new Dimension(320, 360));
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(primaryColor, 3),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+            BorderFactory.createEmptyBorder(25, 25, 25, 25)
         ));
         
         // Title
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(primaryColor);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         // Subtitle
         JLabel subtitleLabel = new JLabel(subtitle);
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         subtitleLabel.setForeground(new Color(100, 100, 100));
         subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        // Features
+        // Features Panel
         JPanel featuresPanel = new JPanel();
         featuresPanel.setLayout(new BoxLayout(featuresPanel, BoxLayout.Y_AXIS));
         featuresPanel.setOpaque(false);
@@ -202,20 +191,22 @@ public class AdminRoleSelection extends JFrame {
         
         for (String feature : features) {
             JLabel featureLabel = new JLabel(feature);
-            featureLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+            featureLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             featureLabel.setForeground(new Color(60, 60, 60));
             featureLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            featureLabel.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
             featuresPanel.add(featureLabel);
         }
         
         // Select Button
         JButton selectBtn = new JButton("SELECT");
-        selectBtn.setMaximumSize(new Dimension(280, 45));
+        selectBtn.setMaximumSize(new Dimension(280, 50));
         selectBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         selectBtn.setBackground(primaryColor);
         selectBtn.setForeground(Color.WHITE);
-        selectBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        selectBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         selectBtn.setFocusPainted(false);
+        selectBtn.setBorderPainted(false);
         selectBtn.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
         selectBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         selectBtn.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -229,9 +220,9 @@ public class AdminRoleSelection extends JFrame {
         selectBtn.addActionListener(actionListener);
         
         card.add(titleLabel);
-        card.add(Box.createVerticalStrut(3));
+        card.add(Box.createVerticalStrut(5));
         card.add(subtitleLabel);
-        card.add(Box.createVerticalStrut(15));
+        card.add(Box.createVerticalStrut(20));
         card.add(featuresPanel);
         card.add(Box.createVerticalGlue());
         card.add(selectBtn);
