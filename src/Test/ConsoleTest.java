@@ -143,7 +143,7 @@ public class ConsoleTest
                                 System.out.println("ID: " + saOutput.getPublicID());
                                 System.out.println();
                                 
-                                System.out.println("[1] Overview    [2] Driver    [3] Sub Admin       [4] Request       [0] Sign Out");
+                                System.out.println("[1] Overview    [2] Driver    [3] Sub Admin       [4] Request       [5] Search       [0] Sign Out");
                                 System.out.println();                                
                                 
                                 boolean inSADashboard = true;
@@ -359,6 +359,100 @@ public class ConsoleTest
                                             
                                             
                                             
+                                            break;
+                                            case 5:
+                                            {
+                                                System.out.println("\n[1] Search Driver");
+                                                System.out.println("[2] Search Sub Admin");
+                                                System.out.print("Choose: ");
+                                                int searchType = scan.nextInt();
+                                                scan.nextLine();
+
+                                                System.out.println("[1] Search by Name");
+                                                System.out.println("[2] Search by ID");
+                                                System.out.print("Choose: ");
+                                                int searchChoice = scan.nextInt();
+                                                scan.nextLine();
+
+                                                if (searchType == 1)
+                                                {
+                                                    Driver foundDriver = null;
+
+                                                    if (searchChoice == 1)
+                                                    {
+                                                        System.out.print("Enter Driver Name: ");
+                                                        String name = scan.nextLine();
+                                                        foundDriver = subs.searchDriverByName(name);
+                                                    }
+                                                    else if (searchChoice == 2)
+                                                    {
+                                                        System.out.print("Enter Driver ID: ");
+                                                        String driverId = scan.nextLine();
+                                                        foundDriver = subs.searchDriverById(driverId);
+                                                    }
+
+                                                    if (foundDriver != null)
+                                                    {
+                                                        System.out.println("\n===== Driver Info =====");
+                                                        System.out.println("Name          : " + foundDriver.getfirstName() + " " + foundDriver.getlastName());
+                                                        System.out.println("ID#           : " + foundDriver.getpublic_driver_id());
+                                                        System.out.println("Gender        : " + foundDriver.getgender());
+                                                        System.out.println("Date of Birth : " + foundDriver.getdateOfBirth());
+                                                        System.out.println("Address       : " + foundDriver.getaddress());
+                                                        System.out.println("Contact       : " + foundDriver.getcontactNumber());
+                                                        System.out.println("License No.   : " + foundDriver.getlicenseNum());
+                                                        System.out.println("License Expiry: " + foundDriver.getlicenseExpiry());
+
+                                                        List<DriverPerformance> records = subs.searchDriverRecords(foundDriver.getpublic_driver_id());
+                                                        System.out.println("\n===== Driver Records =====");
+                                                        System.out.printf("%-15s %-15s %-15s%n", "Tickets", "Revenue", "Avg KMPL");
+                                                        System.out.println("=".repeat(45));
+                                                        for (DriverPerformance dp : records)
+                                                        {
+                                                            System.out.printf("%-15d %-15.2f %-15.2f%n",
+                                                                dp.gettotalTickets(),
+                                                                dp.gettotalRevenue(),
+                                                                dp.getaverageKMPL());
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        System.out.println("Driver not found.");
+                                                    }
+                                                }
+                                                else if (searchType == 2)
+                                                {
+                                                    SubAdmin foundSub = null;
+
+                                                    if (searchChoice == 1)
+                                                    {
+                                                        System.out.print("Enter Sub Admin Name: ");
+                                                        String name = scan.nextLine();
+                                                        foundSub = subs.searchSubAdminByName(name);
+                                                    }
+                                                    else if (searchChoice == 2)
+                                                    {
+                                                        System.out.print("Enter Sub Admin ID: ");
+                                                        String subId = scan.nextLine();
+                                                        foundSub = subs.searchSubAdminById(subId);
+                                                    }
+
+                                                    if (foundSub != null)
+                                                    {
+                                                        System.out.println("\n===== Sub Admin Info =====");
+                                                        System.out.println("Name    : " + foundSub.getfirstName() + " " + foundSub.getlastName());
+                                                        System.out.println("ID#     : " + foundSub.getpublic_sub_id());
+                                                        System.out.println("Gender  : " + foundSub.getgender());
+                                                        System.out.println("Address : " + foundSub.getaddress());
+                                                        System.out.println("Contact : " + foundSub.getcontactNum());
+                                                        System.out.println("Position: " + foundSub.getposition());
+                                                    }
+                                                    else
+                                                    {
+                                                        System.out.println("Sub Admin not found.");
+                                                    }
+                                                }
+                                            }
                                             break;
                                             
                                         case 0:
