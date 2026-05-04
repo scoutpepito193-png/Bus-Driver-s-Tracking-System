@@ -523,7 +523,46 @@ public Integer getTraccarDeviceId(int driverID)
 
     return null;
 }
-    
+    public void updateRanking()
+{
+    Connection conn = dbConnection.getConnection();
+
+    try
+    {
+        String deleteSql = "DELETE FROM ranking";
+        PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+        deleteStmt.executeUpdate();
+
+        String sql = "INSERT INTO ranking (driver_id, driver_rank, rank_date) "
+        + "SELECT d.driver_id, "
+        + "ROW_NUMBER() OVER (ORDER BY "
+        + "SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 "
+        + "         WHEN a.status = 'HALF DAY' THEN 0.5 "
+        + "         ELSE 0.0 END) DESC, "
+        + "SUM(dp.total_tickets) DESC, "
+        + "SUM(dp.total_revenue) DESC, "
+        + "SUM(dp.violations) ASC "
+        + ") AS driver_rank, "
+        + "CURRENT_DATE as rank_date "
+        + "FROM driver d "
+        + "JOIN driver_performance dp ON d.driver_id = dp.driver_id "
+        + "JOIN driver_attendance a ON d.driver_id = a.driver_id "
+        + "WHERE EXTRACT(MONTH FROM a.date) = EXTRACT(MONTH FROM CURRENT_DATE) "
+        + "AND EXTRACT(YEAR FROM a.date) = EXTRACT(YEAR FROM CURRENT_DATE) "
+        + "GROUP BY d.driver_id";
+
+        PreparedStatement prepS = conn.prepareStatement(sql);
+        prepS.executeUpdate();
+    }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
+    finally
+    {
+        try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace(); }
+    }
+}
     /*public List<Driver> listofDrivers()
     {
         List<Driver> d = new ArrayList<>();

@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 import Model.SubAdmin;
+import Model.Driver;
+import Model.DriverPerformance;
+import java.time.LocalDate;
 
 public class SubAdminRepo
 {   
@@ -181,5 +184,108 @@ public class SubAdminRepo
         
         return list;
     }
-    
+    public Driver searchDriverByName(String name)
+{
+    Connection conn = dbConnection.getConnection();
+
+    try
+    {
+        String sql = "SELECT * FROM driver WHERE LOWER(first_name || ' ' || last_name) LIKE LOWER(?)";
+        PreparedStatement prepS = conn.prepareStatement(sql);
+        prepS.setString(1, "%" + name + "%");
+
+        ResultSet res = prepS.executeQuery();
+
+        if (res.next())
+        {
+            Driver d = new Driver();
+            d.setpublic_driver_id(res.getString("public_driver_id"));
+            d.setfirstName(res.getString("first_name"));
+            d.setlastName(res.getString("last_name"));
+            d.setgender(res.getString("gender"));
+            d.setdateOfBirth(res.getObject("date_of_birth", LocalDate.class));
+            d.setaddress(res.getString("address"));
+            d.setcontactNumber(res.getString("contact_number"));
+            d.setlicenseNum(res.getString("license_number"));
+            d.setlicenseExpiry(res.getObject("license_expiry_date", LocalDate.class));
+            return d;
+        }
+    }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return null;
+}
+
+public Driver searchDriverById(String publicDriverId)
+{
+    Connection conn = dbConnection.getConnection();
+
+    try
+    {
+        String sql = "SELECT * FROM driver WHERE public_driver_id = ?";
+        PreparedStatement prepS = conn.prepareStatement(sql);
+        prepS.setString(1, publicDriverId);
+
+        ResultSet res = prepS.executeQuery();
+
+        if (res.next())
+        {
+            Driver d = new Driver();
+            d.setpublic_driver_id(res.getString("public_driver_id"));
+            d.setfirstName(res.getString("first_name"));
+            d.setlastName(res.getString("last_name"));
+            d.setgender(res.getString("gender"));
+            d.setdateOfBirth(res.getObject("date_of_birth", LocalDate.class));
+            d.setaddress(res.getString("address"));
+            d.setcontactNumber(res.getString("contact_number"));
+            d.setlicenseNum(res.getString("license_number"));
+            d.setlicenseExpiry(res.getObject("license_expiry_date", LocalDate.class));
+
+            return d;
+        }
+    }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return null;
+}
+
+public List<DriverPerformance> searchDriverRecords(String publicDriverId)
+{
+    Connection conn = dbConnection.getConnection();
+    List<DriverPerformance> list = new ArrayList<>();
+
+    try
+    {
+        String sql = "SELECT dp.* FROM driver_performance dp "
+                + "JOIN driver d ON dp.driver_id = d.driver_id "
+                + "WHERE d.public_driver_id = ? "
+                + "ORDER BY dp.record_date DESC";
+
+        PreparedStatement prepS = conn.prepareStatement(sql);
+        prepS.setString(1, publicDriverId);
+
+        ResultSet res = prepS.executeQuery();
+
+        while (res.next())
+        {
+            DriverPerformance dp = new DriverPerformance();
+            dp.setaverageKMPL(res.getDouble("average_kmpl"));
+            dp.settotalTickets(res.getInt("total_tickets"));
+            dp.settotalRevenue(res.getDouble("total_revenue"));
+            list.add(dp);
+        }
+    }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return list;
+}
 }
