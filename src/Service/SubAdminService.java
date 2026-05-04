@@ -11,6 +11,8 @@ import org.json.JSONObject;
 import Model.SubAdmin;
 import Model.Request;
 import java.time.LocalDate;
+import Model.Driver;
+import Model.DriverPerformance;
 
 
 public class SubAdminService
@@ -132,5 +134,19 @@ public class SubAdminService
                 }
             }
         }).start();
+    }
+    public Driver searchDriverByName(String name)
+{
+    return subARepo.searchDriverByName(name);
+}
+
+    public Driver searchDriverById(String id)
+    {
+        return subARepo.searchDriverById(id);
+    }
+
+    public List<DriverPerformance> searchDriverRecords(String publicDriverId)
+    {
+        return subARepo.searchDriverRecords(publicDriverId);
     }
 }
