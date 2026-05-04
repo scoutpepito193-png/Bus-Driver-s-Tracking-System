@@ -507,16 +507,9 @@ public class DriverRepo
     
 
         public void updateRanking()
-    {
-        Connection conn = dbConnection.getConnection();
-
-        try
-        {
-            String deleteSql = "DELETE FROM ranking";
-            PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
-            deleteStmt.executeUpdate();
-
-            String sql = "INSERT INTO ranking (driver_id, driver_rank, rank_date) "
+{
+    String deleteSql = "DELETE FROM ranking";
+    String sql = "INSERT INTO ranking (driver_id, driver_rank, rank_date) "
             + "SELECT d.driver_id, "
             + "ROW_NUMBER() OVER (ORDER BY "
             + "SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 "
@@ -534,17 +527,17 @@ public class DriverRepo
             + "AND EXTRACT(YEAR FROM a.date) = EXTRACT(YEAR FROM CURRENT_DATE) "
             + "GROUP BY d.driver_id";
 
-            PreparedStatement prepS = conn.prepareStatement(sql);
-            prepS.executeUpdate();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-        try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace(); }
-        }
+    try (Connection conn = dbConnection.getConnection();
+         PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+         PreparedStatement prepS = conn.prepareStatement(sql))
+    {
+        deleteStmt.executeUpdate();
+        prepS.executeUpdate();
+    }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
     }
 }
     /*public List<Driver> listofDrivers()
