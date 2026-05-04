@@ -119,7 +119,7 @@ public class SubAdminRepo
     {
         int count = 0;
         
-        String sql = "SELECT * FROM sub_admin";
+        String sql = "SELECT COUNT(*) FROM sub_admin";
         
         try(Connection conn = dbConnection.getConnection();
                 PreparedStatement prepS = conn.prepareStatement(sql);)

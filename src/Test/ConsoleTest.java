@@ -605,7 +605,7 @@ public class ConsoleTest
                                         
                                         if (addORrecordChoice == 2)
                                         {
-                                            SalaryService salaryService = new SalaryService();
+                                            
                                             boolean flag = false;
                                             
                                             while(flag == false)
@@ -624,19 +624,7 @@ public class ConsoleTest
                                                 
                                                 flag = ds.recordDriverPerformance(d_ID, aveKMPL, totalTickets, totalRevenue);
                                                 
-                                                if(flag != false)
-                                                {
-                                                    boolean salarySaved = salaryService.processDailySalary(d_ID, totalRevenue);
-                                                    if (salarySaved)
-                                                    {
-                                                        System.out.println("Performance recorded and salary computed.");
-                                                    }
-                                                    else
-                                                    {
-                                                        System.out.println("Performance saved but salary failed.");
-                                                    }
-                                                }
-                                                else
+                                                if(flag == false)
                                                 {
                                                     System.out.println("Driver not Found");
                                                 }
@@ -713,6 +701,21 @@ public class ConsoleTest
                                             {
                                                 System.out.println("Driver not found.");
                                             }
+                                        }
+                                        
+                                        System.out.print("Update Driver Salary [y/n]: ");
+                                        char updateSalary = scan.next().charAt(0);
+                                        scan.nextLine();
+                                        
+                                        if(updateSalary == 'y' || 'Y' == updateSalary)
+                                        {
+                                            SalaryService salaryService = new SalaryService();
+                                            salaryService.processDailySalary();
+                                        }
+                                            
+                                        else
+                                        {
+                                            System.out.println("Failed");
                                         }
                                             
                                         System.out.println("View Driver Location [y/n]: ");
