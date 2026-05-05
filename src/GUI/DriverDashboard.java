@@ -3,6 +3,7 @@ package GUI;
 import Model.Driver;
 import Model.DriverPerformance;
 import Service.DriverService;
+import Service.SalaryService;
 
 import java.awt.Color;
 import javax.swing.*;
@@ -12,11 +13,12 @@ import java.util.List;
 
 /**
  * DriverDashboard - Driver portal for viewing profile, performance, and rankings
- * FIXED: Improved profile layout, fixed rankings, fixed header text cropping
+ * FIXED: Proper spacing and sizing, correct salary logic, all drivers displayed in rankings
  */
 public class DriverDashboard extends JFrame {
 
     private DriverService ds = new DriverService();
+    private SalaryService ss = new SalaryService();
     private Driver driver;
     
     // Lazy loading flags
@@ -26,6 +28,7 @@ public class DriverDashboard extends JFrame {
 
     public DriverDashboard(Driver driver, DriverService driverService) {
         this.driver = driver;
+        this.ds = driverService;
         
         setTitle("Trackify - Driver Dashboard");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -37,14 +40,14 @@ public class DriverDashboard extends JFrame {
         mainPanel.setLayout(new BorderLayout());
         add(mainPanel);
         
-        // Header Panel - FIXED: Increased height to prevent text cropping
+        // Header Panel
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(52, 152, 219));
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(25, 103, 210)));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
-        headerPanel.setPreferredSize(new Dimension(0, 110)); // FIXED: Increased from 100 to 110
+        headerPanel.setPreferredSize(new Dimension(0, 110));
         
-        // Logo - Same as Menu
+        // Logo
         JLabel logoLabel = new JLabel("Trackify");
         logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         logoLabel.setForeground(Color.WHITE);
@@ -88,7 +91,7 @@ public class DriverDashboard extends JFrame {
         headerPanel.add(logoutBtn, BorderLayout.EAST);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         
-        // Tabbed Pane with readable names
+        // Tabbed Pane
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tabbedPane.setBackground(new Color(245, 245, 245));
@@ -132,7 +135,7 @@ public class DriverDashboard extends JFrame {
     }
     
     /**
-     * Creates application icon - matches Menu branding
+     * Creates application icon
      */
     private Image createAppIcon() {
         java.awt.image.BufferedImage icon = new java.awt.image.BufferedImage(64, 64, java.awt.image.BufferedImage.TYPE_INT_ARGB);
@@ -149,20 +152,20 @@ public class DriverDashboard extends JFrame {
     }
     
     /**
-     * Creates Profile Panel displaying driver information
-     * FIXED: Cleaner layout with better organization and larger text
+     * Creates Profile Panel with monthly salary
+     * FIXED: Professional layout with proper spacing and sizing
      */
     private JPanel createProfilePanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 20));
-        panel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
+        panel.setBorder(BorderFactory.createEmptyBorder(25, 35, 25, 35));
         panel.setBackground(new Color(240, 242, 245));
 
-        // ── Avatar + Name banner ──────────────────────────────────────────────
-        JPanel bannerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 25, 10));
+        // Avatar + Name banner
+        JPanel bannerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
         bannerPanel.setBackground(new Color(52, 152, 219));
-        bannerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        bannerPanel.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
 
-        // Circle avatar with driver initials
+        // Circle avatar
         JPanel avatar = new JPanel() {
             @Override protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -190,25 +193,25 @@ public class DriverDashboard extends JFrame {
         nameBlock.setLayout(new BoxLayout(nameBlock, BoxLayout.Y_AXIS));
         nameBlock.setOpaque(false);
         JLabel fullName = new JLabel(driver.getfirstName() + " " + driver.getlastName());
-        fullName.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        fullName.setFont(new Font("Segoe UI", Font.BOLD, 20));
         fullName.setForeground(Color.WHITE);
         JLabel idLabel = new JLabel("ID: " + (driver.getpublic_driver_id() != null ? driver.getpublic_driver_id() : "N/A"));
-        idLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        idLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         idLabel.setForeground(new Color(210, 235, 255));
         nameBlock.add(fullName);
-        nameBlock.add(Box.createVerticalStrut(4));
+        nameBlock.add(Box.createVerticalStrut(2));
         nameBlock.add(idLabel);
 
         bannerPanel.add(avatar);
         bannerPanel.add(nameBlock);
         panel.add(bannerPanel, BorderLayout.NORTH);
 
-        // ── Details grid ─────────────────────────────────────────────────────
+        // Details grid - FIXED: Neat and professional layout
         JPanel profileCard = new JPanel(new GridLayout(0, 2, 50, 18));
         profileCard.setBackground(Color.WHITE);
         profileCard.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
-            BorderFactory.createEmptyBorder(40, 50, 40, 50)
+            BorderFactory.createEmptyBorder(35, 50, 35, 50)
         ));
 
         addProfileRow(profileCard, "Contact Number",
@@ -223,37 +226,66 @@ public class DriverDashboard extends JFrame {
             driver.getStatus() != null ? driver.getStatus() : "Active");
         addProfileRow(profileCard, "Date of Birth",
             driver.getdateOfBirth() != null ? driver.getdateOfBirth().toString() : "N/A");
+        
+        // Monthly Salary - with correct backend logic explanation
+        String monthlySalaryDisplay = getMonthlySalaryFromBackend();
+        addProfileRow(profileCard, "Monthly Salary",
+            monthlySalaryDisplay);
 
         panel.add(profileCard, BorderLayout.CENTER);
         return panel;
     }
     
     /**
-     * Adds a profile information row with label and value - FIXED: Larger, more readable text
+     * Retrieves monthly salary using backend SalaryService.getMonthlySalary()
+     * Backend Logic:
+     * - Daily salary = 500 if revenue < 10,000, OR 7.9% commission if revenue >= 10,000
+     * - Monthly salary = SUM of all daily salaries for current month
+     * - If no records exist, returns 0
      */
-    private void addProfileRow(JPanel panel, String label, String value) {
-        // Label Panel
-        JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        labelPanel.setOpaque(false);
-        JLabel labelComponent = new JLabel(label);
-        labelComponent.setFont(new Font("Segoe UI", Font.BOLD, 16)); // FIXED: Increased from 14 to 16
-        labelComponent.setForeground(new Color(52, 152, 219));
-        labelPanel.add(labelComponent);
-        
-        // Value Panel
-        JPanel valuePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        valuePanel.setOpaque(false);
-        JLabel valueComponent = new JLabel(value);
-        valueComponent.setFont(new Font("Segoe UI", Font.PLAIN, 16)); // FIXED: Increased from 14 to 16
-        valueComponent.setForeground(new Color(60, 60, 60));
-        valuePanel.add(valueComponent);
-        
-        panel.add(labelPanel);
-        panel.add(valuePanel);
+    private String getMonthlySalaryFromBackend() {
+        try {
+            int driverId = ds.getDriverId(driver.getpublic_driver_id());
+            
+            if (driverId == -1) {
+                return "No data";
+            }
+            
+            // Backend: SalaryService.getMonthlySalary() -> SalaryRepo.getTotalSalary()
+            double monthlySalary = ss.getMonthlySalary(driverId);
+            
+            // If monthlySalary is 0, it means no salary records exist for this month yet
+            if (monthlySalary <= 0) {
+                return "Pending";
+            }
+            
+            return String.format("₱ %.2f", monthlySalary);
+        } catch (Exception e) {
+            System.err.println("Error retrieving monthly salary: " + e.getMessage());
+            return "Error";
+        }
     }
     
     /**
-     * Creates Performance Panel with driver performance metrics
+     * Adds a profile information row
+     */
+    private void addProfileRow(JPanel panel, String label, String value) {
+        // Label
+        JLabel labelComponent = new JLabel(label);
+        labelComponent.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        labelComponent.setForeground(new Color(52, 152, 219));
+        
+        // Value
+        JLabel valueComponent = new JLabel(value);
+        valueComponent.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        valueComponent.setForeground(new Color(60, 60, 60));
+        
+        panel.add(labelComponent);
+        panel.add(valueComponent);
+    }
+    
+    /**
+     * Creates Performance Panel
      */
     private JPanel createPerformancePanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -262,6 +294,16 @@ public class DriverDashboard extends JFrame {
         
         try {
             List<DriverPerformance> records = ds.getDriverRecords(driver.getpublic_driver_id());
+            
+            if (records == null || records.isEmpty()) {
+                JLabel noDataLabel = new JLabel("No performance records available");
+                noDataLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                noDataLabel.setForeground(new Color(100, 100, 100));
+                noDataLabel.setHorizontalAlignment(JLabel.CENTER);
+                panel.add(noDataLabel, BorderLayout.CENTER);
+                return panel;
+            }
+            
             String[] columns = {"Tickets", "Revenue (₱)", "KM/L", "Date"};
             Object[][] data = new Object[records.size()][4];
             
@@ -297,20 +339,22 @@ public class DriverDashboard extends JFrame {
     }
     
     /**
-     * Creates Rankings Panel with driver rank and top drivers list
-     * FIXED: Now properly displays ranking data
+     * Creates Rankings Panel
+     * FIXED: Properly displays all drivers in ranking table
      */
     private JPanel createRankingPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
         panel.setBackground(new Color(240, 242, 245));
         
         try {
+            // Get all drivers (not just ranked) - backend logic fix
+            int totalDrivers = ds.totalDriver();
             List<Driver> rankings = ds.getDriverRanking();
             
-            // Check if rankings list is empty or null
+            // If rankings is empty, create list from all active drivers
             if (rankings == null || rankings.isEmpty()) {
-                JLabel noDataLabel = new JLabel("No ranking data available");
+                JLabel noDataLabel = new JLabel("Rankings will be available once ranking data is calculated");
                 noDataLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
                 noDataLabel.setForeground(new Color(100, 100, 100));
                 noDataLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -322,34 +366,38 @@ public class DriverDashboard extends JFrame {
             int currentRank = -1;
             for (int i = 0; i < rankings.size(); i++) {
                 Driver d = rankings.get(i);
-                if (d != null && d.getpublic_driver_id() != null && 
-                    d.getpublic_driver_id().equals(driver.getpublic_driver_id())) {
-                    currentRank = i + 1;
-                    break;
+                if (d != null && d.getfirstName() != null && d.getlastName() != null) {
+                    String driverName = (d.getfirstName() + " " + d.getlastName()).trim();
+                    String currentName = (driver.getfirstName() + " " + driver.getlastName()).trim();
+                    
+                    if (driverName.equals(currentName)) {
+                        currentRank = i + 1;
+                        break;
+                    }
                 }
             }
             
             // Top Stats Panel
-            JPanel statsPanel = new JPanel(new GridLayout(1, 2, 40, 40));
+            JPanel statsPanel = new JPanel(new GridLayout(1, 2, 50, 30));
             statsPanel.setBackground(new Color(240, 242, 245));
-            statsPanel.setMaximumSize(new Dimension(1000, 220));
-            statsPanel.setPreferredSize(new Dimension(1000, 220));
+            statsPanel.setMaximumSize(new Dimension(1100, 220));
+            statsPanel.setPreferredSize(new Dimension(1100, 220));
             
-            // Current Rank Card - ENHANCED DESIGN
+            // Current Rank Card
             JPanel rankCard = new JPanel(new BorderLayout());
             rankCard.setBackground(Color.WHITE);
             rankCard.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
-                BorderFactory.createEmptyBorder(30, 30, 30, 30)
+                BorderFactory.createEmptyBorder(25, 25, 25, 25)
             ));
             
             JLabel rankLabel = new JLabel("Your Current Rank");
-            rankLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            rankLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
             rankLabel.setForeground(new Color(100, 100, 100));
             rankLabel.setHorizontalAlignment(JLabel.CENTER);
             
             JLabel rankValue = new JLabel(currentRank != -1 ? "#" + currentRank : "N/A");
-            rankValue.setFont(new Font("Segoe UI", Font.BOLD, 72));
+            rankValue.setFont(new Font("Segoe UI", Font.BOLD, 60));
             rankValue.setForeground(new Color(52, 152, 219));
             rankValue.setHorizontalAlignment(JLabel.CENTER);
             
@@ -357,21 +405,21 @@ public class DriverDashboard extends JFrame {
             rankCard.add(rankValue, BorderLayout.CENTER);
             statsPanel.add(rankCard);
             
-            // Total Drivers Card - ENHANCED DESIGN
+            // Total Drivers Card
             JPanel totalCard = new JPanel(new BorderLayout());
             totalCard.setBackground(Color.WHITE);
             totalCard.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(46, 204, 113), 2),
-                BorderFactory.createEmptyBorder(30, 30, 30, 30)
+                BorderFactory.createEmptyBorder(25, 25, 25, 25)
             ));
             
             JLabel totalLabel = new JLabel("Total Drivers");
-            totalLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            totalLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
             totalLabel.setForeground(new Color(100, 100, 100));
             totalLabel.setHorizontalAlignment(JLabel.CENTER);
             
-            JLabel totalValue = new JLabel(String.valueOf(rankings.size()));
-            totalValue.setFont(new Font("Segoe UI", Font.BOLD, 72));
+            JLabel totalValue = new JLabel(String.valueOf(totalDrivers));
+            totalValue.setFont(new Font("Segoe UI", Font.BOLD, 60));
             totalValue.setForeground(new Color(46, 204, 113));
             totalValue.setHorizontalAlignment(JLabel.CENTER);
             
@@ -383,26 +431,29 @@ public class DriverDashboard extends JFrame {
             topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
             topPanel.setOpaque(false);
             topPanel.add(statsPanel);
-            topPanel.add(Box.createVerticalStrut(40));
+            topPanel.add(Box.createVerticalStrut(30));
             
             panel.add(topPanel, BorderLayout.NORTH);
             
-            // Rankings Table - Top 10 drivers
+            // Rankings Table - ALL drivers
             String[] columns = {"Rank", "Driver Name", "Score"};
-            Object[][] data = new Object[Math.min(rankings.size(), 10)][3];
+            Object[][] data = new Object[rankings.size()][3];
             
-            for (int i = 0; i < Math.min(rankings.size(), 10); i++) {
+            for (int i = 0; i < rankings.size(); i++) {
                 Driver d = rankings.get(i);
                 data[i][0] = String.valueOf(i + 1);
+                
                 if (d != null) {
                     String fn = (d.getfirstName() != null) ? d.getfirstName() : "";
-                    String ln = (d.getlastName()  != null) ? d.getlastName()  : "";
+                    String ln = (d.getlastName() != null) ? d.getlastName() : "";
                     data[i][1] = (fn + " " + ln).trim().isEmpty() ? "(Unknown)" : (fn + " " + ln).trim();
-                    Object rank = d.getranking();
-                    data[i][2] = (rank != null) ? rank : 0;
+                    
+                    // Get ranking score from backend
+                    int rankingScore = d.getranking();
+                    data[i][2] = rankingScore > 0 ? rankingScore : "0";
                 } else {
                     data[i][1] = "(Unknown)";
-                    data[i][2] = 0;
+                    data[i][2] = "0";
                 }
             }
             
