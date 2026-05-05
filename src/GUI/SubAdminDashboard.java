@@ -1,9 +1,12 @@
 package GUI;
 
 import Model.Driver;
+import Model.DriverPerformance;
 import Model.SubAdmin;
+import Model.DriverProfile;
 import Service.DriverService;
 import Service.SubAdminService;
+import Service.SalaryService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -22,12 +25,15 @@ import java.util.List;
  *   getDriverRanking() returns approved/active drivers with their full fields.
  * - FIX 3: Rankings Driver Name and Score no longer show "N/A" for valid drivers.
  * - FIX 4: Overview Active Drivers now shows ds.totalDriver() instead of hardcoded "0".
+ * - FIX 5: Send Salary button added to Drivers panel using existing processDailySalary().
+ * - FIX 6: Double-click on a driver row to view their complete profile.
  */
 public class SubAdminDashboard extends JFrame {
 
     private DriverService ds = new DriverService();
     private SubAdminService sas = new SubAdminService();
     private SubAdmin subAdmin;
+    private SalaryService sS = new SalaryService(); 
 
     // Flags for lazy loading of tab content
     private boolean overviewLoaded = false;
@@ -121,7 +127,12 @@ public class SubAdminDashboard extends JFrame {
                     break;
                 case 1:
                     // Always reload to pick up newly registered drivers
+                    
+                    JPanel driversPanel = createDriversPanel();
+                    
                     tabbedPane.setComponentAt(1, createDriversPanel());
+                    tabbedPane.revalidate();
+                    tabbedPane.repaint();
                     driversLoaded = true;
                     break;
                 case 2:
@@ -211,56 +222,122 @@ public class SubAdminDashboard extends JFrame {
     /**
      * Creates Drivers Panel showing all registered drivers
      * FIX 2: Driver ID and Contact now show real values.
-     *        getDriverRanking() returns fully populated Driver objects —
-     *        if your DB query was missing columns, make sure the SELECT includes
-     *        public_driver_id and contact_number.
+     * FIX 5: Added "Send Salary" button that calls ds.processDailySalary().
+     * FIX 6: Double-click on a driver row to view their profile.
      */
     private JPanel createDriversPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
-        panel.setBackground(new Color(240, 242, 245));
+    JPanel panel = new JPanel(new BorderLayout());
+    panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+    panel.setBackground(new Color(240, 242, 245));
 
-        try {
-            List<Driver> list = ds.getDriverRanking();
-
-            if (list == null || list.isEmpty()) {
-                JLabel noData = new JLabel("No drivers registered yet.");
-                noData.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                noData.setForeground(new Color(100, 100, 100));
-                noData.setHorizontalAlignment(JLabel.CENTER);
-                panel.add(noData, BorderLayout.CENTER);
-                return panel;
-            }
-
-            String[] columns = {"Driver ID", "Driver Name", "Contact", "Status"};
-            Object[][] data = new Object[list.size()][4];
-
-            for (int i = 0; i < list.size(); i++) {
-                Driver d = list.get(i);
-                // FIX 2: Show real values; only fall back if genuinely null/empty
-                data[i][0] = (d.getpublic_driver_id() != null && !d.getpublic_driver_id().isEmpty())
-                        ? d.getpublic_driver_id() : "(not assigned)";
-                data[i][1] = (d.getfirstName() + " " + d.getlastName()).trim();
-                data[i][2] = (d.getcontactNumber() != null && !d.getcontactNumber().isEmpty())
-                        ? d.getcontactNumber() : "(not set)";
-                data[i][3] = "Active";
-            }
-
-            JTable table = new JTable(new DefaultTableModel(data, columns) {
-                public boolean isCellEditable(int row, int column) { return false; }
-            });
-            styleTable(table, new Color(46, 204, 113));
-
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
-            panel.add(scrollPane, BorderLayout.CENTER);
-        } catch (Exception e) {
-            System.err.println("Error loading drivers panel: " + e.getMessage());
-            e.printStackTrace();
+    try {
+        List<DriverPerformance> list = ds.getPerformance();
+        
+        if (list == null || list.isEmpty()) {
+            JLabel noData = new JLabel("No drivers registered yet.");
+            noData.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            noData.setForeground(new Color(100, 100, 100));
+            noData.setHorizontalAlignment(JLabel.CENTER);
+            panel.add(noData, BorderLayout.CENTER);
+            return panel;
         }
 
-        return panel;
+        String[] columns = {"Driver ID", "Driver Name", "Total Tickets", "Revenue", "Average KM/L"};
+        Object[][] data = new Object[list.size()][5];
+
+        for (int i = 0; i < list.size(); i++) {
+            DriverPerformance dp = list.get(i);
+            data[i][0] = (dp.getdriver().getpublic_driver_id() != null && !dp.getdriver().getpublic_driver_id().isEmpty())
+                    ? dp.getdriver().getpublic_driver_id() : "(not assigned)";
+            data[i][1] = (dp.getdriver().getfirstName() + " " + dp.getdriver().getlastName()).trim();
+            data[i][2] = dp.gettotalTickets();
+            data[i][3] = "₱ " + dp.gettotalRevenue();
+            data[i][4] = dp.getaverageKMPL();
+        }
+
+        JTable table = new JTable(new DefaultTableModel(data, columns) {
+            public boolean isCellEditable(int row, int column) { return false; }
+        });
+        styleTable(table, new Color(46, 204, 113));
+
+        // FIX 6: Add double-click listener to show driver profile
+        final List<DriverPerformance> driverList = list; // Keep reference to the list
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow >= 0 && selectedRow < driverList.size()) {
+                        DriverPerformance dp = driverList.get(selectedRow);
+                        showDriverProfile(dp.getdriver(), dp); // Pass both driver AND performance
+                    }
+                }
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        
+        // Create center panel to hold the table
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBackground(new Color(240, 242, 245));
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        panel.add(centerPanel, BorderLayout.CENTER);
+
+        // FIX 5: Add "Send Salary" button panel below the table
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(new Color(240, 242, 245));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
+
+        JButton sendSalaryBtn = new JButton("SEND SALARY");
+        sendSalaryBtn.setBackground(new Color(52, 152, 219));
+        sendSalaryBtn.setForeground(Color.WHITE);
+        sendSalaryBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        sendSalaryBtn.setFocusPainted(false);
+        sendSalaryBtn.setBorderPainted(false);
+        sendSalaryBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        sendSalaryBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        sendSalaryBtn.setPreferredSize(new Dimension(140, 40));
+        sendSalaryBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                sendSalaryBtn.setBackground(new Color(41, 128, 185));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                sendSalaryBtn.setBackground(new Color(52, 152, 219));
+            }
+        });
+        sendSalaryBtn.addActionListener(e -> {
+            try {
+                sS.processDailySalary();
+                
+                JOptionPane.showMessageDialog(
+                    SubAdminDashboard.this,
+                    "Salary processed successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
+            } catch (Exception ex) {
+                System.err.println("Error processing salary: " + ex.getMessage());
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(
+                    SubAdminDashboard.this,
+                    "Error processing salary.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+                );
+            }
+        });
+
+        buttonPanel.add(sendSalaryBtn);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+    } catch (Exception e) {
+        System.err.println("Error loading drivers panel: " + e.getMessage());
+        e.printStackTrace();
     }
+
+    return panel;
+}
 
     /**
      * Creates Rankings Panel showing top drivers by performance
@@ -504,6 +581,228 @@ public class SubAdminDashboard extends JFrame {
         ));
         f.setPreferredSize(new Dimension(300, 42));
         return f;
+    }
+
+    /**
+     * FIX 6: Displays driver profile in a modal dialog when double-clicked
+     */
+/**
+ * FIX 6: Displays driver profile in a modal dialog when double-clicked
+ * Shows both driver information and performance metrics
+ */
+/**
+ * FIX 6: Displays driver profile in a modal dialog when double-clicked
+ * Shows both driver information and performance metrics
+ */
+/**
+ * FIX 6: Displays driver profile in a modal dialog when double-clicked
+ * Shows both driver information and performance metrics
+ */
+/**
+ * FIX 6: Displays driver profile in a modal dialog when double-clicked
+ * Shows both driver information and performance metrics
+ */
+/**
+ * FIX 6: Displays driver profile in a modal dialog when double-clicked
+ * Shows both driver information and performance metrics
+ */
+/**
+ * FIX 6: Displays driver profile in a modal dialog when double-clicked
+ * Shows both driver information and performance metrics
+ */
+private void showDriverProfile(Driver driver, DriverPerformance performance) {
+    if (driver == null) {
+        JOptionPane.showMessageDialog(
+            SubAdminDashboard.this,
+            "Unable to load driver profile.",
+            "Error",
+            JOptionPane.ERROR_MESSAGE
+        );
+        return;
+    }
+
+    // Fetch complete driver data from database using public ID
+    try {
+        String publicID = driver.getpublic_driver_id();
+        if (publicID != null && !publicID.isEmpty()) {
+            DriverProfile fullProfile = ds.getDriverProfile(publicID);
+            if (fullProfile != null && fullProfile.getDriver() != null) {
+                driver = fullProfile.getDriver(); // Replace with fully populated driver
+                System.out.println("Fetched complete driver profile from database");
+            }
+        }
+    } catch (Exception e) {
+        System.err.println("Error fetching complete driver profile: " + e.getMessage());
+        e.printStackTrace();
+    }
+
+    System.out.println("=== Driver Profile Debug ===");
+    System.out.println("Driver ID: " + driver.getdriverID());
+    System.out.println("Public Driver ID: " + driver.getpublic_driver_id());
+    System.out.println("First Name: " + driver.getfirstName());
+    System.out.println("Gender: " + driver.getgender());
+    System.out.println("Address: " + driver.getaddress());
+    System.out.println("Contact: " + driver.getcontactNumber());
+    System.out.println("Status: " + driver.getStatus());
+    System.out.println("License Num: " + driver.getlicenseNum());
+    System.out.println("DOB: " + driver.getdateOfBirth());
+    System.out.println("License Expiry: " + driver.getlicenseExpiry());
+    System.out.println("Performance - Tickets: " + (performance != null ? performance.gettotalTickets() : "null"));
+    System.out.println("Performance - Revenue: " + (performance != null ? performance.gettotalRevenue() : "null"));
+    System.out.println("Performance - KMPL: " + (performance != null ? performance.getaverageKMPL() : "null"));
+    System.out.println("================================");
+
+    JDialog profileDialog = new JDialog(this, "Driver Profile", true);
+    profileDialog.setSize(700, 650);
+    profileDialog.setLocationRelativeTo(this);
+    profileDialog.setResizable(false);
+
+    JPanel contentPanel = new JPanel();
+    contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+    contentPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+    contentPanel.setBackground(Color.WHITE);
+
+    // Title
+    JLabel titleLabel = new JLabel("DRIVER PROFILE");
+    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+    titleLabel.setForeground(new Color(46, 204, 113));
+    titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    contentPanel.add(titleLabel);
+    contentPanel.add(Box.createVerticalStrut(20));
+
+    // Personal Information Section
+    JLabel personalLabel = new JLabel("Personal Information");
+    personalLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    personalLabel.setForeground(new Color(52, 152, 219));
+    contentPanel.add(personalLabel);
+    contentPanel.add(Box.createVerticalStrut(10));
+
+    JPanel personalPanel = new JPanel();
+    personalPanel.setLayout(new GridBagLayout());
+    personalPanel.setBackground(Color.WHITE);
+    personalPanel.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
+        BorderFactory.createEmptyBorder(15, 15, 15, 15)
+    ));
+
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.WEST;
+    gbc.insets = new Insets(8, 10, 8, 10);
+    gbc.gridy = 0;
+
+    addProfileRow(personalPanel, gbc, "Driver ID:", driver.getpublic_driver_id() != null ? driver.getpublic_driver_id() : "N/A");
+    addProfileRow(personalPanel, gbc, "First Name:", driver.getfirstName() != null ? driver.getfirstName() : "N/A");
+    addProfileRow(personalPanel, gbc, "Last Name:", driver.getlastName() != null ? driver.getlastName() : "N/A");
+    addProfileRow(personalPanel, gbc, "Gender:", driver.getgender() != null ? driver.getgender() : "N/A");
+    addProfileRow(personalPanel, gbc, "Address:", driver.getaddress() != null ? driver.getaddress() : "N/A");
+    addProfileRow(personalPanel, gbc, "Contact Number:", driver.getcontactNumber() != null ? driver.getcontactNumber() : "N/A");
+    addProfileRow(personalPanel, gbc, "Status:", driver.getStatus() != null ? driver.getStatus() : "N/A");
+
+    contentPanel.add(personalPanel);
+    contentPanel.add(Box.createVerticalStrut(20));
+
+    // License Information Section
+    JLabel licenseLabel = new JLabel("License Information");
+    licenseLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    licenseLabel.setForeground(new Color(155, 89, 182));
+    contentPanel.add(licenseLabel);
+    contentPanel.add(Box.createVerticalStrut(10));
+
+    JPanel licensePanel = new JPanel();
+    licensePanel.setLayout(new GridBagLayout());
+    licensePanel.setBackground(Color.WHITE);
+    licensePanel.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(155, 89, 182), 2),
+        BorderFactory.createEmptyBorder(15, 15, 15, 15)
+    ));
+
+    gbc.gridy = 0;
+    addProfileRow(licensePanel, gbc, "License Number:", driver.getlicenseNum() != null ? driver.getlicenseNum() : "N/A");
+    addProfileRow(licensePanel, gbc, "Date of Birth:", driver.getdateOfBirth() != null ? driver.getdateOfBirth().toString() : "N/A");
+    addProfileRow(licensePanel, gbc, "License Expiry:", driver.getlicenseExpiry() != null ? driver.getlicenseExpiry().toString() : "N/A");
+
+    contentPanel.add(licensePanel);
+    contentPanel.add(Box.createVerticalStrut(20));
+
+    // Performance Information Section
+    JLabel performanceLabel = new JLabel("Performance Metrics");
+    performanceLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    performanceLabel.setForeground(new Color(241, 196, 15));
+    contentPanel.add(performanceLabel);
+    contentPanel.add(Box.createVerticalStrut(10));
+
+    JPanel performancePanel = new JPanel();
+    performancePanel.setLayout(new GridBagLayout());
+    performancePanel.setBackground(Color.WHITE);
+    performancePanel.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(241, 196, 15), 2),
+        BorderFactory.createEmptyBorder(15, 15, 15, 15)
+    ));
+
+    gbc.gridy = 0;
+    
+    if (performance != null) {
+        addProfileRow(performancePanel, gbc, "Total Tickets:", String.valueOf(performance.gettotalTickets()));
+        addProfileRow(performancePanel, gbc, "Total Revenue:", "₱ " + String.format("%.2f", performance.gettotalRevenue()));
+        addProfileRow(performancePanel, gbc, "Average KM/L:", String.format("%.2f", performance.getaverageKMPL()));
+    } else {
+        addProfileRow(performancePanel, gbc, "Total Tickets:", "No data");
+        addProfileRow(performancePanel, gbc, "Total Revenue:", "No data");
+        addProfileRow(performancePanel, gbc, "Average KM/L:", "No data");
+    }
+
+    contentPanel.add(performancePanel);
+    contentPanel.add(Box.createVerticalGlue());
+
+    // Close button
+    JButton closeBtn = new JButton("CLOSE");
+    closeBtn.setBackground(new Color(46, 204, 113));
+    closeBtn.setForeground(Color.WHITE);
+    closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    closeBtn.setFocusPainted(false);
+    closeBtn.setBorderPainted(false);
+    closeBtn.setPreferredSize(new Dimension(100, 40));
+    closeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+    closeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    closeBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+        public void mouseEntered(java.awt.event.MouseEvent evt) {
+            closeBtn.setBackground(new Color(27, 149, 74));
+        }
+        public void mouseExited(java.awt.event.MouseEvent evt) {
+            closeBtn.setBackground(new Color(46, 204, 113));
+        }
+    });
+    closeBtn.addActionListener(ev -> profileDialog.dispose());
+    contentPanel.add(closeBtn);
+
+    JScrollPane scrollPane = new JScrollPane(contentPanel);
+    scrollPane.setBorder(null);
+    scrollPane.setOpaque(false);
+    scrollPane.getViewport().setOpaque(false);
+    
+    profileDialog.add(scrollPane);
+    profileDialog.setVisible(true);
+}
+
+    /**
+     * Helper method to add a label-value row to the profile panel
+     */
+    private void addProfileRow(JPanel panel, GridBagConstraints gbc, String label, String value) {
+        gbc.gridx = 0;
+        gbc.weightx = 0;
+        JLabel labelComponent = new JLabel(label);
+        labelComponent.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        labelComponent.setForeground(new Color(60, 60, 60));
+        panel.add(labelComponent, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JLabel valueComponent = new JLabel(value);
+        valueComponent.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        valueComponent.setForeground(new Color(100, 100, 100));
+        panel.add(valueComponent, gbc);
+
+        gbc.gridy++;
     }
 
     private void showApprovalPendingDialog(String requestCode) {

@@ -210,36 +210,41 @@ public class DriverRepo
         return list;
     }
     
-    public int getDriverIdByPublicID(String publicID)
+public int getDriverIdByPublicID(String publicID)
+{
+    String sql = "SELECT driver_id FROM driver WHERE public_driver_id = ?";
+
+    try (Connection conn = dbConnection.getConnection();
+         PreparedStatement prepS = conn.prepareStatement(sql))
     {
-        String sql = "SELECT driver_id FROM driver WHERE public_driver_id = ?";
-        
-        try(Connection conn = dbConnection.getConnection();
-                PreparedStatement prepS = conn.prepareStatement(sql))
+        prepS.setString(1, publicID);
+
+        ResultSet res = prepS.executeQuery();
+
+        if (res.next())
         {
-            prepS.setString(1, publicID);
-            
-            ResultSet res = prepS.executeQuery();
-            
-            if(res.next())
-            {
-                return res.getInt("driver_id");
+            int id = res.getInt("driver_id");
+
+            if (res.wasNull()) {
+                return -1;
             }
+
+            return id;
         }
-        
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        
-        return -1;
     }
+    catch (Exception e)
+    {
+        e.printStackTrace();
+    }
+
+    return -1;
+}
     
     public Driver getDriverProfileById(int driverID)
     {
         String sql = "SELECT public_driver_id, first_name, last_name, gender, "
                     + "date_of_birth, address, contact_number, license_number, "
-                    + "license_expiry_date, photo_url, status"
+                    + "license_expiry_date, photo_url, status "
                     + "FROM driver WHERE driver_id = ?";
 
         try(Connection conn = dbConnection.getConnection();
