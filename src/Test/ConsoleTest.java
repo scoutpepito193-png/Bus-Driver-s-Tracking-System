@@ -727,6 +727,8 @@ public class ConsoleTest
                                             
                                             System.out.println("Starting live tracking... (Press Ctrl + C to stop)");
                                             
+                                            
+                                            
                                             subs.startTracking(publicId, (lat, lng) ->
                                             {
                                                 if (Double.isNaN(lat) || Double.isNaN(lng))
@@ -738,6 +740,7 @@ public class ConsoleTest
                                                 System.out.println("=== DRIVER LOCATION ===");
                                                 System.out.println("Latitude: " + lat);
                                                 System.out.println("Longitude: " + lng);
+                                                
                                             });
                                         }
                                         else

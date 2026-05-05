@@ -22,4 +22,14 @@ public class TraccarService
     {
         return TraccarAPI.getLatestPosition(deviceId);
     }
+    
+    public double getDriverSpeed(int deviceID)
+    {
+        return TraccarAPI.getSpeedKmh(deviceID);
+    }
+    
+    public boolean isDriverOverspeeding(int deviceID)
+    {
+        return getDriverSpeed(deviceID) > 60;
+    }
 }

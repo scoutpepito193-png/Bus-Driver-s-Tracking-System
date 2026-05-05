@@ -8,13 +8,13 @@ import org.json.JSONObject;
 public class TraccarAPI 
 {
     private static String sessionCookie;
-    private static final String BASE_URL = "https://sight-robertson-knee-magazines.trycloudflare.com";
+    private static final String BASE_URL = "https://syndicate-produce-label-phd.trycloudflare.com/";
     
     public static APIResponse logIn(String email, String password)
     {
         try
         {
-            URL url = new URL(BASE_URL + "/api/session");
+            URL url = new URL(BASE_URL + "api/session");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             
             conn.setRequestMethod("POST");
@@ -73,7 +73,7 @@ private static boolean isLoggedIn()
 
     try
     {
-        URL url = new URL(BASE_URL + "/api/session");
+        URL url = new URL(BASE_URL + "api/session");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         conn.setRequestMethod("GET");
@@ -93,7 +93,7 @@ private static boolean isLoggedIn()
     {
         try
         {
-            URL url = new URL(BASE_URL + "/api/devices");
+            URL url = new URL(BASE_URL + "api/devices");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
             conn.setRequestMethod("POST");
@@ -175,7 +175,7 @@ public static JSONObject getLatestPosition(int deviceID)
             }
         }
 
-        URL url = new URL(BASE_URL + "/api/positions?deviceId=" + deviceID + "&limit=1");
+        URL url = new URL(BASE_URL + "api/positions?deviceId=" + deviceID + "&limit=1");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         conn.setRequestMethod("GET");
@@ -240,4 +240,30 @@ public static JSONObject getLatestPosition(int deviceID)
         return null;
     }
 }
+
+    public static double getSpeedKmh(int deviceID)
+    {
+        JSONObject position = getLatestPosition(deviceID);
+        
+        if (position == null)
+        {
+            return -1;
+        }
+        
+        double speedMs = position.optDouble("speed", 0);
+        
+        return speedMs * 1.852;
+    }
+    
+    public static boolean isOverSpeed(int deviceID)
+    {
+        double speed = getSpeedKmh(deviceID);
+        
+        if (speed < 0)
+        {
+            return false;
+        }
+        
+        return speed > 70;
+    }
 }
