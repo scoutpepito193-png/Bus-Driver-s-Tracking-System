@@ -10,6 +10,7 @@ public class Driver
     private int traccarID;
     
     private double salary;
+    private int age; 
     
     private String public_driver_id;
     private String firstName;
@@ -38,6 +39,9 @@ public class Driver
    
    public double getsalary() { return salary; }
    public void setsalary(double salary) { this.salary = salary; }
+   
+   public int getAge() { return age; } 
+   public void setAge(int age) { this.age = age; }
    
    public String getpublic_driver_id() { return public_driver_id; }
    public void setpublic_driver_id(String public_driver_id) { this.public_driver_id = public_driver_id; }
