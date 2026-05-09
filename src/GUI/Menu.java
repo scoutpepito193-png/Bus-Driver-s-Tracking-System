@@ -11,8 +11,7 @@ public class Menu extends JFrame {
     }
     
     public Menu() {
-        setTitle("Trackify");
-        setExtendedState(JFrame.MAXIMIZED_BOTH); 
+        setTitle("BDTracker");
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -22,7 +21,7 @@ public class Menu extends JFrame {
         setIconImage(createAppIcon());
         
         JPanel mainPanel = new GradientPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setLayout(null);
         add(mainPanel);
         
         addComponents(mainPanel);
@@ -55,95 +54,62 @@ public class Menu extends JFrame {
         
         // Top Navigation Bar
         JPanel navBar = createNavBar();
-        navBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
-        navBar.setPreferredSize(new Dimension(Integer.MAX_VALUE, 70));
+        navBar.setBounds(0, 0, 1400, 70);
         mainPanel.add(navBar);
-        
-        // Spacer
-        mainPanel.add(Box.createVerticalStrut(30));
         
         // Logo Section
         JPanel logoSection = new JPanel();
         logoSection.setOpaque(false);
         logoSection.setLayout(new BoxLayout(logoSection, BoxLayout.Y_AXIS));
-        logoSection.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
-        logoSection.setAlignmentX(Component.CENTER_ALIGNMENT);
+        logoSection.setBounds(0, 100, 1400, 250);
         
         // Custom Logo
         JPanel logoPanel = createLogoPanel();
-        logoPanel.setMaximumSize(new Dimension(150, 150));
-        logoPanel.setPreferredSize(new Dimension(150, 150));
+        logoPanel.setMaximumSize(new Dimension(1400, 150));
         logoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         logoSection.add(logoPanel);
         
         // Title
-        JLabel titleLabel = new JLabel("Trackify");
+        JLabel titleLabel = new JLabel("BDTracker");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 72));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        logoSection.add(Box.createVerticalStrut(10));
+        logoSection.add(Box.createVerticalStrut(15));
         logoSection.add(titleLabel);
         
         // Subtitle
-        JLabel subtitleLabel = new JLabel("Bus Driver Tracking & Management System");
+        JLabel subtitleLabel = new JLabel("Professional Bus Driver Tracking & Management System");
         subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 20));
         subtitleLabel.setForeground(new Color(200, 220, 240));
         subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        logoSection.add(Box.createVerticalStrut(8));
+        logoSection.add(Box.createVerticalStrut(10));
         logoSection.add(subtitleLabel);
         
         mainPanel.add(logoSection);
         
-        // Spacer
-        mainPanel.add(Box.createVerticalStrut(30));
-        
         // Buttons Section
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setOpaque(false);
-        buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 80, 20));
-        buttonsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
-        buttonsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 100, 30));
+        buttonsPanel.setBounds(200, 420, 1000, 200);
         
-        // Admin Button
-        RoundedGradientButton adminBtn = new RoundedGradientButton("ADMIN PORTAL",
-            new Color(155, 89, 182), new Color(108, 52, 131));
-        adminBtn.setPreferredSize(new Dimension(350, 120));
-        adminBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        adminBtn.addActionListener(e -> {
-            this.setVisible(false);
-            new AdminRoleSelection(this);
-        });
-        buttonsPanel.add(adminBtn);
-        
-        // Driver Button
-        RoundedGradientButton driverBtn = new RoundedGradientButton("DRIVER PORTAL",
+        // Login Button
+        RoundedGradientButton loginBtn = new RoundedGradientButton("LOGIN",
             new Color(52, 152, 219), new Color(25, 103, 210));
-        driverBtn.setPreferredSize(new Dimension(350, 120));
-        driverBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        driverBtn.addActionListener(e -> {
-            this.setVisible(false);
-            new DriverLoginPanel(this);
-        });
-        buttonsPanel.add(driverBtn);
+        loginBtn.setPreferredSize(new Dimension(350, 120));
+        loginBtn.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        loginBtn.addActionListener(e -> goToLogin());
+        buttonsPanel.add(loginBtn);
         
         mainPanel.add(buttonsPanel);
         
-        // Spacer
-        mainPanel.add(Box.createVerticalGlue());
-        
         // Footer
-        JPanel footerPanel = new JPanel();
-        footerPanel.setOpaque(false);
-        footerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        footerPanel.setLayout(new BorderLayout());
-        
-        JLabel footerLabel = new JLabel("(c) 2026 Trackify. All rights reserved. | Secure Bus Fleet Management");
+        JLabel footerLabel = new JLabel("(c) 2026 BDTracker. All rights reserved. | Secure Bus Fleet Management");
         footerLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         footerLabel.setForeground(new Color(150, 170, 190));
         footerLabel.setHorizontalAlignment(JLabel.CENTER);
-        
-        footerPanel.add(footerLabel, BorderLayout.CENTER);
-        mainPanel.add(footerPanel);
+        footerLabel.setBounds(0, 850, 1400, 30);
+        mainPanel.add(footerLabel);
     }
     
     private JPanel createNavBar() {
@@ -153,7 +119,7 @@ public class Menu extends JFrame {
         navBar.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(52, 152, 219)));
         navBar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         
-        JLabel logo = new JLabel("Trackify");
+        JLabel logo = new JLabel("[ BUS ] BDTracker");
         logo.setFont(new Font("Segoe UI", Font.BOLD, 22));
         logo.setForeground(new Color(52, 152, 219));
         
@@ -180,37 +146,42 @@ public class Menu extends JFrame {
                 
                 // Outer circle
                 g2d.setColor(new Color(52, 152, 219, 100));
-                g2d.fillOval(centerX - 60, centerY - 60, 120, 120);
+                g2d.fillOval(centerX - 80, centerY - 80, 160, 160);
                 
                 // Bus body
                 g2d.setColor(Color.WHITE);
-                g2d.setStroke(new BasicStroke(2));
-                g2d.drawRoundRect(centerX - 45, centerY - 30, 90, 45, 12, 12);
+                g2d.setStroke(new BasicStroke(3));
+                g2d.drawRoundRect(centerX - 60, centerY - 40, 120, 60, 15, 15);
                 
                 // Windows
-                g2d.fillRect(centerX - 38, centerY - 26, 12, 9);
-                g2d.fillRect(centerX - 19, centerY - 26, 12, 9);
-                g2d.fillRect(centerX, centerY - 26, 12, 9);
-                g2d.fillRect(centerX + 19, centerY - 26, 12, 9);
+                g2d.fillRect(centerX - 50, centerY - 35, 15, 12);
+                g2d.fillRect(centerX - 25, centerY - 35, 15, 12);
+                g2d.fillRect(centerX, centerY - 35, 15, 12);
+                g2d.fillRect(centerX + 25, centerY - 35, 15, 12);
                 
                 // Door
-                g2d.setStroke(new BasicStroke(1));
-                g2d.drawRect(centerX + 32, centerY - 20, 12, 26);
+                g2d.setStroke(new BasicStroke(2));
+                g2d.drawRect(centerX + 40, centerY - 25, 15, 35);
                 
                 // Wheels
-                g2d.fillOval(centerX - 35, centerY + 13, 12, 12);
-                g2d.fillOval(centerX + 23, centerY + 13, 12, 12);
+                g2d.fillOval(centerX - 45, centerY + 18, 16, 16);
+                g2d.fillOval(centerX + 29, centerY + 18, 16, 16);
                 
                 // GPS signal
                 g2d.setColor(new Color(46, 204, 113));
-                g2d.drawOval(centerX + 40, centerY - 40, 6, 6);
-                g2d.fillOval(centerX + 42, centerY - 38, 3, 3);
-                g2d.drawOval(centerX + 36, centerY - 44, 14, 14);
-                g2d.drawOval(centerX + 32, centerY - 48, 22, 22);
+                g2d.drawOval(centerX + 50, centerY - 50, 8, 8);
+                g2d.fillOval(centerX + 52, centerY - 48, 4, 4);
+                g2d.drawOval(centerX + 45, centerY - 55, 18, 18);
+                g2d.drawOval(centerX + 40, centerY - 60, 28, 28);
             }
         };
         panel.setOpaque(false);
         return panel;
+    }
+    
+    private void goToLogin() {
+        new UnifiedLoginPanel();
+        this.dispose();
     }
     
     class GradientPanel extends JPanel {
@@ -246,8 +217,8 @@ public class Menu extends JFrame {
             this.endColor = endColor;
             setOpaque(false);
             setContentAreaFilled(false);
-            setBorderPainted(false);  // ✓ Remove border
-            setFocusPainted(false);   // ✓ Remove focus outline
+            setBorderPainted(false);
+            setFocusPainted(false);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
         }
         
@@ -288,12 +259,12 @@ public class Menu extends JFrame {
             g2.setPaint(gradient);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
             
-            // ✓ REMOVED: Border lines that created white rectangle
-            // No border drawing = cleaner look
+            g2.setColor(new Color(0, 0, 0, 30));
+            g2.setStroke(new BasicStroke(1));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
             
-            // Optional: Add subtle shadow effect
-            g2.setColor(new Color(0, 0, 0, 20));
-            g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, arc, arc);
+            g2.setColor(new Color(255, 255, 255, 80));
+            g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() / 2 - 1, arc, arc);
             
             super.paintComponent(g);
         }
