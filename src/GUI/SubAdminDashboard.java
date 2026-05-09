@@ -26,7 +26,7 @@ import org.json.JSONObject;
  * SubAdminDashboard - Fleet and driver management interface for Sub Admins
  * Features: Overview, Drivers, Rankings, Register Driver, Live Traccar Tracking
  */
-public class SubAdminDashboard extends JFrame {
+public class SubAdminDashboard extends JPanel {
 
     private DriverService ds = new DriverService();
     private SubAdminService sas = new SubAdminService();
@@ -38,8 +38,10 @@ public class SubAdminDashboard extends JFrame {
     private boolean registerLoaded = false;
     private boolean rankingLoaded  = false;
 
-    public SubAdminDashboard(SubAdmin subAdmin, SubAdminService subAdminService) {
+    public SubAdminDashboard(JFrame parentFrame, SubAdmin subAdmin) {
         this.subAdmin = subAdmin;
+        this.sas = new SubAdminService();
+        
         util.Session.currentSubAdmin = subAdmin;
 
         setTitle("Trackify - Sub Admin Dashboard");

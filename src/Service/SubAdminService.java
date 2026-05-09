@@ -48,18 +48,6 @@ public class SubAdminService
         return true;
     }
     
-    
-    public SubAdmin subAdminLogIn(String publicID, String password)
-    {
-        return subARepo.subAdminLogIn(publicID, password);
-    }
-    
-    // ADD THIS METHOD
-    public SubAdmin login(String adminId, String password)
-    {
-        return subARepo.subAdminLogIn(adminId, password);
-    }
-    
     public int totalSubAdmin()
     {
         int total = subARepo.countSubAdmin();
@@ -158,4 +146,8 @@ public class SubAdminService
     {
         return subARepo.searchSubAdminById(id);
     }
+    public SubAdmin getSubAdminData()
+    {
+        return Session.currentSubAdmin;
+    } 
 }

@@ -11,6 +11,8 @@ import Model.SubAdmin;
 import Model.Driver;
 import Model.DriverPerformance;
 import java.time.LocalDate;
+import Model.AuthResult;
+import Model.Role;
 
 public class SubAdminRepo
 {   
@@ -43,42 +45,38 @@ public class SubAdminRepo
         }
     }
     
-    public SubAdmin subAdminLogIn(String publicID, String password)
+    public AuthResult subAdminLogIn(String publicID, String password)
     {
+
         String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ? AND password = ?";
 
-        try(Connection conn = dbConnection.getConnection();
-                PreparedStatement prepS = conn.prepareStatement(sql);)
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement prepS = conn.prepareStatement(sql))
         {
+
             prepS.setString(1, publicID);
             prepS.setString(2, password);
-            
+
             ResultSet res = prepS.executeQuery();
-            
-            if(res.next())
+
+            if (res.next())
             {
+
                 SubAdmin sub = new SubAdmin();
-                
                 sub.setSubID(res.getInt("sub_admin_id"));
                 sub.setpublic_sub_id(res.getString("public_sub_id"));
                 sub.setfirstName(res.getString("first_name"));
                 sub.setlastName(res.getString("last_name"));
-                sub.setdateOfBirth(res.getObject("date_of_birth", LocalDate.class));
-                sub.setaddress(res.getString("address"));
-                sub.setcontactnum(res.getString("contact_number"));
-                sub.setposition(res.getString("position_role"));
-                sub.setphotoURL(res.getString("photo_url"));
-                sub.setpassword(res.getString("password"));
-                
-                return sub;
+
+                return new AuthResult(sub, Role.SUB_ADMIN);
             }
+
         }
-        
-        catch(Exception e)
+        catch (Exception e)
         {
             e.printStackTrace();
         }
-        
+
         return null;
     }
     

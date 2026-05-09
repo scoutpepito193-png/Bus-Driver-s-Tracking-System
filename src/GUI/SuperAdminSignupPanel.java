@@ -69,8 +69,9 @@ public class SuperAdminSignupPanel extends JFrame {
         backBtn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backBtn.addActionListener(e -> {
-            new AdminRoleSelection(new Menu());
-            dispose();
+            parentFrame.setContentPane(new Menu());
+            parentFrame.revalidate();
+            parentFrame.repaint();
         });
         
         headerPanel.add(headerLabel, BorderLayout.WEST);

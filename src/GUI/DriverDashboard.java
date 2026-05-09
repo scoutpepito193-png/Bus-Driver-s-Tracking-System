@@ -26,9 +26,9 @@ public class DriverDashboard extends JFrame {
     private boolean performanceLoaded = false;
     private boolean rankingLoaded = false;
 
-    public DriverDashboard(Driver driver, DriverService driverService) {
+    public DriverDashboard(JFrame parentFrame, Driver driver) {
         this.driver = driver;
-        this.ds = driverService;
+        this.ds = new DriverService();
         
         setTitle("Trackify - Driver Dashboard");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
