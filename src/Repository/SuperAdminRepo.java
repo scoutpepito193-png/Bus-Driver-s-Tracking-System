@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import Model.SuperAdmin;
 import Model.Request;
+import Model.AuthResult;
+import Model.Role;
 
 public class SuperAdminRepo
 {
@@ -56,34 +58,36 @@ public class SuperAdminRepo
         }
     }
     
-    public SuperAdmin logInRepo(String publicID)
+    public AuthResult logInRepo(String publicID, String password)
     {
-        
-        String sql = "SELECT * FROM super_admin WHERE public_id = ?";
-        
-        try(Connection conn = dbConnection.getConnection();
-                PreparedStatement prepS = conn.prepareStatement(sql);)
+
+        String sql = "SELECT * FROM super_admin WHERE public_id = ? AND password = ?";
+
+        try (Connection conn = dbConnection.getConnection();
+            PreparedStatement prepS = conn.prepareStatement(sql))
         {
+
             prepS.setString(1, publicID);
-            
+            prepS.setString(2, password);
+
             ResultSet res = prepS.executeQuery();
-            
+
             if (res.next())
             {
+
                 SuperAdmin sa = new SuperAdmin();
-                
                 sa.setPublicID(res.getString("public_id"));
-                sa.setPassword(res.getString("password")); 
-                
-                return sa;
+                sa.setPassword(res.getString("password"));
+            
+                return new AuthResult(sa, Role.SUPER_ADMIN);
             }
+
         }
-        
         catch (Exception e)
         {
             e.printStackTrace();
         }
-        
+
         return null;
     }
     

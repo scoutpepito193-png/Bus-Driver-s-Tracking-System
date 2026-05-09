@@ -475,7 +475,7 @@ public class SuperAdminDashboard extends JFrame {
                         System.out.println("DEBUG: Rejection reason: " + reason);
                         
                         try {
-                            boolean rejected = sas.rejectRequest(requestCode, reason);
+                            boolean rejected = sas.rejectRequest(requestCode);
                             System.out.println("DEBUG: Rejection result: " + rejected);
                             
                             if (rejected) {
