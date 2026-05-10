@@ -227,16 +227,9 @@ public class UnifiedLoginPanel extends JFrame {
             case SUPER_ADMIN -> {
                 SuperAdmin superAdmin = (SuperAdmin) result.getUser();
                 if (superAdmin != null) {
-                    if (superAdmin.getAge() == 0) {
-                        // Profile incomplete
-                        JOptionPane.showMessageDialog(this, "Please complete your profile",
-                            "Profile Setup", JOptionPane.INFORMATION_MESSAGE);
-                        new SuperAdminProfileSetup(superAdmin, new Service.SuperAdminService());
-                    } else {
-                        // Profile complete - go to dashboard
-                        new SuperAdminDashboard(superAdmin, new Service.SuperAdminService(),
-                            new Service.DriverService(), new Service.SubAdminService());
-                    }
+                    // Skip profile check - go directly to dashboard
+                    new SuperAdminDashboard(superAdmin, new Service.SuperAdminService(),
+                        new Service.DriverService(), new Service.SubAdminService());
                     dispose();
                 }
             }

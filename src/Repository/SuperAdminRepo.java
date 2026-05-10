@@ -111,6 +111,7 @@ public class SuperAdminRepo
                 sa.setcontactNum(res.getString("contact_number"));
                 sa.setposition(res.getString("position_role"));
                 sa.setphotoURL(res.getString("photo_url"));
+                sa.setAge(res.getInt("age"));  // ADD THIS LINE
                 
                 return sa;
             }

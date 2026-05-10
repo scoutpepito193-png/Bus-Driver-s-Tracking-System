@@ -19,12 +19,17 @@ import java.util.List;
  * SuperAdminDashboard - Main admin control panel for system management
  * Features: Overview, Drivers, Sub Admins, Requests, Rankings, Create Sub Admin
  *
- * FIXES:
- * - Total Sub Admins count now correct (was calling subs.totalSubAdmin() which may cache;
- *   now uses list.size() directly from getSubAdmins())
- * - Sub Admin Contact & Position no longer show N/A (registerSubAdmin now passes position)
- * - Rankings Driver Name & Score no longer show N/A for valid drivers
- * - Session.currentSuperAdmin set in constructor for downstream use
+ * COMPREHENSIVE FIXES:
+ * - Total Sub Admins count now correct (uses getSubAdmins().size())
+ * - Sub Admin Contact & Position no longer show N/A
+ * - Rankings Driver Name & Score no longer show N/A
+ * - Session.currentSuperAdmin set in constructor
+ * - ALL BACKEND FEATURES NOW INTEGRATED:
+ *   ✓ Driver removal requests handling
+ *   ✓ Ranking updates
+ *   ✓ Performance tracking
+ *   ✓ Request approval/rejection with error handling
+ *   ✓ Live location tracking in Drivers tab
  */
 public class SuperAdminDashboard extends JFrame {
 
@@ -48,7 +53,7 @@ public class SuperAdminDashboard extends JFrame {
         this.subs = subAdminService;
         this.sas = superAdminService;
 
-        // FIX: Set session so downstream repos can access current super admin
+        // Set session so downstream repos can access current super admin
         util.Session.currentSuperAdmin = superAdmin;
 
         setTitle("Trackify - Super Admin Dashboard");
@@ -139,7 +144,7 @@ public class SuperAdminDashboard extends JFrame {
                     }
                     break;
                 case 2:
-                    // FIX: Always reload Sub Admins panel to reflect newly added records
+                    // Always reload Sub Admins panel to reflect newly added records
                     tabbedPane.setComponentAt(2, createSubAdminsPanel());
                     subAdminsLoaded = true;
                     break;
@@ -185,8 +190,6 @@ public class SuperAdminDashboard extends JFrame {
 
     /**
      * Creates Overview Panel with system statistics
-     * FIX: Total Sub Admins now fetches fresh list size instead of relying on
-     *      a potentially stale totalSubAdmin() counter method.
      */
     private JPanel createOverviewPanel() {
         JPanel panel = new JPanel(new GridLayout(2, 3, 25, 25));
@@ -194,12 +197,10 @@ public class SuperAdminDashboard extends JFrame {
         panel.setBackground(new Color(240, 242, 245));
 
         try {
-            // FIX: Get actual list so count is always current
             List<SubAdmin> subAdminList = subs.getSubAdmins();
             int subAdminCount = (subAdminList != null) ? subAdminList.size() : 0;
 
             panel.add(createStatCard("Total Drivers", String.valueOf(ds.totalDriver()), new Color(52, 152, 219)));
-            // FIX: Use subAdminCount from live list instead of subs.totalSubAdmin()
             panel.add(createStatCard("Total Sub Admins", String.valueOf(subAdminCount), new Color(46, 204, 113)));
             panel.add(createStatCard("Total Vehicles", "0", new Color(241, 196, 15)));
             panel.add(createStatCard("Pending Requests", String.valueOf(sas.totalPending()), new Color(230, 126, 34)));
@@ -240,7 +241,7 @@ public class SuperAdminDashboard extends JFrame {
     }
 
     /**
-     * Creates Drivers Panel with driver performance data
+     * Creates Drivers Panel with driver performance data and live tracking
      */
     private JPanel createDriversPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -258,30 +259,91 @@ public class SuperAdminDashboard extends JFrame {
                 return panel;
             }
 
-            String[] columns = {"Driver Name", "Tickets", "Revenue (₱)", "KM/L", "Status"};
-            Object[][] data = new Object[list.size()][5];
+            String[] columns = {"Driver ID", "Driver Name", "Tickets", "Revenue (₱)", "KM/L", "Status"};
+            Object[][] data = new Object[list.size()][6];
 
             for (int i = 0; i < list.size(); i++) {
                 DriverPerformance dp = list.get(i);
                 if (dp == null || dp.getdriver() == null) continue;
                 
+                data[i][0] = (dp.getdriver().getpublic_driver_id() != null) ? dp.getdriver().getpublic_driver_id() : "(N/A)";
                 String firstName = (dp.getdriver().getfirstName() != null) ? dp.getdriver().getfirstName() : "";
                 String lastName = (dp.getdriver().getlastName() != null) ? dp.getdriver().getlastName() : "";
-                data[i][0] = (firstName + " " + lastName).trim();
-                data[i][1] = dp.gettotalTickets();
-                data[i][2] = String.format("₱ %.2f", dp.gettotalRevenue());
-                data[i][3] = String.format("%.2f", dp.getaverageKMPL());
-                data[i][4] = "Active";
+                data[i][1] = (firstName + " " + lastName).trim();
+                data[i][2] = dp.gettotalTickets();
+                data[i][3] = String.format("₱ %.2f", dp.gettotalRevenue());
+                data[i][4] = String.format("%.2f", dp.getaverageKMPL());
+                data[i][5] = "Active";
             }
 
-            JTable table = new JTable(new DefaultTableModel(data, columns) {
+            DefaultTableModel tableModel = new DefaultTableModel(data, columns) {
                 public boolean isCellEditable(int row, int column) { return false; }
-            });
+            };
+            
+            JTable table = new JTable(tableModel);
             styleTable(table, new Color(155, 89, 182));
 
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
             panel.add(scrollPane, BorderLayout.CENTER);
+
+            // Driver action buttons
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
+            btnPanel.setBackground(new Color(240, 242, 245));
+            btnPanel.setPreferredSize(new Dimension(0, 70));
+
+            JButton viewTrackingBtn = new JButton("📍 VIEW LIVE LOCATION");
+            viewTrackingBtn.setBackground(new Color(52, 152, 219));
+            viewTrackingBtn.setForeground(Color.WHITE);
+            viewTrackingBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            viewTrackingBtn.setFocusPainted(false);
+            viewTrackingBtn.setBorderPainted(false);
+            viewTrackingBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            viewTrackingBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            viewTrackingBtn.addActionListener(e -> {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow >= 0) {
+                    String driverId = (String) table.getValueAt(selectedRow, 0);
+                    showDriverLocationDialog(driverId);
+                } else {
+                    showErrorDialog("Warning", "Please select a driver");
+                }
+            });
+
+            JButton removeDriverBtn = new JButton("✗ REMOVE DRIVER");
+            removeDriverBtn.setBackground(new Color(231, 76, 60));
+            removeDriverBtn.setForeground(Color.WHITE);
+            removeDriverBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            removeDriverBtn.setFocusPainted(false);
+            removeDriverBtn.setBorderPainted(false);
+            removeDriverBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            removeDriverBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            removeDriverBtn.addActionListener(e -> {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow >= 0) {
+                    String driverId = (String) table.getValueAt(selectedRow, 0);
+                    String reason = JOptionPane.showInputDialog(this, "Enter reason for removal:", "Remove Driver");
+                    if (reason != null && !reason.trim().isEmpty()) {
+                        try {
+                            boolean success = ds.requestDriverRemoval(driverId, reason);
+                            if (success) {
+                                showInfoDialog("Success", "Driver removal request submitted");
+                                driversLoaded = false;
+                            } else {
+                                showErrorDialog("Error", "Failed to submit removal request");
+                            }
+                        } catch (Exception ex) {
+                            showErrorDialog("Error", "An error occurred: " + ex.getMessage());
+                        }
+                    }
+                } else {
+                    showErrorDialog("Warning", "Please select a driver");
+                }
+            });
+
+            btnPanel.add(viewTrackingBtn);
+            btnPanel.add(removeDriverBtn);
+            panel.add(btnPanel, BorderLayout.SOUTH);
         } catch (Exception e) {
             System.err.println("Error loading drivers panel: " + e.getMessage());
             e.printStackTrace();
@@ -291,9 +353,74 @@ public class SuperAdminDashboard extends JFrame {
     }
 
     /**
+     * Shows driver live location dialog with real-time updates
+     */
+    private void showDriverLocationDialog(String driverId) {
+        JDialog dlg = new JDialog(this, "Driver Location - " + driverId, false);
+        dlg.setSize(500, 350);
+        dlg.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panel.setBackground(Color.WHITE);
+
+        JLabel titleLabel = new JLabel("📍 Live Location Tracking");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setForeground(new Color(52, 152, 219));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(titleLabel);
+        panel.add(Box.createVerticalStrut(15));
+
+        JLabel latLabel = new JLabel("Latitude: --");
+        latLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        latLabel.setForeground(new Color(60, 60, 60));
+        panel.add(latLabel);
+
+        JLabel lngLabel = new JLabel("Longitude: --");
+        lngLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lngLabel.setForeground(new Color(60, 60, 60));
+        panel.add(lngLabel);
+
+        JLabel statusLabel = new JLabel("Status: Connecting...");
+        statusLabel.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        statusLabel.setForeground(new Color(155, 89, 182));
+        panel.add(statusLabel);
+
+        panel.add(Box.createVerticalGlue());
+
+        JButton closeBtn = new JButton("Close");
+        closeBtn.setBackground(new Color(150, 150, 150));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        closeBtn.setFocusPainted(false);
+        closeBtn.setBorderPainted(false);
+        closeBtn.setPreferredSize(new Dimension(100, 35));
+        closeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        closeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        closeBtn.addActionListener(e -> dlg.dispose());
+        panel.add(closeBtn);
+
+        dlg.add(panel);
+
+        // Start tracking in background
+        subs.startTracking(driverId, (lat, lng) -> {
+            SwingUtilities.invokeLater(() -> {
+                if (Double.isNaN(lat) || Double.isNaN(lng)) {
+                    statusLabel.setText("Status: No location data (driver offline)");
+                } else {
+                    latLabel.setText(String.format("Latitude: %.6f", lat));
+                    lngLabel.setText(String.format("Longitude: %.6f", lng));
+                    statusLabel.setText("Status: Live updating...");
+                }
+            });
+        });
+
+        dlg.setVisible(true);
+    }
+
+    /**
      * Creates Sub Admins Panel with list of all sub admins
-     * FIX: Contact and Position no longer show N/A — fetched correctly from DB.
-     *      Count now reflects actual list size.
      */
     private JPanel createSubAdminsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -312,26 +439,25 @@ public class SuperAdminDashboard extends JFrame {
                 return panel;
             }
 
-            String[] columns = {"Sub Admin ID", "Name", "Contact", "Position", "Status"};
-            Object[][] data = new Object[list.size()][5];
+            String[] columns = {"Sub Admin ID", "Name", "Contact", "Position", "Terminal", "Status"};
+            Object[][] data = new Object[list.size()][6];
 
             for (int i = 0; i < list.size(); i++) {
                 SubAdmin sa = list.get(i);
                 if (sa == null) continue;
                 
-                // FIX: Safe null-checks; show actual value or fallback message
                 data[i][0] = (sa.getpublic_sub_id() != null && !sa.getpublic_sub_id().isEmpty())
                         ? sa.getpublic_sub_id() : "(no ID)";
                 String fn = (sa.getfirstName() != null) ? sa.getfirstName() : "";
                 String ln = (sa.getlastName() != null) ? sa.getlastName() : "";
                 data[i][1] = (fn + " " + ln).trim();
-                // FIX: Contact — use getcontactNum(); if empty show "(not set)"
                 data[i][2] = (sa.getcontactNum() != null && !sa.getcontactNum().isEmpty())
                         ? sa.getcontactNum() : "(not set)";
-                // FIX: Position — use getposition(); if empty show "(not set)"
                 data[i][3] = (sa.getposition() != null && !sa.getposition().isEmpty())
                         ? sa.getposition() : "(not set)";
-                data[i][4] = "Active";
+                data[i][4] = (sa.getassignedTerminal() != null && !sa.getassignedTerminal().isEmpty())
+                        ? sa.getassignedTerminal() : "(unassigned)";
+                data[i][5] = "Active";
             }
 
             JTable table = new JTable(new DefaultTableModel(data, columns) {
@@ -350,9 +476,6 @@ public class SuperAdminDashboard extends JFrame {
         return panel;
     }
 
-    /**
-     * Creates Requests Panel with approval functionality
-     */
     /**
      * Creates Requests Panel with approval AND rejection functionality
      */
@@ -394,12 +517,12 @@ public class SuperAdminDashboard extends JFrame {
             scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
             panel.add(scrollPane, BorderLayout.CENTER);
 
-            // ✅ Button Panel - APPROVE & REJECT
+            // Button Panel - APPROVE & REJECT
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
             btnPanel.setBackground(new Color(240, 242, 245));
             btnPanel.setPreferredSize(new Dimension(0, 70));
 
-            // ✅ APPROVE BUTTON
+            // APPROVE BUTTON
             JButton approveBtn = new JButton("✓ APPROVE REQUEST");
             approveBtn.setBackground(new Color(46, 204, 113));
             approveBtn.setForeground(Color.WHITE);
@@ -431,6 +554,7 @@ public class SuperAdminDashboard extends JFrame {
                             showInfoDialog("Success", "✓ Request Approved Successfully!");
                             tableModel.removeRow(selectedRow);
                             requestsLoaded = false;
+                            overviewLoaded = false;
                         } else {
                             showErrorDialog("Error", "Approval failed. Request may be invalid or driver data incomplete.");
                         }
@@ -444,7 +568,7 @@ public class SuperAdminDashboard extends JFrame {
                 }
             });
 
-            // ✅ NEW REJECT BUTTON
+            // REJECT BUTTON
             JButton rejectBtn = new JButton("✗ REJECT REQUEST");
             rejectBtn.setBackground(new Color(231, 76, 60));
             rejectBtn.setForeground(Color.WHITE);
@@ -467,10 +591,9 @@ public class SuperAdminDashboard extends JFrame {
                 if (selectedRow >= 0) {
                     String requestCode = (String) table.getValueAt(selectedRow, 0);
                     
-                    // ✅ Show dialog to get rejection reason
                     String reason = showRejectReasonDialog();
                     
-                    if (reason != null) {  // User clicked OK
+                    if (reason != null) {
                         System.out.println("DEBUG: Attempting to reject request: " + requestCode);
                         System.out.println("DEBUG: Rejection reason: " + reason);
                         
@@ -482,6 +605,7 @@ public class SuperAdminDashboard extends JFrame {
                                 showInfoDialog("Success", "✗ Request Rejected!\nReason: " + reason);
                                 tableModel.removeRow(selectedRow);
                                 requestsLoaded = false;
+                                overviewLoaded = false;
                             } else {
                                 showErrorDialog("Error", "Rejection failed. Please try again.");
                             }
@@ -509,8 +633,6 @@ public class SuperAdminDashboard extends JFrame {
 
     /**
      * Creates Rankings Panel showing driver rankings
-     * FIX: Valid drivers with 0 score no longer show "N/A" as their name.
-     *      Only truly null/empty driver records fall back to a placeholder.
      */
     private JPanel createRankingsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -536,11 +658,9 @@ public class SuperAdminDashboard extends JFrame {
                 Driver d = list.get(i);
                 data[i][0] = (i + 1) + "";
                 if (d != null) {
-                    // FIX: Always show real name even if score is 0
                     String firstName = (d.getfirstName() != null) ? d.getfirstName() : "";
                     String lastName  = (d.getlastName()  != null) ? d.getlastName()  : "";
                     data[i][1] = (firstName + " " + lastName).trim().isEmpty() ? "(Unknown)" : (firstName + " " + lastName).trim();
-                    // FIX: Show 0 explicitly if ranking is null, not "N/A"
                     Object rank = d.getranking();
                     data[i][2] = (rank != null) ? rank : 0;
                 } else {
@@ -557,6 +677,32 @@ public class SuperAdminDashboard extends JFrame {
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
             panel.add(scrollPane, BorderLayout.CENTER);
+
+            // Refresh Rankings button
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+            btnPanel.setBackground(new Color(240, 242, 245));
+            btnPanel.setPreferredSize(new Dimension(0, 60));
+
+            JButton refreshBtn = new JButton("🔄 UPDATE RANKINGS");
+            refreshBtn.setBackground(new Color(52, 152, 219));
+            refreshBtn.setForeground(Color.WHITE);
+            refreshBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            refreshBtn.setFocusPainted(false);
+            refreshBtn.setBorderPainted(false);
+            refreshBtn.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
+            refreshBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            refreshBtn.addActionListener(e -> {
+                try {
+                    ds.updateRanking();
+                    showInfoDialog("Success", "Rankings updated successfully!");
+                    rankingsLoaded = false;
+                } catch (Exception ex) {
+                    showErrorDialog("Error", "Failed to update rankings: " + ex.getMessage());
+                }
+            });
+
+            btnPanel.add(refreshBtn);
+            panel.add(btnPanel, BorderLayout.SOUTH);
         } catch (Exception e) {
             System.err.println("Error loading rankings panel: " + e.getMessage());
             e.printStackTrace();
@@ -567,7 +713,6 @@ public class SuperAdminDashboard extends JFrame {
 
     /**
      * Creates Sub Admin Panel - form for creating new sub admin accounts
-     * FIX: Position field value is now correctly passed to registerSubAdmin().
      */
     private JPanel createSubAdminPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -624,10 +769,6 @@ public class SuperAdminDashboard extends JFrame {
         // Confirm Password
         formPanel.add(makeLabel("Confirm Password"), gbc); gbc.gridy++;
         JPasswordField cpwField = makePasswordField(); formPanel.add(cpwField, gbc); gbc.gridy++;
-        
-        // Terminal (NEW FIELD)
-        formPanel.add(makeLabel("Assigned Terminal"), gbc); gbc.gridy++;
-        JTextField terminalField = makeField(); formPanel.add(terminalField, gbc); gbc.gridy++;
 
         // Create Button
         gbc.insets = new Insets(25, 0, 0, 0);
@@ -657,7 +798,6 @@ public class SuperAdminDashboard extends JFrame {
             String pos = posField.getText().trim();
             String pw  = new String(pwField.getPassword());
             String cpw = new String(cpwField.getPassword());
-            String terminal = terminalField.getText().trim();
 
             if (id.isEmpty() || fn.isEmpty() || ln.isEmpty() || ct.isEmpty() || pos.isEmpty() || pw.isEmpty()) {
                 showErrorDialog("Validation Error", "Please fill in all fields");
@@ -672,8 +812,7 @@ public class SuperAdminDashboard extends JFrame {
                 return;
             }
 
-            // FIX: Pass position (pos) as a real argument.
-            boolean success = subs.registerSubAdmin(id, fn, ln, "M", LocalDate.now(), "", ct, pos, pw, cpw, terminal);
+            boolean success = subs.registerSubAdmin(id, fn, ln, "M", LocalDate.now(), "", ct, pos, pw, cpw);
 
             if (success) {
                 showInfoDialog("Success", "Sub Admin account created successfully!");
@@ -701,7 +840,6 @@ public class SuperAdminDashboard extends JFrame {
     // Helpers
     // -------------------------------------------------------------------------
 
-    /** Applies consistent table styling */
     private void styleTable(JTable table, Color headerColor) {
         table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         table.setRowHeight(32);
@@ -810,7 +948,7 @@ public class SuperAdminDashboard extends JFrame {
     }
     
     /**
-     * ✅ NEW: Shows dialog to get rejection reason from user
+     * Shows dialog to get rejection reason from user
      */
     private String showRejectReasonDialog() {
         JDialog dlg = new JDialog(this, "Reject Request", true);
@@ -823,7 +961,6 @@ public class SuperAdminDashboard extends JFrame {
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         contentPanel.setBackground(Color.WHITE);
 
-        // Title
         JLabel titleLabel = new JLabel("Why are you rejecting this request?");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         titleLabel.setForeground(new Color(231, 76, 60));
@@ -831,7 +968,6 @@ public class SuperAdminDashboard extends JFrame {
         contentPanel.add(titleLabel);
         contentPanel.add(Box.createVerticalStrut(10));
 
-        // Text Area for reason
         JTextArea reasonArea = new JTextArea(5, 40);
         reasonArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         reasonArea.setLineWrap(true);
@@ -842,7 +978,6 @@ public class SuperAdminDashboard extends JFrame {
         contentPanel.add(scrollPane);
         contentPanel.add(Box.createVerticalStrut(15));
 
-        // Button Panel
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         btnPanel.setOpaque(false);
         btnPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
@@ -865,7 +1000,6 @@ public class SuperAdminDashboard extends JFrame {
         cancelBtn.setPreferredSize(new Dimension(100, 35));
         cancelBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Store result
         String[] result = {null};
 
         okBtn.addActionListener(e -> {
