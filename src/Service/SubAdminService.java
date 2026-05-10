@@ -24,7 +24,7 @@ public class SubAdminService
                                     String gender, LocalDate dateOfBirth,
                                     String address, String contactNum, 
                                     String position, String password,
-                                    String confirmPass)
+                                    String confirmPass, String terminal)
     {
         SubAdmin subA = new SubAdmin();
         
@@ -42,6 +42,7 @@ public class SubAdminService
         subA.setcontactnum(contactNum);
         subA.setposition(position);
         subA.setpassword(password);
+        subA.setassignedTerminal(terminal);
         
         subARepo.registerSubAdmin(subA);
         

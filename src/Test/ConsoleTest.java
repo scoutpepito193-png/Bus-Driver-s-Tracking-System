@@ -192,6 +192,42 @@ public class ConsoleTest
                                                     + ", " + dp.getdriver().getfirstName() + "\t" + dp.gettotalTickets()
                                                     + "\t" + dp.gettotalRevenue() + "\t" + dp.getaverageKMPL());
                                         }
+                                        System.out.print("\nView Driver Profile? Enter ID or [0] to skip: ");
+                                        String viewDriverId = scan.nextLine();
+
+                                        if (!viewDriverId.equals("0"))
+                                        {
+                                            Driver foundDriver = subs.searchDriverById(viewDriverId);
+
+                                            if (foundDriver != null)
+                                            {
+                                                System.out.println("\n===== Driver Profile =====");
+                                                System.out.println("Name          : " + foundDriver.getfirstName() + " " + foundDriver.getlastName());
+                                                System.out.println("ID#           : " + foundDriver.getpublic_driver_id());
+                                                System.out.println("Gender        : " + foundDriver.getgender());
+                                                System.out.println("Date of Birth : " + foundDriver.getdateOfBirth());
+                                                System.out.println("Address       : " + foundDriver.getaddress());
+                                                System.out.println("Contact       : " + foundDriver.getcontactNumber());
+                                                System.out.println("License No.   : " + foundDriver.getlicenseNum());
+                                                System.out.println("License Expiry: " + foundDriver.getlicenseExpiry());
+
+                                                List<DriverPerformance> records = subs.searchDriverRecords(foundDriver.getpublic_driver_id());
+                                                System.out.println("\n===== Driver Records =====");
+                                                System.out.printf("%-15s %-15s %-15s%n", "Tickets", "Revenue", "Avg KMPL");
+                                                System.out.println("=".repeat(45));
+                                                for (DriverPerformance dp : records)
+                                                {
+                                                    System.out.printf("%-15d %-15.2f %-15.2f%n",
+                                                        dp.gettotalTickets(),
+                                                        dp.gettotalRevenue(),
+                                                        dp.getaverageKMPL());
+                                                }
+                                            }
+                                            else
+                                            {
+                                                System.out.println("Driver not found.");
+                                            }
+                                        }
                                     }
                                     case 3 ->
                                     {
@@ -201,6 +237,29 @@ public class ConsoleTest
                                         {
                                             System.out.println(subS.getpublic_sub_id() + "\t" + subS.getlastName() + ", " + subS.getfirstName()
                                                     + "\t" + subS.getposition());
+                                        }
+                                        System.out.print("\nView Sub Admin Profile? Enter ID or [0] to skip: ");
+                                        String viewSubId = scan.nextLine();
+
+                                        if (!viewSubId.equals("0"))
+                                        {
+                                            SubAdmin foundSub = subs.searchSubAdminById(viewSubId);
+
+                                            if (foundSub != null)
+                                            {
+                                                System.out.println("\n===== Sub Admin Profile =====");
+                                                System.out.println("Name    : " + foundSub.getfirstName() + " " + foundSub.getlastName());
+                                                System.out.println("ID#     : " + foundSub.getpublic_sub_id());
+                                                System.out.println("Gender  : " + foundSub.getgender());
+                                                System.out.println("Address : " + foundSub.getaddress());
+                                                System.out.println("Contact : " + foundSub.getcontactNum());
+                                                System.out.println("Position: " + foundSub.getposition());
+                                                System.out.println("Terminal: " + foundSub.getassignedTerminal());
+                                            }
+                                            else
+                                            {
+                                                System.out.println("Sub Admin not found.");
+                                            }
                                         }
                                         System.out.println();
                                         System.out.print("Add Sub-Admin [y/n]: ");
@@ -236,6 +295,25 @@ public class ConsoleTest
 
                                                     System.out.print("Upload Photo: ");
                                                     String subPhotoURL = scan.nextLine();
+                                                    System.out.println("Select Terminal:");
+                                                    System.out.println("[1] Cebu South Bus Terminal (CSBT)");
+                                                    System.out.println("[2] Cebu North Bus Terminal (NBT)");
+                                                    System.out.println("[3] Ceres Garage");
+                                                    System.out.println("[4] Marina Mall (Mactan)");
+                                                    System.out.println("[5] Carmen Bus Terminal");
+                                                    System.out.print("Choose: ");
+                                                    int terminalChoice = scan.nextInt();
+                                                    scan.nextLine();
+
+                                                    String subTerminal = switch (terminalChoice)
+                                                    {
+                                                        case 1 -> "Cebu South Bus Terminal (CSBT)";
+                                                        case 2 -> "Cebu North Bus Terminal (NBT)";
+                                                        case 3 -> "Ceres Garage";
+                                                        case 4 -> "Marina Mall (Mactan)";
+                                                        case 5 -> "Carmen Bus Terminal";
+                                                        default -> "Unassigned";
+};
 
                                                     System.out.print("Press [1] Confirm and [2] Clear: ");
                                                     int subProfileChoice = scan.nextInt();
@@ -254,7 +332,7 @@ public class ConsoleTest
                                                             String subConfirmPass = scan.nextLine();
 
                                                             confirm = subs.registerSubAdmin(subID, subFname, subLname, subGender, subDateOfBirth, subAddress,
-                                                                    subContactNumber, subPhotoURL, subPassword, subConfirmPass);
+                                                            subContactNumber, subPhotoURL, subPassword, subConfirmPass, subTerminal);
 
                                                             if (confirm == false)
                                                             {
@@ -456,6 +534,7 @@ public class ConsoleTest
                                                 System.out.println("Address : " + foundSub.getaddress());
                                                 System.out.println("Contact : " + foundSub.getcontactNum());
                                                 System.out.println("Position: " + foundSub.getposition());
+                                                System.out.println("Terminal: " + foundSub.getassignedTerminal());
                                             }
                                             else
                                             {
@@ -485,6 +564,7 @@ public class ConsoleTest
                                 System.out.println("Name: " + subAdmin.getfirstName() + " " + subAdmin.getlastName());
                                 System.out.println("Position: " + subAdmin.getposition());
                                 System.out.println("ID: " + subAdmin.getpublic_sub_id());
+                                System.out.println("Terminal: " + subAdmin.getassignedTerminal());
                                 System.out.println();
 
                                 System.out.println("[1]Overview   [2]Driver   [3]My Request   [4] LeaderBoard    [5] Search    [0] Sign-Out");
