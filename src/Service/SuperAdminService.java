@@ -39,35 +39,6 @@ public class SuperAdminService
         }
     }
     
-    // Authenticate SuperAdmin login
-    // Returns: 1 = success, 2 = wrong password, 0 = account not found
-    public int logIn(String publicID, String password)
-    {
-        try {
-            // Attempt to retrieve SuperAdmin by their public ID from the database
-            SuperAdmin sa = saRepo.logInRepo(publicID);
-            
-            // If no SuperAdmin found with this ID
-            if (sa == null)
-            {
-                return 0;
-            }
-            
-            // If SuperAdmin found but password doesn't match
-            if (!sa.getPassword().equals(password))
-            {
-                return 2;
-            }
-            
-            // Both ID and password are correct
-            return 1;
-        } catch (Exception e) {
-            System.err.println("Error during SuperAdmin login: " + e.getMessage());
-            e.printStackTrace();
-            return 0; // Treat exceptions as "account not found"
-        }
-    }
-    
     // Register a new SuperAdmin account
     // Validates that passwords match before creating account
     public boolean registerSA(String id, String fname, String lname,
@@ -329,7 +300,7 @@ public class SuperAdminService
         return false;
     }
     
-    public boolean rejectRequest(String reqCode, String reason)
+    public boolean rejectRequest(String reqCode)
     {
         try
         {
@@ -344,8 +315,8 @@ public class SuperAdminService
             // Update request status to REJECTED
             boolean statusUpdated = saRepo.updateRequestStatus(reqCode, "REJECTED");
             
-            if(statusUpdated) {
-                System.out.println("Request rejected: " + reqCode + " | Reason: " + reason);
+            if(statusUpdated)
+            {
                 return true;
             }
             
@@ -361,59 +332,5 @@ public class SuperAdminService
     }
     
 }
-    
-    /*public boolean approveRequest(String reqCode)
-    {
-        DriverRepo dRepo = new DriverRepo();
-        try
-        {
-            Driver d = getReqDetails(reqCode);
-            
-            if(d == null) return false;
-            
-            boolean insert = dRepo.insertApprovedDriver(d);
-            if(!insert) return false;
-            
-            boolean update = saRepo.updateRequestStatus(reqCode, "APPROVED");
-            
-            return update;
-        }
-        
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        
-        return false;
-    }*/
-
-    
-    /*public boolean registerSA(String id, String fname, String lname,
-                            String contactNum, String position, String password,
-                            String confirmPass)
-    {
-        if (!password.equals(confirmPass))
-        {
-            return false;
-        }
-        sa.publicID = id;
-        sa.firstName = fname;
-        sa.lastName = lname;
-        sa.contactNum = contactNum;
-        sa.position = position;        
-        sa.password = password;
-        
-        return true;
-    }
-    
-    public boolean logIn(String id, String regID, String password, String regPass)
-    {
-        return id.equals(regID) && password.equals(regPass);
-    }
-    
-    public void dashboardOverview()
-    {
-         
-    }*/
     
    

@@ -475,7 +475,7 @@ public class SuperAdminDashboard extends JFrame {
                         System.out.println("DEBUG: Rejection reason: " + reason);
                         
                         try {
-                            boolean rejected = sas.rejectRequest(requestCode, reason);
+                            boolean rejected = sas.rejectRequest(requestCode);
                             System.out.println("DEBUG: Rejection result: " + rejected);
                             
                             if (rejected) {
@@ -624,6 +624,10 @@ public class SuperAdminDashboard extends JFrame {
         // Confirm Password
         formPanel.add(makeLabel("Confirm Password"), gbc); gbc.gridy++;
         JPasswordField cpwField = makePasswordField(); formPanel.add(cpwField, gbc); gbc.gridy++;
+        
+        // Terminal (NEW FIELD)
+        formPanel.add(makeLabel("Assigned Terminal"), gbc); gbc.gridy++;
+        JTextField terminalField = makeField(); formPanel.add(terminalField, gbc); gbc.gridy++;
 
         // Create Button
         gbc.insets = new Insets(25, 0, 0, 0);
@@ -653,6 +657,7 @@ public class SuperAdminDashboard extends JFrame {
             String pos = posField.getText().trim();
             String pw  = new String(pwField.getPassword());
             String cpw = new String(cpwField.getPassword());
+            String terminal = terminalField.getText().trim();
 
             if (id.isEmpty() || fn.isEmpty() || ln.isEmpty() || ct.isEmpty() || pos.isEmpty() || pw.isEmpty()) {
                 showErrorDialog("Validation Error", "Please fill in all fields");
@@ -668,7 +673,7 @@ public class SuperAdminDashboard extends JFrame {
             }
 
             // FIX: Pass position (pos) as a real argument.
-            boolean success = subs.registerSubAdmin(id, fn, ln, "M", LocalDate.now(), "", ct, pos, pw, cpw);
+            boolean success = subs.registerSubAdmin(id, fn, ln, "M", LocalDate.now(), "", ct, pos, pw, cpw, terminal);
 
             if (success) {
                 showInfoDialog("Success", "Sub Admin account created successfully!");

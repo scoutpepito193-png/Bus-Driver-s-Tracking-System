@@ -11,6 +11,8 @@ import Model.Driver;
 import Model.DriverPerformance;
 import util.Session;
 import util.TimeProvider;
+import Model.AuthResult;
+import Model.Role;
 
 public class DriverRepo
 {   
@@ -397,32 +399,31 @@ public int getDriverIdByPublicID(String publicID)
         return list;
     }
     
-    public Driver driverLogin(String publicDriverId, String password)
+    public AuthResult driverLogin(String publicDriverId, String password)
     {
+
         String sql = "SELECT * FROM driver WHERE public_driver_id = ? AND driver_password = ? AND status = 'ACTIVE'";
 
-        try(Connection conn = dbConnection.getConnection();
-                PreparedStatement prepS = conn.prepareStatement(sql))
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement prepS = conn.prepareStatement(sql))
         {
+
             prepS.setString(1, publicDriverId);
             prepS.setString(2, password);
 
             ResultSet res = prepS.executeQuery();
 
-            if(res.next())
+            if (res.next())
             {
+
                 Driver d = new Driver();
                 d.setpublic_driver_id(res.getString("public_driver_id"));
                 d.setfirstName(res.getString("first_name"));
                 d.setlastName(res.getString("last_name"));
-                d.setgender(res.getString("gender"));
-                d.setdateOfBirth(res.getObject("date_of_birth", LocalDate.class));
-                d.setaddress(res.getString("address"));
-                d.setcontactNumber(res.getString("contact_number"));
-                d.setlicenseNum(res.getString("license_number"));
-                d.setlicenseExpiry(res.getObject("license_expiry_date", LocalDate.class));
-                return d;
+
+                return new AuthResult(d, Role.DRIVER);
             }
+
         }
         catch (Exception e)
         {

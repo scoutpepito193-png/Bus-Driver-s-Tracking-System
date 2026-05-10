@@ -24,7 +24,7 @@ public class SubAdminService
                                     String gender, LocalDate dateOfBirth,
                                     String address, String contactNum, 
                                     String position, String password,
-                                    String confirmPass)
+                                    String confirmPass, String terminal)
     {
         SubAdmin subA = new SubAdmin();
         
@@ -42,22 +42,11 @@ public class SubAdminService
         subA.setcontactnum(contactNum);
         subA.setposition(position);
         subA.setpassword(password);
+        subA.setassignedTerminal(terminal);
         
         subARepo.registerSubAdmin(subA);
         
         return true;
-    }
-    
-    
-    public SubAdmin subAdminLogIn(String publicID, String password)
-    {
-        return subARepo.subAdminLogIn(publicID, password);
-    }
-    
-    // ADD THIS METHOD
-    public SubAdmin login(String adminId, String password)
-    {
-        return subARepo.subAdminLogIn(adminId, password);
     }
     
     public int totalSubAdmin()
@@ -158,4 +147,8 @@ public class SubAdminService
     {
         return subARepo.searchSubAdminById(id);
     }
+    public SubAdmin getSubAdminData()
+    {
+        return Session.currentSubAdmin;
+    } 
 }

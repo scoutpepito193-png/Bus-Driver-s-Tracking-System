@@ -1,24 +1,28 @@
 package GUI;
 
+import Service.LogInService;
+import Model.AuthResult;
+import Model.Role;
+import Model.SuperAdmin;
+import Model.SubAdmin;
 import Model.Driver;
-import Service.DriverService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class DriverLoginPanel extends JFrame {
+public class UnifiedLoginPanel extends JFrame {
     
-    private DriverService driverService;
-    private JFrame parentFrame;
-
-    public DriverLoginPanel(JFrame parentFrame) {
-        this.parentFrame = parentFrame;
-        this.driverService = new DriverService();
+    private LogInService logInService;
+    private int loginAttempts = 0;
+    private static final int MAX_ATTEMPTS = 3;
+    
+    public UnifiedLoginPanel() {
+        this.logInService = new LogInService();
         
-        setTitle("Trackify - Driver Login");
+        setTitle("BDTracker - Login");
         setSize(900, 650);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
         setMinimumSize(new Dimension(700, 500));
         setIconImage(createAppIcon());
@@ -37,12 +41,17 @@ public class DriverLoginPanel extends JFrame {
         Graphics2D g2d = icon.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
-        g2d.setColor(new Color(52, 152, 219));
+        g2d.setColor(new Color(25, 103, 210));
         g2d.fillRoundRect(0, 0, 64, 64, 10, 10);
         
         g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Segoe UI", Font.BOLD, 40));
-        g2d.drawString("D", 16, 50);
+        g2d.setStroke(new BasicStroke(2));
+        g2d.drawRoundRect(10, 15, 44, 28, 4, 4);
+        g2d.fillRect(14, 18, 8, 6);
+        g2d.fillRect(25, 18, 8, 6);
+        g2d.fillRect(36, 18, 8, 6);
+        g2d.fillOval(16, 42, 6, 6);
+        g2d.fillOval(42, 42, 6, 6);
         
         g2d.dispose();
         return icon;
@@ -52,12 +61,12 @@ public class DriverLoginPanel extends JFrame {
         
         // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(new Color(52, 152, 219));
-        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(25, 103, 210)));
+        headerPanel.setBackground(new Color(20, 40, 80));
+        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, new Color(52, 152, 219)));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
         headerPanel.setPreferredSize(new Dimension(0, 80));
         
-        JLabel headerLabel = new JLabel("DRIVER LOGIN");
+        JLabel headerLabel = new JLabel("BDTracker LOGIN");
         headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
         headerLabel.setForeground(Color.WHITE);
         
@@ -69,11 +78,8 @@ public class DriverLoginPanel extends JFrame {
         backBtn.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backBtn.addActionListener(e -> {
-            // Close this login window
+            new Menu();
             dispose();
-            // Restore the Menu window (it was hidden with setVisible(false), not disposed,
-            // so it is still alive in memory and can be made visible again)
-            parentFrame.setVisible(true);
         });
         
         headerPanel.add(headerLabel, BorderLayout.WEST);
@@ -91,32 +97,32 @@ public class DriverLoginPanel extends JFrame {
             BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
             BorderFactory.createEmptyBorder(40, 40, 40, 40)
         ));
-        formContainer.setMaximumSize(new Dimension(600, 400));
-        formContainer.setPreferredSize(new Dimension(600, 400));
+        formContainer.setMaximumSize(new Dimension(600, 350));
+        formContainer.setPreferredSize(new Dimension(600, 350));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(15, 0, 15, 0);
         gbc.weightx = 1.0;
         
-        // Driver ID Label
+        // ID Label
         gbc.gridy = 0;
-        JLabel idLabel = new JLabel("Driver ID:");
+        JLabel idLabel = new JLabel("User ID:");
         idLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         idLabel.setForeground(new Color(60, 60, 60));
         formContainer.add(idLabel, gbc);
         
-        // Driver ID Field
+        // ID Field
         gbc.gridy = 1;
-        JTextField driverIdField = new JTextField(20);
-        driverIdField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        driverIdField.setBorder(BorderFactory.createCompoundBorder(
+        JTextField idField = new JTextField(20);
+        idField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        idField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
-        driverIdField.setMaximumSize(new Dimension(400, 40));
-        driverIdField.setPreferredSize(new Dimension(400, 40));
-        formContainer.add(driverIdField, gbc);
+        idField.setMaximumSize(new Dimension(400, 40));
+        idField.setPreferredSize(new Dimension(400, 40));
+        formContainer.add(idField, gbc);
         
         // Password Label
         gbc.gridy = 2;
@@ -137,20 +143,13 @@ public class DriverLoginPanel extends JFrame {
         passwordField.setPreferredSize(new Dimension(400, 40));
         formContainer.add(passwordField, gbc);
         
-        // Forgot Password Link
+        // Attempt counter (initially hidden)
         gbc.gridy = 4;
         gbc.insets = new Insets(5, 0, 20, 0);
-        JButton forgotBtn = new JButton("Forgot Password?");
-        forgotBtn.setOpaque(false);
-        forgotBtn.setContentAreaFilled(false);
-        forgotBtn.setBorderPainted(false);
-        forgotBtn.setForeground(new Color(52, 152, 219));
-        forgotBtn.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        forgotBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        forgotBtn.addActionListener(e -> JOptionPane.showMessageDialog(this,
-            "Please contact your sub-admin to reset password",
-            "Password Reset", JOptionPane.INFORMATION_MESSAGE));
-        formContainer.add(forgotBtn, gbc);
+        JLabel attemptLabel = new JLabel("");
+        attemptLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        attemptLabel.setForeground(new Color(200, 50, 50));
+        formContainer.add(attemptLabel, gbc);
         
         // Login Button
         gbc.gridy = 5;
@@ -173,37 +172,41 @@ public class DriverLoginPanel extends JFrame {
         });
         
         loginBtn.addActionListener(e -> {
-            String driverId = driverIdField.getText().trim();
+            String userId = idField.getText().trim();
             String password = new String(passwordField.getPassword());
             
-            // Validate: both fields must be filled before attempting login
-            if (driverId.isEmpty() || password.isEmpty()) {
+            if (userId.isEmpty() || password.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields",
                     "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             
-            // Call the service layer to verify credentials.
-            // Returns a Driver object if credentials are valid AND the account has been
-            // approved by an admin, or null if not found / wrong password / pending approval
-            Driver driver = driverService.loginDriver(driverId, password);
-            
-            if (driver != null) {
-                // Login successful — open the Driver Dashboard
-                new DriverDashboard(driver, driverService);
-                
-                // Hide the Menu (parent window) — no longer needed during the session
-                parentFrame.setVisible(false);
-                
-                // Close this login window
-                dispose();
-            } else {
-                // Invalid credentials or the driver account has not been approved yet
-                JOptionPane.showMessageDialog(this,
-                    "Invalid Credentials or Account Not Approved",
-                    "Login Failed", JOptionPane.ERROR_MESSAGE);
-                passwordField.setText(""); // Clear the password field so user can retry
+            if (loginAttempts >= MAX_ATTEMPTS) {
+                JOptionPane.showMessageDialog(this, "Maximum login attempts reached. Please try again later.",
+                    "Access Denied", JOptionPane.ERROR_MESSAGE);
+                loginBtn.setEnabled(false);
+                return;
             }
+            
+            // Call unified login service
+            AuthResult result = logInService.logIn(userId, password);
+            
+            if (result == null) {
+                loginAttempts++;
+                int remaining = MAX_ATTEMPTS - loginAttempts;
+                attemptLabel.setText("Invalid credentials! Attempt " + loginAttempts + " of " + MAX_ATTEMPTS);
+                passwordField.setText("");
+                
+                if (loginAttempts >= MAX_ATTEMPTS) {
+                    JOptionPane.showMessageDialog(this, "Maximum login attempts reached.",
+                        "Access Denied", JOptionPane.ERROR_MESSAGE);
+                    loginBtn.setEnabled(false);
+                }
+                return;
+            }
+            
+            // Login successful - route based on role
+            handleLoginSuccess(result);
         });
         
         formContainer.add(loginBtn, gbc);
@@ -215,6 +218,68 @@ public class DriverLoginPanel extends JFrame {
         centerPanel.add(formContainer, centerGbc);
         
         mainPanel.add(centerPanel, BorderLayout.CENTER);
+    }
+    
+    private void handleLoginSuccess(AuthResult result) {
+        Role userRole = result.getRole();
+        
+        switch (userRole) {
+            case SUPER_ADMIN -> {
+                SuperAdmin superAdmin = (SuperAdmin) result.getUser();
+                if (superAdmin != null) {
+                    if (superAdmin.getAge() == 0) {
+                        // Profile incomplete
+                        JOptionPane.showMessageDialog(this, "Please complete your profile",
+                            "Profile Setup", JOptionPane.INFORMATION_MESSAGE);
+                        new SuperAdminProfileSetup(superAdmin, new Service.SuperAdminService());
+                    } else {
+                        // Profile complete - go to dashboard
+                        new SuperAdminDashboard(superAdmin, new Service.SuperAdminService(),
+                            new Service.DriverService(), new Service.SubAdminService());
+                    }
+                    dispose();
+                }
+            }
+            
+            case SUB_ADMIN -> {
+                SubAdmin subAdmin = (SubAdmin) result.getUser();
+                if (subAdmin != null) {
+                    if (subAdmin.getAge() == 0) {
+                        // Profile incomplete
+                        JOptionPane.showMessageDialog(this, "Please complete your profile",
+                            "Profile Setup", JOptionPane.INFORMATION_MESSAGE);
+                        new SubAdminProfileSetup(subAdmin, new Service.SubAdminService());
+                    } else {
+                        // Profile complete - go to dashboard
+                        JOptionPane.showMessageDialog(this, "Welcome " + subAdmin.getfirstName() + "!",
+                            "Login Successful", JOptionPane.INFORMATION_MESSAGE);
+                        // TODO: Open SubAdminDashboard when created
+                    }
+                    dispose();
+                }
+            }
+            
+            case DRIVER -> {
+                Driver driver = (Driver) result.getUser();
+                if (driver != null) {
+                    // Mark driver as present
+                    Service.DriverAttendanceService attendanceService = new Service.DriverAttendanceService();
+                    attendanceService.markDriverPresent(driver.getpublic_driver_id());
+                    
+                    if (driver.getAge()==0) {
+                        // Profile incomplete
+                        new DriverProfileSetup(driver, new Service.DriverService());
+                    } else {
+                        // Profile complete - go to dashboard
+                        new DriverDashboard(driver, new Service.DriverService());
+                    }
+                    dispose();
+                }
+            }
+            
+            default -> JOptionPane.showMessageDialog(this, "Unknown user role",
+                "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     class BackgroundPanel extends JPanel {

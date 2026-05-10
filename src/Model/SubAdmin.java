@@ -54,4 +54,9 @@ public class SubAdmin
     // ADD THESE TWO METHODS
     public int getAge() { return age; }
     public void setAge(int age) { this.age = age; }
+    
+    private String assignedTerminal;
+
+    public String getassignedTerminal() { return assignedTerminal; }
+    public void setassignedTerminal(String assignedTerminal) { this.assignedTerminal = assignedTerminal; }
 }
