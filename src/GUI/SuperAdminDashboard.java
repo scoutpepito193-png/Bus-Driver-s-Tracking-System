@@ -26,8 +26,9 @@ import org.json.JSONObject;
  * - Sub Admin Contact & Position no longer show N/A (registerSubAdmin now passes position)
  * - Rankings Driver Name & Score no longer show N/A for valid drivers
  * - Session.currentSuperAdmin set in constructor for downstream use
- * - Drivers Panel no longer uses SubAdmin-dependent method
+ * - Drivers Panel now displays driver performance data (FIXED!)
  * - Driver profile now extracts data from Request JSON details
+ * - Address field REMOVED from driver profile dialog
  */
 public class SuperAdminDashboard extends JFrame {
 
@@ -243,8 +244,8 @@ public class SuperAdminDashboard extends JFrame {
     }
 
     /**
-     * Creates Drivers Panel with driver performance data
-     * FIX: No longer uses SubAdmin-dependent getPerformance() method
+     * ✅ FIXED: Creates Drivers Panel with driver performance data
+     * Now displays all drivers like SubAdminDashboard does!
      */
     private JPanel createDriversPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -252,11 +253,40 @@ public class SuperAdminDashboard extends JFrame {
         panel.setBackground(new Color(240, 242, 245));
 
         try {
-            JLabel noData = new JLabel("Driver Performance Dashboard - All Drivers");
-            noData.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            noData.setForeground(new Color(100, 100, 100));
-            noData.setHorizontalAlignment(JLabel.CENTER);
-            panel.add(noData, BorderLayout.CENTER);
+            List<DriverPerformance> list = ds.getPerformance();
+            
+            if (list == null || list.isEmpty()) {
+                JLabel noData = new JLabel("No drivers registered yet.");
+                noData.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                noData.setForeground(new Color(100, 100, 100));
+                noData.setHorizontalAlignment(JLabel.CENTER);
+                panel.add(noData, BorderLayout.CENTER);
+                return panel;
+            }
+
+            String[] columns = {"Driver ID", "Driver Name", "Total Tickets", "Revenue", "Average KM/L"};
+            Object[][] data = new Object[list.size()][5];
+
+            for (int i = 0; i < list.size(); i++) {
+                DriverPerformance dp = list.get(i);
+                if (dp == null || dp.getdriver() == null) continue;
+                
+                data[i][0] = (dp.getdriver().getpublic_driver_id() != null && !dp.getdriver().getpublic_driver_id().isEmpty())
+                        ? dp.getdriver().getpublic_driver_id() : "(not assigned)";
+                data[i][1] = (dp.getdriver().getfirstName() + " " + dp.getdriver().getlastName()).trim();
+                data[i][2] = dp.gettotalTickets();
+                data[i][3] = "₱ " + dp.gettotalRevenue();
+                data[i][4] = dp.getaverageKMPL();
+            }
+
+            JTable table = new JTable(new DefaultTableModel(data, columns) {
+                public boolean isCellEditable(int row, int column) { return false; }
+            });
+            styleTable(table, new Color(155, 89, 182));
+
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+            panel.add(scrollPane, BorderLayout.CENTER);
             
         } catch (Exception e) {
             System.err.println("Error loading drivers panel: " + e.getMessage());
@@ -531,7 +561,6 @@ public class SuperAdminDashboard extends JFrame {
             driver.setlastName(json.optString("lastName", "N/A"));
             driver.setgender(json.optString("gender", "N/A"));
             driver.setdateOfBirth(json.has("dateOfBirth") ? LocalDate.parse(json.getString("dateOfBirth")) : null);
-            driver.setaddress(json.optString("address", "N/A"));
             driver.setcontactNumber(json.optString("contactNumber", "N/A"));
             driver.setlicenseNum(json.optString("licenseNum", "N/A"));
             driver.setlicenseExpiry(json.has("licenseExpiry") ? LocalDate.parse(json.getString("licenseExpiry")) : null);
@@ -548,10 +577,11 @@ public class SuperAdminDashboard extends JFrame {
 
     /**
      * ✅ Shows driver profile in a dialog
+     * ADDRESS FIELD REMOVED!
      */
     private void showDriverProfileDialog(Driver driver) {
         JDialog dlg = new JDialog(this, "Driver Profile", true);
-        dlg.setSize(550, 600);
+        dlg.setSize(550, 500);
         dlg.setLocationRelativeTo(this);
         dlg.setResizable(true);
 
@@ -568,14 +598,13 @@ public class SuperAdminDashboard extends JFrame {
         contentPanel.add(headerLabel);
         contentPanel.add(Box.createVerticalStrut(20));
 
-        // Profile fields
+        // Profile fields (ADDRESS REMOVED)
         addProfileField(contentPanel, "Driver ID:", driver.getpublic_driver_id());
         addProfileField(contentPanel, "First Name:", driver.getfirstName());
         addProfileField(contentPanel, "Last Name:", driver.getlastName());
         addProfileField(contentPanel, "Gender:", driver.getgender());
         addProfileField(contentPanel, "Date of Birth:", driver.getdateOfBirth() != null ? driver.getdateOfBirth().toString() : "N/A");
         addProfileField(contentPanel, "Contact Number:", driver.getcontactNumber());
-        addProfileField(contentPanel, "Address:", driver.getaddress());
         addProfileField(contentPanel, "License Number:", driver.getlicenseNum());
         addProfileField(contentPanel, "License Expiry:", driver.getlicenseExpiry() != null ? driver.getlicenseExpiry().toString() : "N/A");
         
