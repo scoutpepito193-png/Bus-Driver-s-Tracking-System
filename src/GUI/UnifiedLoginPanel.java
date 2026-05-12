@@ -10,13 +10,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class UnifiedLoginPanel extends JFrame {
+public class UnifiedLoginPanel extends JFrame
+{
     
     private LogInService logInService;
     private int loginAttempts = 0;
     private static final int MAX_ATTEMPTS = 3;
     
-    public UnifiedLoginPanel() {
+    public UnifiedLoginPanel()
+    {
         this.logInService = new LogInService();
         
         setTitle("BDTracker - Login");
@@ -36,7 +38,8 @@ public class UnifiedLoginPanel extends JFrame {
         setVisible(true);
     }
     
-    private Image createAppIcon() {
+    private Image createAppIcon()
+    {
         BufferedImage icon = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = icon.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -57,7 +60,8 @@ public class UnifiedLoginPanel extends JFrame {
         return icon;
     }
     
-    private void addComponents(JPanel mainPanel) {
+    private void addComponents(JPanel mainPanel)
+    {
         
         // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
@@ -220,69 +224,56 @@ public class UnifiedLoginPanel extends JFrame {
         mainPanel.add(centerPanel, BorderLayout.CENTER);
     }
     
-    private void handleLoginSuccess(AuthResult result) {
+    private void handleLoginSuccess(AuthResult result)
+    {
         Role userRole = result.getRole();
         
-        switch (userRole) {
-            case SUPER_ADMIN -> {
+        switch (userRole)
+        {
+            case SUPER_ADMIN ->
+            {
                 SuperAdmin superAdmin = (SuperAdmin) result.getUser();
-                if (superAdmin != null) {
-                    if (superAdmin.getAge() == 0) {
-                        // Profile incomplete
-                        JOptionPane.showMessageDialog(this, "Please complete your profile",
-                            "Profile Setup", JOptionPane.INFORMATION_MESSAGE);
-                        new SuperAdminProfileSetup(superAdmin, new Service.SuperAdminService());
-                    } else {
-                        // Profile complete - go to dashboard
-                        new SuperAdminDashboard(superAdmin, new Service.SuperAdminService(),
-                            new Service.DriverService(), new Service.SubAdminService());
-                    }
-                    dispose();
-                }
+                
+                new SuperAdminDashboard(
+                superAdmin,
+                new Service.SuperAdminService(),
+                new Service.DriverService(),
+                new Service.SubAdminService());
+                dispose();
             }
             
-            case SUB_ADMIN -> {
+            
+            case SUB_ADMIN ->
+            {
                 SubAdmin subAdmin = (SubAdmin) result.getUser();
-                if (subAdmin != null) {
-                    if (subAdmin.getAge() == 0) {
-                        // Profile incomplete
-                        JOptionPane.showMessageDialog(this, "Please complete your profile",
-                            "Profile Setup", JOptionPane.INFORMATION_MESSAGE);
-                        new SubAdminProfileSetup(subAdmin, new Service.SubAdminService());
-                    } else {
-                        // Profile complete - go to dashboard
-                        JOptionPane.showMessageDialog(this, "Welcome " + subAdmin.getfirstName() + "!",
-                            "Login Successful", JOptionPane.INFORMATION_MESSAGE);
-                        // TODO: Open SubAdminDashboard when created
-                    }
+                
+                new SubAdminDashboard(subAdmin, new Service.SubAdminService());
+                
                     dispose();
-                }
             }
             
-            case DRIVER -> {
+            case DRIVER ->
+            {
                 Driver driver = (Driver) result.getUser();
-                if (driver != null) {
-                    // Mark driver as present
-                    Service.DriverAttendanceService attendanceService = new Service.DriverAttendanceService();
+                Service.DriverAttendanceService attendanceService = new Service.DriverAttendanceService();
+                
+                if(driver.getpublic_driver_id() != null)
+                {
                     attendanceService.markDriverPresent(driver.getpublic_driver_id());
-                    
-                    if (driver.getAge()==0) {
-                        // Profile incomplete
-                        new DriverProfileSetup(driver, new Service.DriverService());
-                    } else {
-                        // Profile complete - go to dashboard
-                        new DriverDashboard(driver, new Service.DriverService());
-                    }
-                    dispose();
                 }
+                
+                new DriverDashboard(driver, new Service.DriverService());
+                dispose();
             }
             
             default -> JOptionPane.showMessageDialog(this, "Unknown user role",
                 "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+}
     
-    class BackgroundPanel extends JPanel {
+    class BackgroundPanel extends JPanel
+    {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
@@ -299,4 +290,3 @@ public class UnifiedLoginPanel extends JFrame {
             g2d.fillOval(getWidth() - 200, getHeight() - 300, 500, 500);
         }
     }
-}

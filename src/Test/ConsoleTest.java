@@ -266,7 +266,8 @@ public class ConsoleTest
                                         System.out.print("Add Sub-Admin [y/n]: ");
                                         char addSub = scan.next().charAt(0);
                                         scan.nextLine();
-                                        switch (addSub) {
+                                        switch (addSub)
+                                        {
                                             case 'y', 'Y' ->
                                             {
                                                 boolean flag = true;
