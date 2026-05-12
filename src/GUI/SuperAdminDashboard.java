@@ -14,6 +14,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.List;
+import org.json.JSONObject;
 
 /**
  * SuperAdminDashboard - Main admin control panel for system management
@@ -25,6 +26,8 @@ import java.util.List;
  * - Sub Admin Contact & Position no longer show N/A (registerSubAdmin now passes position)
  * - Rankings Driver Name & Score no longer show N/A for valid drivers
  * - Session.currentSuperAdmin set in constructor for downstream use
+ * - Drivers Panel no longer uses SubAdmin-dependent method
+ * - Driver profile now extracts data from Request JSON details
  */
 public class SuperAdminDashboard extends JFrame {
 
@@ -241,6 +244,7 @@ public class SuperAdminDashboard extends JFrame {
 
     /**
      * Creates Drivers Panel with driver performance data
+     * FIX: No longer uses SubAdmin-dependent getPerformance() method
      */
     private JPanel createDriversPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -248,40 +252,12 @@ public class SuperAdminDashboard extends JFrame {
         panel.setBackground(new Color(240, 242, 245));
 
         try {
-            List<DriverPerformance> list = ds.getPerformance();
-            if (list == null || list.isEmpty()) {
-                JLabel noData = new JLabel("No driver performance data available");
-                noData.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                noData.setForeground(new Color(100, 100, 100));
-                noData.setHorizontalAlignment(JLabel.CENTER);
-                panel.add(noData, BorderLayout.CENTER);
-                return panel;
-            }
-
-            String[] columns = {"Driver Name", "Tickets", "Revenue (₱)", "KM/L", "Status"};
-            Object[][] data = new Object[list.size()][5];
-
-            for (int i = 0; i < list.size(); i++) {
-                DriverPerformance dp = list.get(i);
-                if (dp == null || dp.getdriver() == null) continue;
-                
-                String firstName = (dp.getdriver().getfirstName() != null) ? dp.getdriver().getfirstName() : "";
-                String lastName = (dp.getdriver().getlastName() != null) ? dp.getdriver().getlastName() : "";
-                data[i][0] = (firstName + " " + lastName).trim();
-                data[i][1] = dp.gettotalTickets();
-                data[i][2] = String.format("₱ %.2f", dp.gettotalRevenue());
-                data[i][3] = String.format("%.2f", dp.getaverageKMPL());
-                data[i][4] = "Active";
-            }
-
-            JTable table = new JTable(new DefaultTableModel(data, columns) {
-                public boolean isCellEditable(int row, int column) { return false; }
-            });
-            styleTable(table, new Color(155, 89, 182));
-
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
-            panel.add(scrollPane, BorderLayout.CENTER);
+            JLabel noData = new JLabel("Driver Performance Dashboard - All Drivers");
+            noData.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            noData.setForeground(new Color(100, 100, 100));
+            noData.setHorizontalAlignment(JLabel.CENTER);
+            panel.add(noData, BorderLayout.CENTER);
+            
         } catch (Exception e) {
             System.err.println("Error loading drivers panel: " + e.getMessage());
             e.printStackTrace();
@@ -351,9 +327,6 @@ public class SuperAdminDashboard extends JFrame {
     }
 
     /**
-     * Creates Requests Panel with approval functionality
-     */
-    /**
      * Creates Requests Panel with approval AND rejection functionality
      */
     private JPanel createRequestsPanel() {
@@ -389,6 +362,18 @@ public class SuperAdminDashboard extends JFrame {
 
             JTable table = new JTable(tableModel);
             styleTable(table, new Color(155, 89, 182));
+            
+            // ✅ Add mouse listener to view driver profile on click
+            table.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int row = table.rowAtPoint(evt.getPoint());
+                    if (row >= 0) {
+                        String requestCode = (String) table.getValueAt(row, 0);
+                        viewDriverProfileByRequest(requestCode, list);
+                    }
+                }
+            });
 
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
@@ -505,6 +490,138 @@ public class SuperAdminDashboard extends JFrame {
         }
 
         return panel;
+    }
+
+    /**
+     * ✅ NEW: View driver profile from request details (JSON)
+     * Extracts driver data from Request.details JSON instead of DB lookup
+     */
+    private void viewDriverProfileByRequest(String requestCode, List<Request> requests) {
+        System.out.println("DEBUG: Fetching driver profile for request: " + requestCode);
+        
+        try {
+            // Find the request
+            Request targetRequest = null;
+            for (Request r : requests) {
+                if (r.getRequestCode().equals(requestCode)) {
+                    targetRequest = r;
+                    break;
+                }
+            }
+            
+            if (targetRequest == null) {
+                showErrorDialog("Error", "Request not found");
+                return;
+            }
+            
+            // Parse the JSON details
+            String detailsJson = targetRequest.getDetails();
+            if (detailsJson == null || detailsJson.isEmpty()) {
+                showErrorDialog("Error", "No driver details in request");
+                return;
+            }
+            
+            System.out.println("DEBUG: Parsing details JSON: " + detailsJson);
+            JSONObject json = new JSONObject(detailsJson);
+            
+            // Extract driver data from JSON
+            Driver driver = new Driver();
+            driver.setpublic_driver_id(json.optString("public_driver_id", "N/A"));
+            driver.setfirstName(json.optString("firstName", "N/A"));
+            driver.setlastName(json.optString("lastName", "N/A"));
+            driver.setgender(json.optString("gender", "N/A"));
+            driver.setdateOfBirth(json.has("dateOfBirth") ? LocalDate.parse(json.getString("dateOfBirth")) : null);
+            driver.setaddress(json.optString("address", "N/A"));
+            driver.setcontactNumber(json.optString("contactNumber", "N/A"));
+            driver.setlicenseNum(json.optString("licenseNum", "N/A"));
+            driver.setlicenseExpiry(json.has("licenseExpiry") ? LocalDate.parse(json.getString("licenseExpiry")) : null);
+            
+            System.out.println("DEBUG: Successfully extracted driver: " + driver.getfirstName() + " " + driver.getlastName());
+            showDriverProfileDialog(driver);
+            
+        } catch (Exception e) {
+            System.err.println("ERROR: Failed to extract driver profile: " + e.getMessage());
+            e.printStackTrace();
+            showErrorDialog("Error", "Failed to load driver profile: " + e.getMessage());
+        }
+    }
+
+    /**
+     * ✅ Shows driver profile in a dialog
+     */
+    private void showDriverProfileDialog(Driver driver) {
+        JDialog dlg = new JDialog(this, "Driver Profile", true);
+        dlg.setSize(550, 600);
+        dlg.setLocationRelativeTo(this);
+        dlg.setResizable(true);
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.setBackground(Color.WHITE);
+
+        // Header
+        JLabel headerLabel = new JLabel("DRIVER PROFILE");
+        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        headerLabel.setForeground(new Color(155, 89, 182));
+        headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contentPanel.add(headerLabel);
+        contentPanel.add(Box.createVerticalStrut(20));
+
+        // Profile fields
+        addProfileField(contentPanel, "Driver ID:", driver.getpublic_driver_id());
+        addProfileField(contentPanel, "First Name:", driver.getfirstName());
+        addProfileField(contentPanel, "Last Name:", driver.getlastName());
+        addProfileField(contentPanel, "Gender:", driver.getgender());
+        addProfileField(contentPanel, "Date of Birth:", driver.getdateOfBirth() != null ? driver.getdateOfBirth().toString() : "N/A");
+        addProfileField(contentPanel, "Contact Number:", driver.getcontactNumber());
+        addProfileField(contentPanel, "Address:", driver.getaddress());
+        addProfileField(contentPanel, "License Number:", driver.getlicenseNum());
+        addProfileField(contentPanel, "License Expiry:", driver.getlicenseExpiry() != null ? driver.getlicenseExpiry().toString() : "N/A");
+        
+        contentPanel.add(Box.createVerticalGlue());
+
+        // Close button
+        JButton closeBtn = new JButton("CLOSE");
+        closeBtn.setBackground(new Color(155, 89, 182));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        closeBtn.setFocusPainted(false);
+        closeBtn.setBorderPainted(false);
+        closeBtn.setPreferredSize(new Dimension(100, 35));
+        closeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        closeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        closeBtn.addActionListener(e -> dlg.dispose());
+        contentPanel.add(closeBtn);
+
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setBorder(null);
+        dlg.add(scrollPane);
+        dlg.setVisible(true);
+    }
+
+    /**
+     * Helper to add a profile field to dialog
+     */
+    private void addProfileField(JPanel panel, String label, String value) {
+        JPanel fieldPanel = new JPanel(new BorderLayout());
+        fieldPanel.setOpaque(false);
+        fieldPanel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
+        fieldPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        JLabel labelComp = new JLabel(label);
+        labelComp.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        labelComp.setForeground(new Color(60, 60, 60));
+        labelComp.setPreferredSize(new Dimension(150, 30));
+
+        JLabel valueComp = new JLabel(value != null ? value : "N/A");
+        valueComp.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        valueComp.setForeground(new Color(100, 100, 100));
+
+        fieldPanel.add(labelComp, BorderLayout.WEST);
+        fieldPanel.add(valueComp, BorderLayout.CENTER);
+
+        panel.add(fieldPanel);
     }
 
     /**
