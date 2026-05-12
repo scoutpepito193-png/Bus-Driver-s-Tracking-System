@@ -8,7 +8,7 @@ import org.json.JSONObject;
 public class TraccarAPI 
 {
     private static String sessionCookie;
-    private static final String BASE_URL = "https://proceeding-black-entrepreneurs-griffin.trycloudflare.com/";
+    private static final String BASE_URL = "https://reception-collectables-routine-colin.trycloudflare.com/";
     
     public static APIResponse logIn(String email, String password)
     {
@@ -161,21 +161,18 @@ private static boolean isLoggedIn()
         return -1;
     }
     
-public static JSONObject getLatestPosition(int deviceID)
-{
-    try
-    {
-        if (!isLoggedIn())
-        {
+public static JSONObject getLatestPosition(int deviceID) {
+    try {
+        if (!isLoggedIn()) {
             APIResponse res = logIn("scoutpepito193@gmail.com", "goaltogetrich4b");
 
-            if (!res.isSuccess())
-            {
+            if (!res.isSuccess()) {
+                System.out.println("Traccar login failed: " + res.getMessage());
                 return null;
             }
         }
 
-        URL url = new URL(BASE_URL + "api/positions?deviceId=" + deviceID + "&limit=1");
+        URL url = new URL(BASE_URL + "api/positions?deviceId=" + deviceID);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         conn.setRequestMethod("GET");
@@ -183,63 +180,48 @@ public static JSONObject getLatestPosition(int deviceID)
         conn.setRequestProperty("Accept", "application/json");
 
         int code = conn.getResponseCode();
+        System.out.println("Traccar position HTTP code: " + code);
 
-        if (code != 200)
-        {
-            BufferedReader err = new BufferedReader(
-                new InputStreamReader(conn.getErrorStream())
-            );
+        InputStream stream = code >= 200 && code < 300
+                ? conn.getInputStream()
+                : conn.getErrorStream();
 
-            String line;
-            StringBuilder sbErr = new StringBuilder();
-
-            while ((line = err.readLine()) != null)
-            {
-                sbErr.append(line);
-            }
-
-
-            return null;
-        }
-
-        BufferedReader buff = new BufferedReader(
-            new InputStreamReader(conn.getInputStream())
-        );
-
+        BufferedReader buff = new BufferedReader(new InputStreamReader(stream));
         StringBuilder sb = new StringBuilder();
         String line;
 
-        while ((line = buff.readLine()) != null)
-        {
+        while ((line = buff.readLine()) != null) {
             sb.append(line);
         }
 
         buff.close();
 
         String responseText = sb.toString();
+        System.out.println("Traccar position response: " + responseText);
 
-        if (responseText.trim().equals("[]"))
-        {
+        if (code != 200) {
+            return null;
+        }
+
+        if (responseText.trim().isEmpty() || responseText.trim().equals("[]")) {
+            System.out.println("No GPS position found for device ID: " + deviceID);
             return null;
         }
 
         JSONArray arr = new JSONArray(responseText);
 
-        if (arr.length() == 0)
-        {
+        if (arr.length() == 0) {
             return null;
         }
 
-        JSONObject position = arr.getJSONObject(0);
+        return arr.getJSONObject(0);
 
-        return position;
-    }
-    catch (Exception e)
-    {
+    } catch (Exception e) {
         e.printStackTrace();
         return null;
     }
 }
+    
 
     public static double getSpeedKmh(int deviceID)
     {
