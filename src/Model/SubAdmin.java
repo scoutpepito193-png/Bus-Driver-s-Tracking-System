@@ -5,6 +5,8 @@ import java.time.LocalDate;
 public class SubAdmin
 {    
     private int sub_id;
+    private int age;
+    private int terminal_id;
     
     private String public_sub_id;
     private String firstName;
@@ -16,7 +18,7 @@ public class SubAdmin
     private String photoURL;
     private String password;
     private String position;
-    private int age;  // ADD THIS FIELD
+    private String assignedTerminal;
     
     public int getSubID() { return sub_id; }
     public void setSubID(int sub_id) { this.sub_id = sub_id; }
@@ -51,11 +53,11 @@ public class SubAdmin
     public String getposition() { return position; }
     public void setposition(String position) { this.position = position; }
     
-    // ADD THESE TWO METHODS
     public int getAge() { return age; }
     public void setAge(int age) { this.age = age; }
     
-    private String assignedTerminal;
+    public int getTerminalID() { return terminal_id; }
+    public void setTerminalID(int terminal_id) { this.terminal_id = terminal_id; }
 
     public String getassignedTerminal() { return assignedTerminal; }
     public void setassignedTerminal(String assignedTerminal) { this.assignedTerminal = assignedTerminal; }

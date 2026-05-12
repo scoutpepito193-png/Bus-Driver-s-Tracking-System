@@ -9,6 +9,7 @@ public class Request
     private String requestInfo;
     private String status;
     private String details;
+    private String routeName;
     
     public int getRequestID() { return requestID; }
     public void  setRequestID(int requestID) { this.requestID = requestID; }
@@ -27,4 +28,7 @@ public class Request
     
     public String getDetails() { return details; }
     public void setDetails(String details) { this.details = details; }
+    
+    public String getRouteName() { return routeName; }
+    public void setRouteName(String routeName) { this.routeName = routeName; }    
 }

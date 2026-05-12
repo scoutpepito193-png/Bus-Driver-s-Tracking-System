@@ -6,13 +6,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDate;
 import Model.SubAdmin;
 import Model.Driver;
 import Model.DriverPerformance;
 import java.time.LocalDate;
 import Model.AuthResult;
 import Model.Role;
+import Model.Route;
 
 public class SubAdminRepo
 {   
@@ -20,7 +20,7 @@ public class SubAdminRepo
     public void registerSubAdmin(SubAdmin subA)
     {
         String sql = "INSERT INTO sub_admin (public_sub_id, first_name, last_name, gender, "
-                + "date_of_birth, address, contact_number, photo_url, password, assigned_terminal)"
+                + "date_of_birth, address, contact_number, photo_url, terminal_id, password)"
                 + "VALUES (?,?,?,?,?,?,?,?,?,?)";
         
         try(Connection conn = dbConnection.getConnection();
@@ -34,8 +34,8 @@ public class SubAdminRepo
             prepS.setString(6, subA.getaddress());
             prepS.setString(7, subA.getcontactNum());
             prepS.setString(8, subA.getphotoURL());
-            prepS.setString(9, subA.getpassword());
-            prepS.setString(10, subA.getassignedTerminal());
+            prepS.setInt(9, subA.getTerminalID());
+            prepS.setString(10, subA.getpassword());
             
             prepS.executeUpdate();
         }
@@ -49,7 +49,10 @@ public class SubAdminRepo
     public AuthResult subAdminLogIn(String publicID, String password)
     {
 
-        String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ? AND password = ?";
+        String sql = "SELECT s.*, terminal_name "
+                + "FROM sub_admin s "
+                + "JOIN terminals t ON s.terminal_id = t.terminal_id "
+                + "WHERE s.public_sub_id = ? AND password = ?";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement prepS = conn.prepareStatement(sql))
@@ -68,7 +71,8 @@ public class SubAdminRepo
                 sub.setpublic_sub_id(res.getString("public_sub_id"));
                 sub.setfirstName(res.getString("first_name"));
                 sub.setlastName(res.getString("last_name"));
-                sub.setassignedTerminal(res.getString("assigned_terminal"));
+                sub.setassignedTerminal(res.getString("terminal_name"));
+                sub.setTerminalID(res.getInt("terminal_id"));
 
                 return new AuthResult(sub, Role.SUB_ADMIN);
             }
@@ -336,5 +340,60 @@ public class SubAdminRepo
         }
 
         return null;
+    }
+    
+    public int countDriversBySubAdmin(int subAdminId)
+    {
+        int count = 0;
+
+        String sql = "SELECT COUNT(*) FROM driver WHERE assigned_by = ?";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, subAdminId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return count;
+    }
+    
+    public List<Route> getRouteByTerminal(int terminalID)
+    {
+        List<Route> routes = new ArrayList<>();
+        
+        String sql = "SELECT * FROM routes WHERE terminal_id = ?";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
+        {
+            prepS.setInt(1, terminalID);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            while(res.next())
+            {
+                Route route = new Route();
+                
+                route.setRouteID(res.getInt("route_id"));
+                route.setRouteName(res.getString("route_name"));
+                
+                routes.add(route);
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return routes;
     }
 }

@@ -19,8 +19,8 @@ public class DriverRepo
     
     public boolean requestDriverRegistration(Driver d, String requestCode)
     {   
-        String sql = "INSERT INTO request (request_code, request_info, details, sub_admin_id) "
-                + "VALUES (?,?::request_type,?::jsonb,?)";
+        String sql = "INSERT INTO request (request_code, request_info, details) "
+                + "VALUES (?,?::request_type,?::jsonb)";
         
         try(Connection conn = dbConnection.getConnection();
                 PreparedStatement prepS = conn.prepareStatement(sql))
@@ -37,14 +37,15 @@ public class DriverRepo
                     + "\"contactNumber\":\"" + d.getcontactNumber() + "\","
                     + "\"licenseNum\":\"" + d.getlicenseNum() + "\","
                     + "\"licenseExpiry\":\"" + d.getlicenseExpiry() + "\","
+                    + "\"routeID\":\"" + d.getRouteID()+ "\","
                     + "\"photoURL\":\"" + d.getphotoURL() + "\","
-                    + "\"password\":\"" + d.getpassword() + "\""
+                    + "\"password\":\"" + d.getpassword() + "\","
+                    + "\"assigned_by\":\"" + subAdminID + "\""
                     + "}";
             
             prepS.setString(1, requestCode);
             prepS.setString(2, "DRIVER REGISTRATION");
             prepS.setString(3, details);
-            prepS.setInt(4, subAdminID);
             
             int rows = prepS.executeUpdate();
             
@@ -106,8 +107,8 @@ public class DriverRepo
     public boolean insertApprovedDriver(Driver d)
     {
         String sql = "INSERT INTO driver "
-                + "(public_driver_id, first_name, last_name, gender, date_of_birth, address, contact_number, license_number, license_expiry_date, photo_url, driver_password, traccar_device_id) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "(public_driver_id, first_name, last_name, gender, date_of_birth, address, contact_number, license_number, license_expiry_date, photo_url, route_id, driver_password, traccar_device_id, assigned_by) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         
         try(Connection conn = dbConnection.getConnection();
                 PreparedStatement prepS = conn.prepareStatement(sql))
@@ -122,8 +123,10 @@ public class DriverRepo
             prepS.setString(8, d.getlicenseNum());
             prepS.setDate(9, java.sql.Date.valueOf(d.getlicenseExpiry()));
             prepS.setString(10, d.getphotoURL());
-            prepS.setString(11, d.getpassword());
-            prepS.setInt(12, d.getTracerID());
+            prepS.setInt(11, d.getRouteID());
+            prepS.setString(12, d.getpassword());
+            prepS.setInt(13, d.getTracerID());
+            prepS.setInt(14, d.getassigned_by());
             
             return prepS.executeUpdate() > 0;
         }
@@ -362,6 +365,7 @@ public int getDriverIdByPublicID(String publicID)
                 + "AND p.record_date >= ? "
                 + "AND p.record_date < ? "
                 + "WHERE status = 'ACTIVE' "
+                + "AND d.assigned_by = ? "
                 + "GROUP BY d.driver_id, d.first_name, d.last_name "
                 + "ORDER BY d.last_name ASC";        
         
@@ -370,6 +374,7 @@ public int getDriverIdByPublicID(String publicID)
         {
             prepS.setDate(1, java.sql.Date.valueOf(startMonth));
             prepS.setDate(2, java.sql.Date.valueOf(nextMonth));
+            prepS.setInt(3, Session.currentSubAdmin.getSubID());
             
             ResultSet res = prepS.executeQuery();
             

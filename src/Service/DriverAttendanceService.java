@@ -3,7 +3,7 @@
 import Repository.DriverAttendanceRepo;
 import Repository.DriverRepo;
 import java.time.LocalDate;
-    import util.TimeProvider;
+import util.TimeProvider;
 
 public class DriverAttendanceService
 {
@@ -41,5 +41,15 @@ public class DriverAttendanceService
         int expectedDays = attendanceRepo.getExpectedDutyDays(today);
         
         return presentDays == expectedDays;
-    }    
+    }
+    
+    public int getActiveDriversToday(int subAdminId)
+    {
+        return attendanceRepo.countActiveDriversToday(subAdminId);
+    }
+    
+    public int countAbsentDriversToday(int subAdminId)
+    {
+        return attendanceRepo.countAbsentDriversToday(subAdminId);
+    }
 }

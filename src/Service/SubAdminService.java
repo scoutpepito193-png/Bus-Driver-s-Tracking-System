@@ -4,7 +4,7 @@ import Repository.SubAdminRepo;
 import util.TraccarAPI;
 import Model.Driver;
 import Repository.DriverRepo;
-import java.util.ArrayList;
+import Model.Route;
 import java.util.List;
 import util.Session;
 import org.json.JSONObject;
@@ -24,7 +24,7 @@ public class SubAdminService
                                     String gender, LocalDate dateOfBirth,
                                     String address, String contactNum, 
                                     String position, String password,
-                                    String confirmPass, String terminal)
+                                    String confirmPass, int terminal)
     {
         SubAdmin subA = new SubAdmin();
         
@@ -42,7 +42,7 @@ public class SubAdminService
         subA.setcontactnum(contactNum);
         subA.setposition(position);
         subA.setpassword(password);
-        subA.setassignedTerminal(terminal);
+        subA.setTerminalID(terminal);
         
         subARepo.registerSubAdmin(subA);
         
@@ -151,4 +151,14 @@ public class SubAdminService
     {
         return Session.currentSubAdmin;
     } 
+    
+    public int getTotalDriversBySubAdmin(int subAdminId)
+    {
+        return subARepo.countDriversBySubAdmin(subAdminId);
+    }
+    
+    public List<Route> getRoutesByTerminal(int terminalID)
+    {
+        return subARepo.getRouteByTerminal(terminalID);
+    }
 }
