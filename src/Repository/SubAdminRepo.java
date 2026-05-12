@@ -311,38 +311,63 @@ public class SubAdminRepo
 
         return null;
     }
-
-    public SubAdmin searchSubAdminById(String publicSubId)
-    {
-        String sql = "SELECT * FROM sub_admin WHERE public_sub_id = ?";
+    
+    public SubAdmin searchSubAdminById(String publicSubId) {
+        String sql =
+            "SELECT sub_admin_id, public_sub_id, first_name, last_name, gender, " +
+            "date_of_birth, address, contact_number, status, terminal_id, position_role " +
+            "FROM sub_admin " +
+            "WHERE public_sub_id = ?";
 
         try (Connection conn = dbConnection.getConnection();
-             PreparedStatement prepS = conn.prepareStatement(sql))
-        {
-            prepS.setString(1, publicSubId);
-            ResultSet res = prepS.executeQuery();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            if (res.next())
-            {
-                SubAdmin sub = new SubAdmin();
-                sub.setpublic_sub_id(res.getString("public_sub_id"));
-                sub.setfirstName(res.getString("first_name"));
-                sub.setlastName(res.getString("last_name"));
-                sub.setgender(res.getString("gender"));
-                sub.setaddress(res.getString("address"));
-                sub.setcontactnum(res.getString("contact_number"));
-                sub.setposition(res.getString("position_role"));
-                sub.setassignedTerminal(res.getString("assigned_terminal"));
-                return sub;
+            stmt.setString(1, publicSubId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                SubAdmin sa = new SubAdmin();
+
+                sa.setSubID(rs.getInt("sub_admin_id"));
+                sa.setpublic_sub_id(rs.getString("public_sub_id"));
+                sa.setfirstName(rs.getString("first_name"));
+                sa.setlastName(rs.getString("last_name"));
+                sa.setgender(rs.getString("gender"));
+
+                java.sql.Date dob = rs.getDate("date_of_birth");
+                if (dob != null) {
+                    sa.setdateOfBirth(dob.toLocalDate());
+                }
+
+                sa.setaddress(rs.getString("address"));
+                sa.setcontactnum(rs.getString("contact_number"));
+                sa.setposition(rs.getString("position_role"));
+                sa.setTerminalID(rs.getInt("terminal_id"));
+                sa.setassignedTerminal(getTerminalName(rs.getInt("terminal_id")));
+
+                return sa;
             }
-        }
-        catch (Exception e)
-        {
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         return null;
     }
+    
+    private String getTerminalName(int terminalID)
+    {
+        return switch (terminalID) {
+            case 1 -> "Cebu North Bus Terminal (NBT)";
+            case 2 -> "Cebu South Bus Terminal (CSBT)";
+            case 3 -> "Ceres Garage";
+            case 4 -> "Marina Mall (Mactan)";
+            case 5 -> "Carmen Bus Terminal";
+            default -> "N/A";
+        };
+    }
+
     
     public int countDriversBySubAdmin(int subAdminId)
     {
