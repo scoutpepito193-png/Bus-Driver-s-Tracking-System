@@ -29,6 +29,7 @@ import org.json.JSONObject;
  * - Drivers Panel now displays driver performance data (FIXED!)
  * - Driver profile now extracts data from Request JSON details
  * - Address field REMOVED from driver profile dialog
+ * - Sub Admin double-click profile viewer added
  */
 public class SuperAdminDashboard extends JFrame {
 
@@ -297,9 +298,10 @@ public class SuperAdminDashboard extends JFrame {
     }
 
     /**
-     * Creates Sub Admins Panel with list of all sub admins
+     * ✅ FIXED: Creates Sub Admins Panel with list of all sub admins
      * FIX: Contact and Position no longer show N/A — fetched correctly from DB.
      *      Count now reflects actual list size.
+     * ✅ NEW: Double-click to view sub admin profile
      */
     private JPanel createSubAdminsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -345,6 +347,20 @@ public class SuperAdminDashboard extends JFrame {
             });
             styleTable(table, new Color(155, 89, 182));
 
+            // ✅ Add double-click listener to view sub admin profile
+            table.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    if (evt.getClickCount() == 2) {
+                        int row = table.rowAtPoint(evt.getPoint());
+                        if (row >= 0 && row < list.size()) {
+                            SubAdmin selectedSubAdmin = list.get(row);
+                            showSubAdminProfileDialog(selectedSubAdmin);
+                        }
+                    }
+                }
+            });
+
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
             panel.add(scrollPane, BorderLayout.CENTER);
@@ -354,6 +370,60 @@ public class SuperAdminDashboard extends JFrame {
         }
 
         return panel;
+    }
+
+    /**
+     * ✅ NEW: Shows sub admin profile in a dialog
+     */
+    private void showSubAdminProfileDialog(SubAdmin subAdmin) {
+        JDialog dlg = new JDialog(this, "Sub Admin Profile", true);
+        dlg.setSize(550, 550);
+        dlg.setLocationRelativeTo(this);
+        dlg.setResizable(true);
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.setBackground(Color.WHITE);
+
+        // Header
+        JLabel headerLabel = new JLabel("SUB ADMIN PROFILE");
+        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        headerLabel.setForeground(new Color(155, 89, 182));
+        headerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contentPanel.add(headerLabel);
+        contentPanel.add(Box.createVerticalStrut(20));
+
+        // Profile fields
+        addProfileField(contentPanel, "Sub Admin ID:", subAdmin.getpublic_sub_id() != null ? subAdmin.getpublic_sub_id() : "N/A");
+        addProfileField(contentPanel, "First Name:", subAdmin.getfirstName() != null ? subAdmin.getfirstName() : "N/A");
+        addProfileField(contentPanel, "Last Name:", subAdmin.getlastName() != null ? subAdmin.getlastName() : "N/A");
+        addProfileField(contentPanel, "Gender:", subAdmin.getgender() != null ? subAdmin.getgender() : "N/A");
+        addProfileField(contentPanel, "Date of Birth:", subAdmin.getdateOfBirth() != null ? subAdmin.getdateOfBirth().toString() : "N/A");
+        addProfileField(contentPanel, "Contact Number:", subAdmin.getcontactNum() != null ? subAdmin.getcontactNum() : "N/A");
+        addProfileField(contentPanel, "Position:", subAdmin.getposition() != null ? subAdmin.getposition() : "N/A");
+        addProfileField(contentPanel, "Terminal ID:", String.valueOf(subAdmin.getTerminalID()));
+        addProfileField(contentPanel, "Assigned Terminal:", subAdmin.getassignedTerminal() != null ? subAdmin.getassignedTerminal() : "N/A");
+        
+        contentPanel.add(Box.createVerticalGlue());
+
+        // Close button
+        JButton closeBtn = new JButton("CLOSE");
+        closeBtn.setBackground(new Color(155, 89, 182));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        closeBtn.setFocusPainted(false);
+        closeBtn.setBorderPainted(false);
+        closeBtn.setPreferredSize(new Dimension(100, 35));
+        closeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        closeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        closeBtn.addActionListener(e -> dlg.dispose());
+        contentPanel.add(closeBtn);
+
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setBorder(null);
+        dlg.add(scrollPane);
+        dlg.setVisible(true);
     }
 
     /**
