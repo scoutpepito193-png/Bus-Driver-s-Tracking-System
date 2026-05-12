@@ -20,8 +20,8 @@ public class SubAdminRepo
     public void registerSubAdmin(SubAdmin subA)
     {
         String sql = "INSERT INTO sub_admin (public_sub_id, first_name, last_name, gender, "
-                + "date_of_birth, address, contact_number, photo_url, terminal_id, password)"
-                + "VALUES (?,?,?,?,?,?,?,?,?,?)";
+                + "date_of_birth, address, contact_number, position_role, photo_url, terminal_id, password)"
+                + "VALUES (?,?,?,?,?,?,?,?,?,?,?)";
         
         try(Connection conn = dbConnection.getConnection();
                 PreparedStatement prepS = conn.prepareStatement(sql);)
@@ -33,9 +33,10 @@ public class SubAdminRepo
             prepS.setDate(5, java.sql.Date.valueOf(subA.getdateOfBirth()));
             prepS.setString(6, subA.getaddress());
             prepS.setString(7, subA.getcontactNum());
-            prepS.setString(8, subA.getphotoURL());
-            prepS.setInt(9, subA.getTerminalID());
-            prepS.setString(10, subA.getpassword());
+            prepS.setString(8, subA.getposition());
+            prepS.setString(9, subA.getphotoURL());
+            prepS.setInt(10, subA.getTerminalID());
+            prepS.setString(11, subA.getpassword());
             
             prepS.executeUpdate();
         }
@@ -90,7 +91,7 @@ public class SubAdminRepo
     {
         List<SubAdmin> list = new ArrayList<>();
         
-        String sql = "SELECT public_sub_id, first_name, last_name, position_role "
+        String sql = "SELECT public_sub_id, first_name, last_name, contact_number, position_role "
                 + "FROM sub_admin";      
         
         try(Connection conn = dbConnection.getConnection();
@@ -105,6 +106,7 @@ public class SubAdminRepo
                 sub.setpublic_sub_id(res.getString("public_sub_id"));
                 sub.setfirstName(res.getString("first_name"));
                 sub.setlastName(res.getString("last_name"));
+                sub.setcontactnum(res.getString("contact_number"));
                 sub.setposition(res.getString("position_role"));
                 
                 list.add(sub);
@@ -173,7 +175,7 @@ public class SubAdminRepo
             }
         }
        
-     
+      
         catch(Exception e)
         {
             e.printStackTrace();
