@@ -444,6 +444,7 @@ public class SubAdminDashboard extends JFrame {
         
         for(Route r : routes)
         {
+            System.out.println("Route: " + r.getRouteName());
             routeBox.addItem(r);
         }
         
@@ -926,6 +927,8 @@ private void startLiveTracking(
     Timer timer = (providedTimer != null) ? providedTimer : new Timer();
     final int[] updateCount = {0};
 
+    DriverRepo driverRepo = new DriverRepo(); // moved outside loop (OPTIMIZED)
+
     TimerTask trackingTask = new TimerTask() {
 
         @Override
@@ -938,62 +941,23 @@ private void startLiveTracking(
 
             try {
 
-                // ==============================
-                // 🔥 FIX: ALWAYS FETCH REAL DEVICE ID FROM DB
-                // ==============================
-                DriverRepo driverRepo = new DriverRepo();
-
                 int driverID = driverRepo.getDriverIdByPublicID(driver.getpublic_driver_id());
                 Integer deviceId = driverRepo.getTraccarDeviceId(driverID);
 
                 if (deviceId == null || deviceId <= 0) {
+
                     SwingUtilities.invokeLater(() -> {
                         statusLabel.setText("⚠️ No Device ID Assigned");
                         statusLabel.setForeground(new Color(241, 196, 15));
                     });
+
                     return;
                 }
 
-                // ==============================
-                // GET POSITION FROM TRACCAR
-                // ==============================
-                    JSONObject position = TraccarAPI.getLatestPosition(deviceId);
+                JSONObject position = TraccarAPI.getLatestPosition(deviceId);
 
-                if (position != null) {
+                if (position == null) {
 
-                    double latitude = position.optDouble("latitude", 0);
-                    double longitude = position.optDouble("longitude", 0);
-                    double speed = TraccarAPI.getSpeedKmh(deviceId);
-                    boolean overSpeed = TraccarAPI.isOverSpeed(deviceId);
-
-                    long timestamp = position.optLong("fixTime", System.currentTimeMillis());
-                    String timeStr = new java.text.SimpleDateFormat("HH:mm:ss")
-                            .format(new java.util.Date(timestamp));
-
-                    updateCount[0]++;
-
-                    mapCanvas.updateLocation(latitude, longitude, speed, overSpeed);
-
-                    SwingUtilities.invokeLater(() -> {
-
-                        statusLabel.setText("🟢 Online - Tracking Active");
-                        statusLabel.setForeground(new Color(46, 204, 113));
-
-                        speedLabel.setText(
-                                "Speed: " + String.format("%.2f", speed) + " km/h"
-                                + (overSpeed ? " ⚠️ OVERSPEED" : "")
-                        );
-                        speedLabel.setForeground(
-                                overSpeed ? new Color(231, 76, 60) : new Color(46, 204, 113)
-                        );
-
-                        latLabel.setText(String.format("Latitude: %.6f", latitude));
-                        lonLabel.setText(String.format("Longitude: %.6f", longitude));
-                        timeLabel.setText("Last Update: " + timeStr +
-                                " (Updates: " + updateCount[0] + ")");
-                    });
-
-                } else {
                     SwingUtilities.invokeLater(() -> {
                         statusLabel.setText("🔴 Offline - No GPS Signal");
                         statusLabel.setForeground(new Color(231, 76, 60));
@@ -1001,9 +965,46 @@ private void startLiveTracking(
                         latLabel.setText("Latitude: --");
                         lonLabel.setText("Longitude: --");
                     });
+
+                    return;
                 }
 
+                double latitude = position.optDouble("latitude", 0);
+                double longitude = position.optDouble("longitude", 0);
+                double speed = TraccarAPI.getSpeedKmh(deviceId);
+                boolean overSpeed = TraccarAPI.isOverSpeed(deviceId);
+
+                long timestamp = position.optLong("fixTime", System.currentTimeMillis());
+                String timeStr = new java.text.SimpleDateFormat("HH:mm:ss")
+                        .format(new java.util.Date(timestamp));
+
+                updateCount[0]++;
+
+                // ✅ ALL UI + MAP UPDATES MUST BE ON EDT
+                SwingUtilities.invokeLater(() -> {
+
+                    mapCanvas.updateLocation(latitude, longitude, speed, overSpeed);
+
+                    statusLabel.setText("🟢 Online - Tracking Active");
+                    statusLabel.setForeground(new Color(46, 204, 113));
+
+                    speedLabel.setText(
+                            "Speed: " + String.format("%.2f", speed) + " km/h"
+                            + (overSpeed ? " ⚠️ OVERSPEED" : "")
+                    );
+
+                    speedLabel.setForeground(
+                            overSpeed ? new Color(231, 76, 60) : new Color(46, 204, 113)
+                    );
+
+                    latLabel.setText(String.format("Latitude: %.6f", latitude));
+                    lonLabel.setText(String.format("Longitude: %.6f", longitude));
+                    timeLabel.setText("Last Update: " + timeStr +
+                            " (Updates: " + updateCount[0] + ")");
+                });
+
             } catch (Exception e) {
+
                 System.err.println("Live tracking error: " + e.getMessage());
 
                 SwingUtilities.invokeLater(() -> {
