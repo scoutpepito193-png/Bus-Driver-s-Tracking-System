@@ -28,7 +28,7 @@ public class DriverService
                                     String gender, LocalDate dateOfBirth,
                                     String address, String contactNum,
                                     String licenseNum, LocalDate licenseExpiry,
-                                    String photoURL, String password,
+                                    String photoURL, int routeID, String password,
                                     String confirmPass)
     {
         Driver d = new Driver();
@@ -48,6 +48,7 @@ public class DriverService
         d.setlicenseNum(licenseNum);
         d.setlicenseExpiry(licenseExpiry);
         d.setphotoURL(photoURL);
+        d.setRouteID(routeID);
         d.setpassword(password);
         
         String requestCode = generateReqCode();

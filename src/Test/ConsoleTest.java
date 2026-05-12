@@ -19,7 +19,7 @@ import java.util.List;
 import java.time.LocalDate;
 import java.util.Map;
 import util.Session;
-import org.json.JSONObject;
+import Model.Route;
 
 public class ConsoleTest
 {   
@@ -35,6 +35,7 @@ public class ConsoleTest
         SubAdminService subs = new SubAdminService();
         DriverService ds = new DriverService();
         LogInService logS = new LogInService();
+        DriverAttendanceService attendanceService = new DriverAttendanceService();
         
         int choice;        
         do
@@ -296,24 +297,14 @@ public class ConsoleTest
                                                     System.out.print("Upload Photo: ");
                                                     String subPhotoURL = scan.nextLine();
                                                     System.out.println("Select Terminal:");
-                                                    System.out.println("[1] Cebu South Bus Terminal (CSBT)");
-                                                    System.out.println("[2] Cebu North Bus Terminal (NBT)");
+                                                    System.out.println("[1] Cebu North Bus Terminal (NBT)");
+                                                    System.out.println("[2] Cebu South Bus Terminal (CSBT)");
                                                     System.out.println("[3] Ceres Garage");
                                                     System.out.println("[4] Marina Mall (Mactan)");
                                                     System.out.println("[5] Carmen Bus Terminal");
                                                     System.out.print("Choose: ");
                                                     int terminalChoice = scan.nextInt();
                                                     scan.nextLine();
-
-                                                    String subTerminal = switch (terminalChoice)
-                                                    {
-                                                        case 1 -> "Cebu South Bus Terminal (CSBT)";
-                                                        case 2 -> "Cebu North Bus Terminal (NBT)";
-                                                        case 3 -> "Ceres Garage";
-                                                        case 4 -> "Marina Mall (Mactan)";
-                                                        case 5 -> "Carmen Bus Terminal";
-                                                        default -> "Unassigned";
-};
 
                                                     System.out.print("Press [1] Confirm and [2] Clear: ");
                                                     int subProfileChoice = scan.nextInt();
@@ -332,7 +323,7 @@ public class ConsoleTest
                                                             String subConfirmPass = scan.nextLine();
 
                                                             confirm = subs.registerSubAdmin(subID, subFname, subLname, subGender, subDateOfBirth, subAddress,
-                                                            subContactNumber, subPhotoURL, subPassword, subConfirmPass, subTerminal);
+                                                            subContactNumber, subPhotoURL, subPassword, subConfirmPass, terminalChoice);
 
                                                             if (confirm == false)
                                                             {
@@ -384,6 +375,11 @@ public class ConsoleTest
                                         if("DRIVER REGISTRATION".equals(type))
                                         {
                                             Driver d = (Driver) sas.getReqDetails(viewRequest);
+                                            
+                                            int routeId = d.getRouteID();
+                                            
+                                            Route route = sas.getRouteByRouteID(routeId);
+                                            
                                             System.out.println("ID: " + d.getpublic_driver_id());
                                             System.out.println("Name: " + d.getfirstName() + " " + d.getlastName());
                                             System.out.println("Gender: " + d.getgender());
@@ -392,6 +388,7 @@ public class ConsoleTest
                                             System.out.println("Contact Number: " + d.getcontactNumber());
                                             System.out.println("License Number: " + d.getlicenseNum());
                                             System.out.println("License Expiry: " + d.getlicenseExpiry());
+                                            System.out.println("Assigned Route: " + route.getRouteName());
                                         }
                                         else if("REMOVE DRIVER".equals(type))
                                         {
@@ -581,10 +578,14 @@ public class ConsoleTest
                                     switch(inDashboardChoice)
                                     {
                                         case 1:
-                                            System.out.println("Total Driver: ");
-                                            System.out.println("Active Drivers: ");
-                                            System.out.println("Inactive Drivers: ");
-                                            System.out.println("Violations Logged: ");
+                                            
+                                            int handledDriver = subs.getTotalDriversBySubAdmin(subAdmin.getSubID());
+                                            int activeDriver = attendanceService.getActiveDriversToday(subAdmin.getSubID());
+                                            int inactiveDriver = attendanceService.countAbsentDriversToday(subAdmin.getSubID());
+                                            
+                                            System.out.println("Total Driver: " + handledDriver);
+                                            System.out.println("Active Drivers: " + activeDriver);
+                                            System.out.println("Inactive Drivers: " + inactiveDriver);
 
                                             List<Driver> list = ds.getDriverRanking();
 
@@ -640,6 +641,20 @@ public class ConsoleTest
 
                                                     System.out.print("Upload Photo: ");
                                                     String driverPhotoURL = scan.nextLine();
+                                                    
+                                                    System.out.println("SubAdmin Terminal ID: " + subAdmin.getTerminalID());
+                                                    
+                                                    List<Route> routes = subs.getRoutesByTerminal(subAdmin.getTerminalID());
+                                                    
+                                                    System.out.println("Assign Route");
+                                                    for(Route r : routes)
+                                                    {
+                                                        System.out.println("[" + r.getRouteID() + "] " + r.getRouteName());
+                                                    }
+                                                    
+                                                    int chooseRoute = scan.nextInt();
+                                                    scan.nextLine();
+                                                    
 
                                                     System.out.print("Press [1]Confirm or [2]Clear: ");
                                                     int driverAddChoice = scan.nextInt();
@@ -658,7 +673,7 @@ public class ConsoleTest
                                                             String driverConfirmPass = scan.nextLine();
 
                                                             String reqCode = ds.registerDriver(driverID, driverfName, driverlName, driverGender, driverDateOfBirth, driverAddress,
-                                                                    driverContactNumber, driverLicenseNum, driverLicenseExpiry, driverPhotoURL, driverPass, driverConfirmPass);
+                                                                    driverContactNumber, driverLicenseNum, driverLicenseExpiry, driverPhotoURL, chooseRoute, driverPass, driverConfirmPass);
 
                                                             if(reqCode != null)
                                                             {
@@ -930,7 +945,6 @@ public class ConsoleTest
                             
                             driver = driverProfile.getDriver();
                             
-                            DriverAttendanceService attendanceService = new DriverAttendanceService();
                             attendanceService.markDriverPresent(driver.getpublic_driver_id());
 
                             System.out.println("\nDriver Dashboard");

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import Model.Driver;
 import Model.Request;
 import Model.SuperAdmin;
+import Model.Route;
 
 // Repository imports
 import Repository.SuperAdminRepo;
@@ -329,6 +330,11 @@ public class SuperAdminService
         }
         
         return false;
+    }
+    
+    public Route getRouteByRouteID(int routeID)
+    {
+        return saRepo.getRouteByRouteID(routeID);
     }
     
 }

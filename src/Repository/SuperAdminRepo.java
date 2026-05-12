@@ -9,6 +9,7 @@ import Model.SuperAdmin;
 import Model.Request;
 import Model.AuthResult;
 import Model.Role;
+import Model.Route;
 
 public class SuperAdminRepo
 {
@@ -161,7 +162,10 @@ public class SuperAdminRepo
     
     public Request getRequest(String reqCode)
     {
-        String sql = "SELECT * FROM request WHERE request_code = ?";
+        String sql = "SELECT r.request_code, r.request_info, r.status, r.driver_id, rt.route_name, r.details "
+                + "FROM request r "
+                + "LEFT JOIN routes rt ON rt.route_id = (r.details->>'routeID')::int "
+                + "WHERE r.request_code = ?";
         
         try(Connection conn = dbConnection.getConnection();
                 PreparedStatement prepS = conn.prepareStatement(sql))
@@ -189,6 +193,7 @@ public class SuperAdminRepo
                     req.setDriverID(driverID);
                 }
                 
+                req.setRouteName(res.getString("route_name"));
                 req.setDetails(res.getString("details"));
                 
                 return req;
@@ -324,5 +329,34 @@ public class SuperAdminRepo
         }
         
         return count;
+    }
+    
+    public Route getRouteByRouteID(int routeID)
+    {   
+        String sql = "SELECT * FROM routes WHERE route_id = ?";
+        
+        try(Connection conn = dbConnection.getConnection();
+                PreparedStatement prepS = conn.prepareStatement(sql))
+        {
+            prepS.setInt(1, routeID);
+            
+            ResultSet res = prepS.executeQuery();
+            
+            if(res.next())
+            {
+                Route route = new Route();
+                
+                route.setRouteID(res.getInt("route_id"));
+                route.setRouteName(res.getString("route_name"));
+                
+                return route;
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        return null;
     }
 }

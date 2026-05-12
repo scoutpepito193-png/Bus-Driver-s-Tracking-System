@@ -8,6 +8,8 @@ public class Driver
     private int ranking;
     private int driverID;
     private int traccarID;
+    private int routeID;
+    private int assigned_by;
     
     private double salary;
     private int age; 
@@ -73,11 +75,15 @@ public class Driver
    public String getphotoURL() { return photoURL; }
    public void setphotoURL(String photoURL) { this.photoURL = photoURL; }
    
+   public int getRouteID() { return routeID; }
+   public void setRouteID(int routeID) { this.routeID = routeID; }
+   
    public String getpassword() { return password; }
    public void setpassword(String password) { this.password = password; }
    
    public String getStatus() { return status; }
    public void setStatus(String status) { this.status = status; }
    
-   
+   public int getassigned_by() { return assigned_by; }
+   public void setassigned_by(int assigned_by) { this.assigned_by = assigned_by; }     
 }

@@ -118,4 +118,64 @@ public class DriverAttendanceRepo
         
         return (int) Math.round(daysInMonth * (6.0 / 7.0));
     }
+    
+    public int countActiveDriversToday(int subAdminId)
+    {
+        int count = 0;
+
+        String sql =
+            "SELECT COUNT(DISTINCT a.driver_id) " +
+            "FROM driver_attendance a " +
+            "JOIN driver d ON a.driver_id = d.driver_id " +
+            "WHERE a.status = 'PRESENT' " +
+            "AND a.date = CURRENT_DATE " +
+            "AND d.assigned_by = ?";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, subAdminId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return count;
+    }
+    
+    public int countAbsentDriversToday(int subAdminId)
+    {
+        int count = 0;
+
+        String sql =
+        "SELECT COUNT(*) FROM driver d " +
+        "WHERE d.assigned_by = ? " +
+        "AND NOT EXISTS ( " +
+        "   SELECT 1 FROM driver_attendance a " +
+        "   WHERE a.driver_id = d.driver_id " +
+        "   AND a.date = CURRENT_DATE " +
+        ")";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, subAdminId);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return count;
+    }
 }
