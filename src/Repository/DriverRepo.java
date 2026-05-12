@@ -13,6 +13,9 @@ import util.Session;
 import util.TimeProvider;
 import Model.AuthResult;
 import Model.Role;
+import java.util.Map;
+import java.util.LinkedHashMap;
+
 
 public class DriverRepo
 {   
@@ -184,36 +187,36 @@ public class DriverRepo
     public List<Driver> driverRanking()
     {
         List<Driver> list = new ArrayList<>();
-        
-        String sql = " SELECT d.first_name, d.last_name, r.driver_rank "
-                + "FROM ranking r "
-                + "JOIN driver d ON d.driver_id = r.driver_id "
-                + "ORDER BY r.driver_rank ASC";
-        try(Connection conn = dbConnection.getConnection();
-                PreparedStatement prepS = conn.prepareStatement(sql))
-        {
+
+        String sql =
+            "SELECT d.public_driver_id, d.first_name, d.last_name, r.driver_rank " +
+            "FROM ranking r " +
+            "JOIN driver d ON d.driver_id = r.driver_id " +
+            "ORDER BY r.driver_rank ASC";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement prepS = conn.prepareStatement(sql)) {
+
             ResultSet res = prepS.executeQuery();
-            
-            while(res.next())
-            {
+
+            while (res.next()) {
                 Driver d = new Driver();
-                
+
+                d.setpublic_driver_id(res.getString("public_driver_id"));
                 d.setfirstName(res.getString("first_name"));
                 d.setlastName(res.getString("last_name"));
                 d.setranking(res.getInt("driver_rank"));
-                
+
                 list.add(d);
             }
-            
-        }
-        
-        catch (Exception e)
-        {
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         return list;
     }
+
     
 public int getDriverIdByPublicID(String publicID)
 {
@@ -404,6 +407,69 @@ public int getDriverIdByPublicID(String publicID)
         return list;
     }
     
+public Map<String, List<DriverPerformance>> allDriverPerformanceByTerminal() {
+    Map<String, List<DriverPerformance>> terminalMap = new LinkedHashMap<>();
+
+    LocalDate today = TimeProvider.now();
+    LocalDate startMonth = TimeProvider.startOfMonth(today);
+    LocalDate nextMonth = TimeProvider.startOfNextMonth(today);
+
+    String sql =
+        "SELECT d.public_driver_id, d.first_name, d.last_name, d.status, " +
+        "       CASE sa.terminal_id " +
+        "           WHEN 1 THEN 'Cebu North Bus Terminal (CNBT)' " +
+        "           WHEN 2 THEN 'Cebu South Bus Terminal (CSBT)' " +
+        "           WHEN 3 THEN 'Ceres Garage' " +
+        "           WHEN 4 THEN 'Marina Mall (Mactan)' " +
+        "           WHEN 5 THEN 'Carmen Bus Terminal' " +
+        "           ELSE 'Unassigned Terminal' " +
+        "       END AS terminal_name, " +
+        "       COALESCE(AVG(p.average_kmpl), 0) AS average_kmpl, " +
+        "       COALESCE(SUM(p.total_tickets), 0) AS total_tickets, " +
+        "       COALESCE(SUM(p.total_revenue), 0) AS total_revenue " +
+        "FROM driver d " +
+        "LEFT JOIN sub_admin sa ON d.assigned_by = sa.sub_admin_id " +
+        "LEFT JOIN driver_performance p ON d.driver_id = p.driver_id " +
+        "AND p.record_date >= ? " +
+        "AND p.record_date < ? " +
+        "GROUP BY d.driver_id, d.public_driver_id, d.first_name, d.last_name, d.status, sa.terminal_id " +
+        "ORDER BY terminal_name ASC, d.last_name ASC";
+
+    try (Connection conn = dbConnection.getConnection();
+         PreparedStatement prepS = conn.prepareStatement(sql)) {
+
+        prepS.setDate(1, java.sql.Date.valueOf(startMonth));
+        prepS.setDate(2, java.sql.Date.valueOf(nextMonth));
+
+        ResultSet res = prepS.executeQuery();
+
+        while (res.next()) {
+            Driver d = new Driver();
+            DriverPerformance dp = new DriverPerformance();
+
+            d.setpublic_driver_id(res.getString("public_driver_id"));
+            d.setfirstName(res.getString("first_name"));
+            d.setlastName(res.getString("last_name"));
+            d.setStatus(res.getString("status"));
+
+            dp.setdriver(d);
+            dp.setaverageKMPL(res.getDouble("average_kmpl"));
+            dp.settotalTickets(res.getInt("total_tickets"));
+            dp.settotalRevenue(res.getDouble("total_revenue"));
+
+            String terminalName = res.getString("terminal_name");
+            terminalMap.computeIfAbsent(terminalName, key -> new ArrayList<>()).add(dp);
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    return terminalMap;
+}
+
+
+    
     public AuthResult driverLogin(String publicDriverId, String password)
     {
 
@@ -530,47 +596,49 @@ public int getDriverIdByPublicID(String publicID)
     public void updateRanking()
     {
         LocalDate today = TimeProvider.now();
-        
+
         String deleteSql = "DELETE FROM ranking";
-        String sql = "INSERT INTO ranking (driver_id, driver_rank, rank_date) "
-                + "SELECT d.driver_id, "
-                + "ROW_NUMBER() OVER (ORDER BY "
-                + "SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 "
-                + "         WHEN a.status = 'HALF DAY' THEN 0.5 "
-                + "         ELSE 0.0 END) DESC, "
-                + "SUM(dp.total_tickets) DESC, "
-                + "SUM(dp.total_revenue) DESC, "
-                + "SUM(dp.violations) ASC "
-                + ") AS driver_rank, "
-                + "? as rank_date "
-                + "FROM driver d "
-                + "JOIN driver_performance dp ON d.driver_id = dp.driver_id "
-                + "JOIN driver_attendance a ON d.driver_id = a.driver_id "
-                + "WHERE EXTRACT(MONTH FROM a.date) = ? "
-                + "AND EXTRACT(YEAR FROM a.date) = ? "
-                + "AND EXTRACT(MONTH FROM dp.record_date) = ? "
-                + "AND EXTRACT(YEAR FROM dp.record_date) = ? "
-                + "GROUP BY d.driver_id";
+
+        String sql =
+            "INSERT INTO ranking (driver_id, driver_rank, rank_date) " +
+            "SELECT d.driver_id, " +
+            "ROW_NUMBER() OVER (ORDER BY " +
+            "COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 " +
+            "                  WHEN a.status = 'HALF DAY' THEN 0.5 " +
+            "                  ELSE 0.0 END), 0) DESC, " +
+            "COALESCE(SUM(dp.total_tickets), 0) DESC, " +
+            "COALESCE(SUM(dp.total_revenue), 0) DESC, " +
+            "COALESCE(SUM(dp.violations), 0) ASC " +
+            ") AS driver_rank, " +
+            "? AS rank_date " +
+            "FROM driver d " +
+            "LEFT JOIN driver_performance dp ON d.driver_id = dp.driver_id " +
+            "AND EXTRACT(MONTH FROM dp.record_date) = ? " +
+            "AND EXTRACT(YEAR FROM dp.record_date) = ? " +
+            "LEFT JOIN driver_attendance a ON d.driver_id = a.driver_id " +
+            "AND EXTRACT(MONTH FROM a.date) = ? " +
+            "AND EXTRACT(YEAR FROM a.date) = ? " +
+            "GROUP BY d.driver_id";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
-             PreparedStatement prepS = conn.prepareStatement(sql))
-        {
-            deleteStmt.executeUpdate();            
-            
+             PreparedStatement prepS = conn.prepareStatement(sql)) {
+
+            deleteStmt.executeUpdate();
+
             prepS.setDate(1, java.sql.Date.valueOf(today));
             prepS.setInt(2, today.getMonthValue());
             prepS.setInt(3, today.getYear());
             prepS.setInt(4, today.getMonthValue());
             prepS.setInt(5, today.getYear());
-            
+
             prepS.executeUpdate();
-        }
-        catch (Exception e)
-        {
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
     
     public List<Driver> getAllActiveDrivers()
     {
@@ -601,5 +669,166 @@ public int getDriverIdByPublicID(String publicID)
         
         return list;
     }
+    
+    public String getDriverRouteName(String publicDriverId)
+    {
+        String sql =
+            "SELECT COALESCE(r.route_name, 'N/A') AS route_name " +
+            "FROM driver d " +
+            "LEFT JOIN routes r ON d.route_id = r.route_id " +
+            "WHERE d.public_driver_id = ?";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, publicDriverId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("route_name");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return "N/A";
+    }
+    
+    public void updateRankingByTerminal()
+    {
+        LocalDate today = TimeProvider.now();
+
+        String deleteSql = "DELETE FROM ranking";
+
+        String sql =
+            "INSERT INTO ranking (driver_id, driver_rank, rank_date) " +
+            "SELECT d.driver_id, " +
+            "ROW_NUMBER() OVER ( " +
+            "   PARTITION BY sa.terminal_id " +
+            "   ORDER BY " +
+            "       COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 " +
+            "                         WHEN a.status = 'HALF DAY' THEN 0.5 " +
+            "                         ELSE 0.0 END), 0) DESC, " +
+            "       COALESCE(SUM(dp.total_tickets), 0) DESC, " +
+            "       COALESCE(SUM(dp.total_revenue), 0) DESC, " +
+            "       COALESCE(SUM(dp.violations), 0) ASC " +
+            ") AS driver_rank, " +
+            "? AS rank_date " +
+            "FROM driver d " +
+            "LEFT JOIN sub_admin sa ON d.assigned_by = sa.sub_admin_id " +
+            "LEFT JOIN driver_performance dp ON d.driver_id = dp.driver_id " +
+            "AND EXTRACT(MONTH FROM dp.record_date) = ? " +
+            "AND EXTRACT(YEAR FROM dp.record_date) = ? " +
+            "LEFT JOIN driver_attendance a ON d.driver_id = a.driver_id " +
+            "AND EXTRACT(MONTH FROM a.date) = ? " +
+            "AND EXTRACT(YEAR FROM a.date) = ? " +
+            "GROUP BY d.driver_id, sa.terminal_id";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql);
+             PreparedStatement prepS = conn.prepareStatement(sql))
+        {
+
+            deleteStmt.executeUpdate();
+
+            prepS.setDate(1, java.sql.Date.valueOf(today));
+            prepS.setInt(2, today.getMonthValue());
+            prepS.setInt(3, today.getYear());
+            prepS.setInt(4, today.getMonthValue());
+            prepS.setInt(5, today.getYear());
+
+            prepS.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Map<String, List<Driver>> driverRankingByTerminal()
+    {
+        Map<String, List<Driver>> rankingsByTerminal = new LinkedHashMap<>();
+
+        String sql =
+            "SELECT " +
+            "   CASE sa.terminal_id " +
+            "       WHEN 1 THEN 'Cebu North Bus Terminal (NBT)' " +
+            "       WHEN 2 THEN 'Cebu South Bus Terminal (CSBT)' " +
+            "       WHEN 3 THEN 'Ceres Garage' " +
+            "       WHEN 4 THEN 'Marina Mall (Mactan)' " +
+            "       WHEN 5 THEN 'Carmen Bus Terminal' " +
+            "       ELSE 'Unassigned Terminal' " +
+            "   END AS terminal_name, " +
+            "   d.public_driver_id, d.first_name, d.last_name, r.driver_rank " +
+            "FROM ranking r " +
+            "JOIN driver d ON d.driver_id = r.driver_id " +
+            "LEFT JOIN sub_admin sa ON d.assigned_by = sa.sub_admin_id " +
+            "ORDER BY sa.terminal_id ASC, r.driver_rank ASC";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement prepS = conn.prepareStatement(sql);
+             ResultSet res = prepS.executeQuery())
+        {
+
+            while (res.next()) {
+                Driver d = new Driver();
+
+                d.setpublic_driver_id(res.getString("public_driver_id"));
+                d.setfirstName(res.getString("first_name"));
+                d.setlastName(res.getString("last_name"));
+                d.setranking(res.getInt("driver_rank"));
+
+                String terminalName = res.getString("terminal_name");
+
+                rankingsByTerminal
+                        .computeIfAbsent(terminalName, key -> new ArrayList<>())
+                        .add(d);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return rankingsByTerminal;
+    }
+
+    public List<Driver> driverRankingByTerminalId(int terminalId)
+    {
+        List<Driver> list = new ArrayList<>();
+
+        String sql =
+            "SELECT d.public_driver_id, d.first_name, d.last_name, r.driver_rank " +
+            "FROM ranking r " +
+            "JOIN driver d ON d.driver_id = r.driver_id " +
+            "JOIN sub_admin sa ON d.assigned_by = sa.sub_admin_id " +
+            "WHERE sa.terminal_id = ? " +
+            "ORDER BY r.driver_rank ASC";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement prepS = conn.prepareStatement(sql)) {
+
+            prepS.setInt(1, terminalId);
+
+            ResultSet res = prepS.executeQuery();
+
+            while (res.next()) {
+                Driver d = new Driver();
+
+                d.setpublic_driver_id(res.getString("public_driver_id"));
+                d.setfirstName(res.getString("first_name"));
+                d.setlastName(res.getString("last_name"));
+                d.setranking(res.getInt("driver_rank"));
+
+                list.add(d);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
 }
 

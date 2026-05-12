@@ -8,6 +8,7 @@ import Model.Route;
 import Service.DriverService;
 import Service.SubAdminService;
 import Service.SalaryService;
+import Service.DriverAttendanceService;
 import util.TraccarAPI;
 import Repository.DriverRepo;
 
@@ -25,6 +26,7 @@ public class SubAdminDashboard extends JFrame {
 
     private DriverService ds = new DriverService();
     private SubAdminService sas = new SubAdminService();
+    private DriverAttendanceService attendanceService = new DriverAttendanceService();
     private SubAdmin subAdmin;
     private SalaryService sS = new SalaryService();
 
@@ -35,6 +37,11 @@ public class SubAdminDashboard extends JFrame {
 
     public SubAdminDashboard(SubAdmin subAdmin, SubAdminService subAdminService) {
         this.subAdmin = subAdmin;
+
+        if (subAdminService != null) {
+            this.sas = subAdminService;
+        }
+
         util.Session.currentSubAdmin = subAdmin;
 
         setTitle("Trackify - Sub Admin Dashboard");
@@ -100,7 +107,9 @@ public class SubAdminDashboard extends JFrame {
         tabbedPane.setBackground(new Color(245, 245, 245));
         tabbedPane.setForeground(new Color(60, 60, 60));
 
-        tabbedPane.addTab("Overview", new JPanel());
+        tabbedPane.addTab("Overview", createOverviewPanel());
+        overviewLoaded = true;
+
         tabbedPane.addTab("Drivers", new JPanel());
         tabbedPane.addTab("Rankings", new JPanel());
         tabbedPane.addTab("Register Driver", new JPanel());
@@ -139,8 +148,6 @@ public class SubAdminDashboard extends JFrame {
         });
 
         tabbedPane.setSelectedIndex(0);
-        tabbedPane.setComponentAt(0, createOverviewPanel());
-        overviewLoaded = true;
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
         setVisible(true);
@@ -160,20 +167,92 @@ public class SubAdminDashboard extends JFrame {
     }
 
     private JPanel createOverviewPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 30, 30));
+        JPanel panel = new JPanel(new BorderLayout(25, 25));
         panel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
         panel.setBackground(new Color(240, 242, 245));
 
         try {
-            int totalDrivers = ds.totalDriver();
+            int handledDriver = sas.getTotalDriversBySubAdmin(subAdmin.getSubID());
+            int activeDriver = attendanceService.getActiveDriversToday(subAdmin.getSubID());
+            int inactiveDriver = attendanceService.countAbsentDriversToday(subAdmin.getSubID());
 
-            panel.add(createStatCard("Total Drivers", String.valueOf(totalDrivers), new Color(46, 204, 113)));
-            panel.add(createStatCard("Active Drivers", String.valueOf(totalDrivers), new Color(52, 152, 219)));
-            panel.add(createStatCard("Pending Approvals", "0", new Color(241, 196, 15)));
-            panel.add(createStatCard("Total Vehicles", "0", new Color(155, 89, 182)));
+            JPanel statsPanel = new JPanel(new GridLayout(1, 3, 30, 30));
+            statsPanel.setOpaque(false);
+
+            statsPanel.add(createStatCard("Total Drivers", String.valueOf(handledDriver), new Color(46, 204, 113)));
+            statsPanel.add(createStatCard("Active Drivers", String.valueOf(activeDriver), new Color(52, 152, 219)));
+            statsPanel.add(createStatCard("Inactive Drivers", String.valueOf(inactiveDriver), new Color(231, 76, 60)));
+
+            panel.add(statsPanel, BorderLayout.NORTH);
+
+            JPanel rankingPanel = new JPanel(new BorderLayout());
+            rankingPanel.setBackground(Color.WHITE);
+            rankingPanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(46, 204, 113), 2),
+                    BorderFactory.createEmptyBorder(20, 20, 20, 20)
+            ));
+
+            JLabel titleLabel = new JLabel("Top Drivers");
+            titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+            titleLabel.setForeground(new Color(46, 204, 113));
+            titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+            rankingPanel.add(titleLabel, BorderLayout.NORTH);
+
+            List<Driver> list = ds.getDriverRanking();
+
+            if (list == null || list.isEmpty()) {
+                JLabel noDataLabel = new JLabel("No driver ranking data available");
+                noDataLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                noDataLabel.setForeground(new Color(100, 100, 100));
+                noDataLabel.setHorizontalAlignment(JLabel.CENTER);
+                rankingPanel.add(noDataLabel, BorderLayout.CENTER);
+            } else {
+                int rowCount = Math.min(list.size(), 10);
+                String[] columns = {"Rank", "Driver Name", "Score"};
+                Object[][] data = new Object[rowCount][3];
+
+                for (int i = 0; i < rowCount; i++) {
+                    Driver d = list.get(i);
+                    data[i][0] = String.valueOf(i + 1);
+
+                    if (d != null) {
+                        String firstName = d.getfirstName() != null ? d.getfirstName() : "";
+                        String lastName = d.getlastName() != null ? d.getlastName() : "";
+                        String fullName = (firstName + " " + lastName).trim();
+
+                        Object rank = d.getranking();
+
+                        data[i][1] = fullName.isEmpty() ? "(unknown driver)" : fullName;
+                        data[i][2] = rank != null ? rank : 0;
+                    } else {
+                        data[i][1] = "(unknown driver)";
+                        data[i][2] = 0;
+                    }
+                }
+
+                JTable table = new JTable(new DefaultTableModel(data, columns) {
+                    public boolean isCellEditable(int row, int column) {
+                        return false;
+                    }
+                });
+
+                styleTable(table, new Color(46, 204, 113));
+
+                JScrollPane scrollPane = new JScrollPane(table);
+                scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+                rankingPanel.add(scrollPane, BorderLayout.CENTER);
+            }
+
+            panel.add(rankingPanel, BorderLayout.CENTER);
         } catch (Exception e) {
             System.err.println("Error loading overview panel: " + e.getMessage());
             e.printStackTrace();
+
+            JLabel errorLabel = new JLabel("Unable to load overview data.");
+            errorLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            errorLabel.setForeground(new Color(231, 76, 60));
+            errorLabel.setHorizontalAlignment(JLabel.CENTER);
+            panel.add(errorLabel, BorderLayout.CENTER);
         }
 
         return panel;
@@ -349,10 +428,14 @@ public class SubAdminDashboard extends JFrame {
         panel.setBackground(new Color(240, 242, 245));
 
         try {
-            List<Driver> list = ds.getDriverRanking();
+            int terminalID = subAdmin.getTerminalID();
+
+            ds.updateRankingByTerminal();
+
+            List<Driver> list = ds.getDriverRankingByTerminalId(terminalID);
 
             if (list == null || list.isEmpty()) {
-                JLabel noDataLabel = new JLabel("No ranking data available");
+                JLabel noDataLabel = new JLabel("No ranking data available for this terminal");
                 noDataLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
                 noDataLabel.setForeground(new Color(100, 100, 100));
                 noDataLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -360,22 +443,24 @@ public class SubAdminDashboard extends JFrame {
                 return panel;
             }
 
-            String[] columns = {"Rank", "Driver Name", "Score"};
-            Object[][] data = new Object[Math.min(list.size(), 15)][3];
+            String[] columns = {"Rank", "Driver ID", "Driver Name"};
+            Object[][] data = new Object[list.size()][3];
 
-            for (int i = 0; i < Math.min(list.size(), 15); i++) {
+            for (int i = 0; i < list.size(); i++) {
                 Driver d = list.get(i);
-                data[i][0] = String.valueOf(i + 1);
 
                 if (d != null) {
                     String firstName = d.getfirstName() != null ? d.getfirstName() : "";
                     String lastName = d.getlastName() != null ? d.getlastName() : "";
+                    String fullName = (firstName + " " + lastName).trim();
 
-                    data[i][1] = (firstName + " " + lastName).trim();
-                    data[i][2] = d.getranking();
+                    data[i][0] = d.getranking();
+                    data[i][1] = d.getpublic_driver_id() != null ? d.getpublic_driver_id() : "(no ID)";
+                    data[i][2] = fullName.isEmpty() ? "(unknown driver)" : fullName;
                 } else {
-                    data[i][1] = "(unknown driver)";
-                    data[i][2] = 0;
+                    data[i][0] = i + 1;
+                    data[i][1] = "(no ID)";
+                    data[i][2] = "(unknown driver)";
                 }
             }
 
@@ -384,6 +469,7 @@ public class SubAdminDashboard extends JFrame {
                     return false;
                 }
             });
+
             styleTable(table, new Color(46, 204, 113));
 
             JScrollPane scrollPane = new JScrollPane(table);
@@ -392,10 +478,17 @@ public class SubAdminDashboard extends JFrame {
         } catch (Exception e) {
             System.err.println("Error loading ranking panel: " + e.getMessage());
             e.printStackTrace();
+
+            JLabel errorLabel = new JLabel("Unable to load rankings.");
+            errorLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            errorLabel.setForeground(new Color(231, 76, 60));
+            errorLabel.setHorizontalAlignment(JLabel.CENTER);
+            panel.add(errorLabel, BorderLayout.CENTER);
         }
 
         return panel;
     }
+
 
     private JPanel createRegisterDriverPanel() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -692,392 +785,230 @@ public class SubAdminDashboard extends JFrame {
         profileDialog.setVisible(true);
     }
 
-    private JPanel createLiveTrackingPanel(Driver driver, JDialog parentDialog) {
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(new Color(240, 242, 245));
-        mainPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(46, 204, 113), 2),
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
+private void showRecordPerformanceDialog() {
+    JDialog dialog = new JDialog(this, "Record Driver Performance", true);
+    dialog.setSize(800, 680);
+    dialog.setLocationRelativeTo(this);
+    dialog.setResizable(false);
+    dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        JLabel headerLabel = new JLabel("LIVE TRACKING");
-        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        headerLabel.setForeground(new Color(46, 204, 113));
-        headerLabel.setHorizontalAlignment(JLabel.CENTER);
+    JPanel mainPanel = new JPanel(new BorderLayout(10, 20));
+    mainPanel.setBackground(Color.WHITE);
+    mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 38, 30, 38));
 
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(new Color(240, 242, 245));
-        headerPanel.add(headerLabel, BorderLayout.CENTER);
-        mainPanel.add(headerPanel, BorderLayout.NORTH);
+    JLabel titleLabel = new JLabel("RECORD DRIVER PERFORMANCE");
+    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+    titleLabel.setForeground(new Color(46, 204, 113));
+    titleLabel.setHorizontalAlignment(JLabel.CENTER);
+    mainPanel.add(titleLabel, BorderLayout.NORTH);
 
-        JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(Color.WHITE);
-        contentPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+    JPanel formPanel = new JPanel(new GridBagLayout());
+    formPanel.setBackground(Color.WHITE);
 
-        TraccarMapPanel mapPanel = new TraccarMapPanel();
-        contentPanel.add(mapPanel, BorderLayout.CENTER);
-        mainPanel.add(contentPanel, BorderLayout.CENTER);
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.insets = new Insets(10, 0, 10, 0);
+    gbc.weightx = 1.0;
+    gbc.gridx = 0;
+    gbc.gridy = 0;
 
-        JLabel statusLabel = new JLabel("Tracking Inactive");
-        JLabel speedLabel = new JLabel("Speed: -- km/h");
-        JLabel latLabel = new JLabel("Latitude: --");
-        JLabel lonLabel = new JLabel("Longitude: --");
-        JLabel timeLabel = new JLabel("Last Update: --");
+    JLabel driverLabel = new JLabel("Driver:");
+    driverLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    formPanel.add(driverLabel, gbc);
 
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        speedLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        latLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lonLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        timeLabel.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+    gbc.gridy++;
 
-        speedLabel.setForeground(new Color(46, 204, 113));
-        statusLabel.setForeground(new Color(60, 60, 60));
-        latLabel.setForeground(new Color(100, 100, 100));
-        lonLabel.setForeground(new Color(100, 100, 100));
-        timeLabel.setForeground(new Color(150, 150, 150));
+    JComboBox<Driver> driverBox = new JComboBox<>();
 
-        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        controlPanel.setBackground(new Color(240, 242, 245));
-        controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+    try {
+        List<DriverPerformance> drivers = ds.getPerformance();
 
-        JButton startBtn = new JButton("START TRACKING");
-        startBtn.setBackground(new Color(46, 204, 113));
-        startBtn.setForeground(Color.WHITE);
-        startBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        startBtn.setFocusPainted(false);
-        startBtn.setBorderPainted(false);
-        startBtn.setPreferredSize(new Dimension(160, 35));
-
-        JButton stopBtn = new JButton("STOP TRACKING");
-        stopBtn.setBackground(new Color(231, 76, 60));
-        stopBtn.setForeground(Color.WHITE);
-        stopBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        stopBtn.setFocusPainted(false);
-        stopBtn.setBorderPainted(false);
-        stopBtn.setPreferredSize(new Dimension(160, 35));
-        stopBtn.setEnabled(false);
-
-        JButton refreshBtn = new JButton("REFRESH");
-        refreshBtn.setBackground(new Color(52, 152, 219));
-        refreshBtn.setForeground(Color.WHITE);
-        refreshBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        refreshBtn.setFocusPainted(false);
-        refreshBtn.setBorderPainted(false);
-        refreshBtn.setPreferredSize(new Dimension(120, 35));
-
-        final Timer[] trackingTimer = {null};
-
-        startBtn.addActionListener(e -> {
-            if (trackingTimer[0] != null) {
-                trackingTimer[0].cancel();
-            }
-
-            startBtn.setEnabled(false);
-            stopBtn.setEnabled(true);
-            statusLabel.setText("Starting Tracking...");
-            statusLabel.setForeground(new Color(241, 196, 15));
-
-            trackingTimer[0] = new Timer();
-            startLiveTracking(
-                    driver,
-                    mapPanel,
-                    statusLabel,
-                    speedLabel,
-                    latLabel,
-                    lonLabel,
-                    timeLabel,
-                    parentDialog,
-                    trackingTimer[0]
-            );
-        });
-
-        stopBtn.addActionListener(e -> {
-            if (trackingTimer[0] != null) {
-                trackingTimer[0].cancel();
-                trackingTimer[0] = null;
-            }
-
-            startBtn.setEnabled(true);
-            stopBtn.setEnabled(false);
-            statusLabel.setText("Tracking Stopped");
-            statusLabel.setForeground(new Color(231, 76, 60));
-            speedLabel.setText("Speed: -- km/h");
-            latLabel.setText("Latitude: --");
-            lonLabel.setText("Longitude: --");
-            timeLabel.setText("Last Update: --");
-        });
-
-        refreshBtn.addActionListener(e -> {
-            mapPanel.clearHistory();
-            mapPanel.repaint();
-        });
-
-        controlPanel.add(startBtn);
-        controlPanel.add(stopBtn);
-        controlPanel.add(refreshBtn);
-
-        JPanel statusTextPanel = new JPanel();
-        statusTextPanel.setLayout(new BoxLayout(statusTextPanel, BoxLayout.Y_AXIS));
-        statusTextPanel.setBackground(new Color(240, 242, 245));
-        statusTextPanel.add(statusLabel);
-        statusTextPanel.add(speedLabel);
-        statusTextPanel.add(latLabel);
-        statusTextPanel.add(lonLabel);
-        statusTextPanel.add(timeLabel);
-
-        JPanel statusPanel = new JPanel(new BorderLayout());
-        statusPanel.setBackground(new Color(240, 242, 245));
-        statusPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        statusPanel.add(statusTextPanel, BorderLayout.CENTER);
-
-        mainPanel.add(controlPanel, BorderLayout.WEST);
-        mainPanel.add(statusPanel, BorderLayout.SOUTH);
-
-        parentDialog.addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent e) {
-                if (trackingTimer[0] != null) {
-                    trackingTimer[0].cancel();
+        if (drivers != null) {
+            for (DriverPerformance dp : drivers) {
+                if (dp != null && dp.getdriver() != null) {
+                    driverBox.addItem(dp.getdriver());
                 }
             }
-        });
-
-        return mainPanel;
+        }
+    } catch (Exception ex) {
+        System.err.println("Error loading drivers: " + ex.getMessage());
     }
 
-    private void startLiveTracking(
-            Driver driver,
-            TraccarMapPanel mapPanel,
-            JLabel statusLabel,
-            JLabel speedLabel,
-            JLabel latLabel,
-            JLabel lonLabel,
-            JLabel timeLabel,
-            JDialog parentDialog,
-            Timer providedTimer
-    ) {
-        Timer timer = providedTimer != null ? providedTimer : new Timer();
-        final int[] updateCount = {0};
+    driverBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+    driverBox.setPreferredSize(new Dimension(400, 38));
 
-        DriverRepo driverRepo = new DriverRepo();
+    driverBox.setRenderer(new DefaultListCellRenderer() {
+        @Override
+        public Component getListCellRendererComponent(
+                JList<?> list,
+                Object value,
+                int index,
+                boolean isSelected,
+                boolean cellHasFocus
+        ) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-        TimerTask trackingTask = new TimerTask() {
-            public void run() {
-                if (!parentDialog.isDisplayable()) {
-                    cancel();
-                    return;
-                }
+            if (value instanceof Driver d) {
+                String id = d.getpublic_driver_id() != null ? d.getpublic_driver_id() : "(no ID)";
+                String fn = d.getfirstName() != null ? d.getfirstName() : "";
+                String ln = d.getlastName() != null ? d.getlastName() : "";
+                String name = (fn + " " + ln).trim();
 
-                try {
-                    int driverID = driverRepo.getDriverIdByPublicID(driver.getpublic_driver_id());
-                    Integer deviceId = driverRepo.getTraccarDeviceId(driverID);
-
-                    if (deviceId == null || deviceId <= 0) {
-                        SwingUtilities.invokeLater(() -> {
-                            statusLabel.setText("No Device ID Assigned");
-                            statusLabel.setForeground(new Color(241, 196, 15));
-                        });
-                        return;
-                    }
-
-                    JSONObject position = TraccarAPI.getLatestPosition(deviceId);
-
-                    if (position == null) {
-                        SwingUtilities.invokeLater(() -> {
-                            statusLabel.setText("Offline - No GPS Signal");
-                            statusLabel.setForeground(new Color(231, 76, 60));
-                            speedLabel.setText("Speed: N/A");
-                            latLabel.setText("Latitude: --");
-                            lonLabel.setText("Longitude: --");
-                        });
-                        return;
-                    }
-
-                    double latitude = position.optDouble("latitude", 0);
-                    double longitude = position.optDouble("longitude", 0);
-                    double speed = TraccarAPI.getSpeedKmh(deviceId);
-                    boolean overSpeed = TraccarAPI.isOverSpeed(deviceId);
-
-                    long timestamp = position.optLong("fixTime", System.currentTimeMillis());
-                    String timeStr = new java.text.SimpleDateFormat("HH:mm:ss")
-                            .format(new java.util.Date(timestamp));
-
-                    updateCount[0]++;
-
-                    SwingUtilities.invokeLater(() -> {
-                        statusLabel.setText("Online - Tracking Active");
-                        statusLabel.setForeground(new Color(46, 204, 113));
-
-                        speedLabel.setText(
-                                "Speed: " + String.format("%.2f", speed) + " km/h"
-                                        + (overSpeed ? " OVERSPEED" : "")
-                        );
-
-                        speedLabel.setForeground(
-                                overSpeed ? new Color(231, 76, 60) : new Color(46, 204, 113)
-                        );
-
-                        latLabel.setText(String.format("Latitude: %.6f", latitude));
-                        lonLabel.setText(String.format("Longitude: %.6f", longitude));
-                        timeLabel.setText("Last Update: " + timeStr + " (Updates: " + updateCount[0] + ")");
-
-                        if (updateCount[0] == 1) {
-                            mapPanel.loadDevice(deviceId);
-                        }
-                    });
-                } catch (Exception e) {
-                    System.err.println("Live tracking error: " + e.getMessage());
-
-                    SwingUtilities.invokeLater(() -> {
-                        statusLabel.setText("Error Fetching Data");
-                        statusLabel.setForeground(new Color(241, 196, 15));
-                    });
-                }
+                setText(id + " - " + (name.isEmpty() ? "(unknown driver)" : name));
             }
-        };
 
-        timer.scheduleAtFixedRate(trackingTask, 0, 2000);
-    }
+            return this;
+        }
+    });
 
-    private void showRecordPerformanceDialog() {
-        JDialog dialog = new JDialog(this, "Record Driver Performance", true);
-        dialog.setSize(600, 500);
-        dialog.setLocationRelativeTo(this);
-        dialog.setResizable(false);
-        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+    formPanel.add(driverBox, gbc);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    gbc.gridy++;
 
-        JPanel formPanel = new JPanel();
-        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.setBackground(Color.WHITE);
+    JLabel kmplLabel = new JLabel("Average KM/L:");
+    kmplLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    formPanel.add(kmplLabel, gbc);
 
-        JLabel titleLabel = new JLabel("RECORD DRIVER PERFORMANCE");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(46, 204, 113));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        formPanel.add(titleLabel);
-        formPanel.add(Box.createVerticalStrut(20));
+    gbc.gridy++;
 
-        JLabel driverIdLabel = new JLabel("Driver ID:");
-        driverIdLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        formPanel.add(driverIdLabel);
+    JTextField kmplField = makePerformanceField();
+    formPanel.add(kmplField, gbc);
 
-        JTextField driverIdField = new JTextField(20);
-        driverIdField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        driverIdField.setMaximumSize(new Dimension(400, 35));
-        formPanel.add(driverIdField);
-        formPanel.add(Box.createVerticalStrut(15));
+    gbc.gridy++;
 
-        JLabel kmplLabel = new JLabel("Average KM/L:");
-        kmplLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        formPanel.add(kmplLabel);
+    JLabel ticketsLabel = new JLabel("Total Tickets:");
+    ticketsLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    formPanel.add(ticketsLabel, gbc);
 
-        JTextField kmplField = new JTextField(20);
-        kmplField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        kmplField.setMaximumSize(new Dimension(400, 35));
-        formPanel.add(kmplField);
-        formPanel.add(Box.createVerticalStrut(15));
+    gbc.gridy++;
 
-        JLabel ticketsLabel = new JLabel("Total Tickets:");
-        ticketsLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        formPanel.add(ticketsLabel);
+    JTextField ticketsField = makePerformanceField();
+    formPanel.add(ticketsField, gbc);
 
-        JTextField ticketsField = new JTextField(20);
-        ticketsField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        ticketsField.setMaximumSize(new Dimension(400, 35));
-        formPanel.add(ticketsField);
-        formPanel.add(Box.createVerticalStrut(15));
+    gbc.gridy++;
 
-        JLabel revenueLabel = new JLabel("Total Revenue (PHP):");
-        revenueLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        formPanel.add(revenueLabel);
+    JLabel revenueLabel = new JLabel("Total Revenue (PHP):");
+    revenueLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+    formPanel.add(revenueLabel, gbc);
 
-        JTextField revenueField = new JTextField(20);
-        revenueField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        revenueField.setMaximumSize(new Dimension(400, 35));
-        formPanel.add(revenueField);
+    gbc.gridy++;
 
-        formPanel.add(Box.createVerticalGlue());
-        mainPanel.add(formPanel, BorderLayout.CENTER);
+    JTextField revenueField = makePerformanceField();
+    formPanel.add(revenueField, gbc);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
-        buttonPanel.setBackground(Color.WHITE);
+    mainPanel.add(formPanel, BorderLayout.CENTER);
 
-        JButton saveBtn = new JButton("SAVE");
-        saveBtn.setBackground(new Color(46, 204, 113));
-        saveBtn.setForeground(Color.WHITE);
-        saveBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        saveBtn.setFocusPainted(false);
-        saveBtn.setBorderPainted(false);
-        saveBtn.setPreferredSize(new Dimension(100, 40));
-        saveBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        saveBtn.addActionListener(e -> {
-            String driverId = driverIdField.getText().trim();
-            String kmplStr = kmplField.getText().trim();
-            String ticketsStr = ticketsField.getText().trim();
-            String revenueStr = revenueField.getText().trim();
+    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 22, 0));
+    buttonPanel.setBackground(Color.WHITE);
 
-            if (driverId.isEmpty() || kmplStr.isEmpty() || ticketsStr.isEmpty() || revenueStr.isEmpty()) {
-                showErrorDialog("Validation Error", "Please fill in all fields");
+    JButton saveBtn = new JButton("SAVE");
+    saveBtn.setBackground(new Color(46, 204, 113));
+    saveBtn.setForeground(Color.WHITE);
+    saveBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    saveBtn.setFocusPainted(false);
+    saveBtn.setBorderPainted(false);
+    saveBtn.setPreferredSize(new Dimension(155, 56));
+    saveBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+    saveBtn.addActionListener(e -> {
+        Driver selectedDriver = (Driver) driverBox.getSelectedItem();
+
+        if (selectedDriver == null) {
+            showErrorDialog("Validation Error", "Please select a driver");
+            return;
+        }
+
+        String driverId = selectedDriver.getpublic_driver_id();
+        String kmplStr = kmplField.getText().trim();
+        String ticketsStr = ticketsField.getText().trim();
+        String revenueStr = revenueField.getText().trim();
+
+        if (driverId == null || driverId.trim().isEmpty()
+                || kmplStr.isEmpty()
+                || ticketsStr.isEmpty()
+                || revenueStr.isEmpty()) {
+            showErrorDialog("Validation Error", "Please fill in all fields");
+            return;
+        }
+
+        try {
+            double kmpl = Double.parseDouble(kmplStr);
+            int tickets = Integer.parseInt(ticketsStr);
+            double revenue = Double.parseDouble(revenueStr);
+
+            if (kmpl < 0 || tickets < 0 || revenue < 0) {
+                showErrorDialog("Validation Error", "Values cannot be negative");
                 return;
             }
 
-            try {
-                double kmpl = Double.parseDouble(kmplStr);
-                int tickets = Integer.parseInt(ticketsStr);
-                double revenue = Double.parseDouble(revenueStr);
+            ds.recordDriverPerformance(driverId, kmpl, tickets, revenue);
+            showInfoDialog("Success", "Driver performance recorded successfully!");
 
-                if (kmpl < 0 || tickets < 0 || revenue < 0) {
-                    showErrorDialog("Validation Error", "Values cannot be negative");
-                    return;
-                }
+            dialog.dispose();
+            driversLoaded = false;
+            overviewLoaded = false;
+            rankingLoaded = false;
+        } catch (NumberFormatException ex) {
+            showErrorDialog("Input Error", "Please enter valid numeric values.");
+        } catch (Exception ex) {
+            System.err.println("Error: " + ex.getMessage());
+            showErrorDialog("Error", "Failed to record performance: " + ex.getMessage());
+        }
+    });
 
-                ds.recordDriverPerformance(driverId, kmpl, tickets, revenue);
-                showInfoDialog("Success", "Driver performance recorded successfully!");
-                dialog.dispose();
-                driversLoaded = false;
-            } catch (NumberFormatException ex) {
-                showErrorDialog("Input Error", "Please enter valid numeric values.");
-            } catch (Exception ex) {
-                System.err.println("Error: " + ex.getMessage());
-                showErrorDialog("Error", "Failed to record performance: " + ex.getMessage());
-            }
-        });
-        buttonPanel.add(saveBtn);
+    JButton clearBtn = new JButton("CLEAR");
+    clearBtn.setBackground(new Color(241, 196, 15));
+    clearBtn.setForeground(Color.WHITE);
+    clearBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    clearBtn.setFocusPainted(false);
+    clearBtn.setBorderPainted(false);
+    clearBtn.setPreferredSize(new Dimension(155, 56));
+    clearBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JButton clearBtn = new JButton("CLEAR");
-        clearBtn.setBackground(new Color(241, 196, 15));
-        clearBtn.setForeground(Color.WHITE);
-        clearBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        clearBtn.setFocusPainted(false);
-        clearBtn.setBorderPainted(false);
-        clearBtn.setPreferredSize(new Dimension(100, 40));
-        clearBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        clearBtn.addActionListener(e -> {
-            driverIdField.setText("");
-            kmplField.setText("");
-            ticketsField.setText("");
-            revenueField.setText("");
-        });
-        buttonPanel.add(clearBtn);
+    clearBtn.addActionListener(e -> {
+        if (driverBox.getItemCount() > 0) {
+            driverBox.setSelectedIndex(0);
+        }
 
-        JButton cancelBtn = new JButton("CANCEL");
-        cancelBtn.setBackground(new Color(231, 76, 60));
-        cancelBtn.setForeground(Color.WHITE);
-        cancelBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        cancelBtn.setFocusPainted(false);
-        cancelBtn.setBorderPainted(false);
-        cancelBtn.setPreferredSize(new Dimension(100, 40));
-        cancelBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        cancelBtn.addActionListener(e -> dialog.dispose());
-        buttonPanel.add(cancelBtn);
+        kmplField.setText("");
+        ticketsField.setText("");
+        revenueField.setText("");
+    });
 
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-        dialog.add(mainPanel);
-        dialog.setVisible(true);
+    JButton cancelBtn = new JButton("CANCEL");
+    cancelBtn.setBackground(new Color(231, 76, 60));
+    cancelBtn.setForeground(Color.WHITE);
+    cancelBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    cancelBtn.setFocusPainted(false);
+    cancelBtn.setBorderPainted(false);
+    cancelBtn.setPreferredSize(new Dimension(155, 56));
+    cancelBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    cancelBtn.addActionListener(e -> dialog.dispose());
+
+    buttonPanel.add(saveBtn);
+    buttonPanel.add(clearBtn);
+    buttonPanel.add(cancelBtn);
+
+    mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+    dialog.add(mainPanel);
+    dialog.setVisible(true);
+}
+
+
+    private JTextField makePerformanceField()
+    {
+        JTextField field = new JTextField(20);
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(120, 140, 160), 1),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+        field.setPreferredSize(new Dimension(400, 38));
+        return field;
     }
+
+
 
     private void styleTable(JTable table, Color headerColor) {
         table.setFont(new Font("Segoe UI", Font.PLAIN, 13));

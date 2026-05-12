@@ -10,6 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 import java.time.LocalDate;
 import util.TraccarAPI;
+import java.util.Map;
+import java.util.List;
          
 public class DriverService
 {
@@ -139,5 +141,31 @@ public class DriverService
     public int getDriverId(String publicID)
     {
         return dRepo.getDriverIdByPublicID(publicID);
+    }
+    
+    public Map<String, List<DriverPerformance>> getAllDriverPerformanceByTerminal()
+    {
+        return dRepo.allDriverPerformanceByTerminal();  
+    }
+    
+    public String getDriverRouteName(String publicDriverId)
+    {
+        return dRepo.getDriverRouteName(publicDriverId);
+    }
+    
+    public void updateRankingByTerminal()
+    {
+        dRepo.updateRankingByTerminal();
+    }
+
+    public Map<String, List<Driver>> getDriverRankingByTerminal()
+    {
+        return dRepo.driverRankingByTerminal();
+    }
+    
+    public List<Driver> getDriverRankingByTerminalId(int terminalId) 
+    {
+        dRepo.updateRankingByTerminal();
+        return dRepo.driverRankingByTerminalId(terminalId);
     }
 }
