@@ -4,6 +4,7 @@ import Model.Driver;
 import Model.DriverPerformance;
 import Model.SubAdmin;
 import Model.DriverProfile;
+import Model.Route;
 import Service.DriverService;
 import Service.SubAdminService;
 import Service.SalaryService;
@@ -433,6 +434,23 @@ public class SubAdminDashboard extends JFrame {
 
         formPanel.add(makeLabel("License Number"), gbc); gbc.gridy++;
         JTextField licenseField = makeField(); formPanel.add(licenseField, gbc); gbc.gridy++;
+        
+        formPanel.add(makeLabel("Assign Route"), gbc); gbc.gridy++;
+        
+        List<Route> routes = sas.getRoutesByTerminal(
+                util.Session.currentSubAdmin.getTerminalID());
+        
+        JComboBox<Route> routeBox = new JComboBox<>();
+        
+        for(Route r : routes)
+        {
+            routeBox.addItem(r);
+        }
+        
+        routeBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        routeBox.setPreferredSize(new Dimension(300, 42));
+        
+        formPanel.add(routeBox, gbc); gbc.gridy++;
 
         formPanel.add(makeLabel("Initial Password"), gbc); gbc.gridy++;
         JPasswordField pwField = makePasswordField(); formPanel.add(pwField, gbc); gbc.gridy++;
@@ -467,6 +485,9 @@ public class SubAdminDashboard extends JFrame {
             String license = licenseField.getText().trim();
             String pw      = new String(pwField.getPassword());
             String cpw     = new String(cpwField.getPassword());
+            
+            Route selectedRoute = (Route) routeBox.getSelectedItem();
+            int routeID = selectedRoute.getRouteID();
 
             if (id.isEmpty() || fn.isEmpty() || ln.isEmpty() || ct.isEmpty() || pw.isEmpty()) {
                 showErrorDialog("Validation Error", "Please fill in all required fields");
@@ -489,7 +510,7 @@ public class SubAdminDashboard extends JFrame {
             try {
                 String requestCode = ds.registerDriver(
                         id, fn, ln, "M", LocalDate.now(),
-                        "", ct, license, LocalDate.now().plusYears(5), "", pw, cpw);
+                        "", ct, license, LocalDate.now().plusYears(5), "", routeID, pw, cpw);
 
                 if (requestCode != null && !requestCode.isEmpty()) {
                     showApprovalPendingDialog(requestCode);
@@ -936,7 +957,7 @@ private void startLiveTracking(
                 // ==============================
                 // GET POSITION FROM TRACCAR
                 // ==============================
-                JSONObject position = TraccarAPI.getLatestPosition(deviceId);
+                    JSONObject position = TraccarAPI.getLatestPosition(deviceId);
 
                 if (position != null) {
 

@@ -616,6 +616,22 @@ public class SuperAdminDashboard extends JFrame {
         // Position
         formPanel.add(makeLabel("Position"), gbc); gbc.gridy++;
         JTextField posField = makeField(); formPanel.add(posField, gbc); gbc.gridy++;
+        
+        formPanel.add(makeLabel("Assign Terminal"), gbc); gbc.gridy++;
+        String[] terminals = 
+        {
+            "Cebu North Bus Terminal (NBT)",
+            "Cebu South Bus Terminal (CSBT)",
+            "Ceres Garage",
+            "Marina Mall (Mactan)",
+            "Carmen Bus Terminal"
+        };
+        
+        JComboBox<String> terminalBox = new JComboBox<>(terminals);
+        terminalBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        terminalBox.setPreferredSize(new Dimension(300, 42));
+        
+        formPanel.add(terminalBox, gbc); gbc.gridy++;
 
         // Password
         formPanel.add(makeLabel("Password"), gbc); gbc.gridy++;
@@ -653,6 +669,19 @@ public class SuperAdminDashboard extends JFrame {
             String pos = posField.getText().trim();
             String pw  = new String(pwField.getPassword());
             String cpw = new String(cpwField.getPassword());
+            String selectedTerminal = (String) terminalBox.getSelectedItem();
+            
+            int terminalID = switch(selectedTerminal)
+            {
+                case "Cebu North Bus Terminal (NBT)" -> 1;
+                case "Cebu South Bus Terminal (CSBT)" -> 2;
+                case "Ceres Garage" -> 3;
+                case "Marina Mall (Mactan)" -> 4;
+                case "Carmen Bus Terminal" -> 5;
+                default -> 0;
+                        
+            };
+            
 
             if (id.isEmpty() || fn.isEmpty() || ln.isEmpty() || ct.isEmpty() || pos.isEmpty() || pw.isEmpty()) {
                 showErrorDialog("Validation Error", "Please fill in all fields");
@@ -668,7 +697,7 @@ public class SuperAdminDashboard extends JFrame {
             }
 
             // FIX: Pass position (pos) as a real argument.
-            boolean success = subs.registerSubAdmin(id, fn, ln, "M", LocalDate.now(), "", ct, pos, pw, cpw);
+            boolean success = subs.registerSubAdmin(id, fn, ln, "M", LocalDate.now(), "", ct, pos, pw, cpw, terminalID);
 
             if (success) {
                 showInfoDialog("Success", "Sub Admin account created successfully!");
