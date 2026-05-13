@@ -603,12 +603,14 @@ public Map<String, List<DriverPerformance>> allDriverPerformanceByTerminal() {
             "INSERT INTO ranking (driver_id, driver_rank, rank_date) " +
             "SELECT d.driver_id, " +
             "ROW_NUMBER() OVER (ORDER BY " +
+            "(" +
             "COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1.0 " +
             "                  WHEN a.status = 'HALF DAY' THEN 0.5 " +
-            "                  ELSE 0.0 END), 0) DESC, " +
-            "COALESCE(SUM(dp.total_tickets), 0) DESC, " +
-            "COALESCE(SUM(dp.total_revenue), 0) DESC, " +
-            "COALESCE(SUM(dp.violations), 0) ASC " +
+            "                  ELSE 0.0 END), 0) * 0.25 " +
+            "+ COALESCE(SUM(dp.total_tickets), 0) * 0.30 " +
+            "+ COALESCE(SUM(dp.total_revenue), 0) * 0.35 " +
+            "- COALESCE(SUM(dp.violations), 0) * 0.10 " +
+            ") DESC " +
             ") AS driver_rank, " +
             "? AS rank_date " +
             "FROM driver d " +
