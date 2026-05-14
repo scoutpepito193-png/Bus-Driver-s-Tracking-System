@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.json.JSONObject;
+import com.toedter.calendar.JDateChooser;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 
 public class SubAdminDashboard extends JFrame {
 
@@ -490,215 +494,279 @@ public class SubAdminDashboard extends JFrame {
     }
 
 
-    private JPanel createRegisterDriverPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
-        panel.setBackground(new Color(240, 242, 245));
+private JPanel createRegisterDriverPanel() {
+    JPanel panel = new JPanel(new BorderLayout());
+    panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+    panel.setBackground(new Color(240, 242, 245));
 
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(Color.WHITE);
-        formPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(46, 204, 113), 2),
-                BorderFactory.createEmptyBorder(35, 45, 35, 45)
-        ));
+    JPanel formPanel = new JPanel(new GridBagLayout());
+    formPanel.setBackground(Color.WHITE);
+    formPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(46, 204, 113), 2),
+            BorderFactory.createEmptyBorder(35, 45, 35, 45)
+    ));
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(12, 0, 12, 0);
-        gbc.weightx = 1.0;
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.insets = new Insets(12, 0, 12, 0);
+    gbc.weightx = 1.0;
 
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
+    gbc.gridy = 0;
+    gbc.gridwidth = 2;
 
-        JLabel titleLabel = new JLabel("REGISTER NEW DRIVER");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(46, 204, 113));
-        formPanel.add(titleLabel, gbc);
+    JLabel titleLabel = new JLabel("REGISTER NEW DRIVER");
+    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+    titleLabel.setForeground(new Color(46, 204, 113));
+    formPanel.add(titleLabel, gbc);
 
-        gbc.gridy++;
+    gbc.gridy++;
 
-        JLabel infoLabel = new JLabel("<html>Driver registration requests require SuperAdmin approval before account activation.</html>");
-        infoLabel.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        infoLabel.setForeground(new Color(241, 196, 15));
-        formPanel.add(infoLabel, gbc);
+    JLabel infoLabel = new JLabel("<html>Driver registration requests require SuperAdmin approval before account activation.</html>");
+    infoLabel.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+    infoLabel.setForeground(new Color(241, 196, 15));
+    formPanel.add(infoLabel, gbc);
 
-        gbc.gridwidth = 1;
-        gbc.gridy++;
+    gbc.gridwidth = 1;
+    gbc.gridy++;
 
-        formPanel.add(makeLabel("Driver ID"), gbc);
-        gbc.gridy++;
-        JTextField idField = makeField();
-        formPanel.add(idField, gbc);
-        gbc.gridy++;
+    formPanel.add(makeLabel("Driver ID"), gbc);
+    gbc.gridy++;
+    JTextField idField = makeField();
+    formPanel.add(idField, gbc);
+    gbc.gridy++;
 
-        formPanel.add(makeLabel("First Name"), gbc);
-        gbc.gridy++;
-        JTextField fnField = makeField();
-        formPanel.add(fnField, gbc);
-        gbc.gridy++;
+    formPanel.add(makeLabel("First Name"), gbc);
+    gbc.gridy++;
+    JTextField fnField = makeField();
+    formPanel.add(fnField, gbc);
+    gbc.gridy++;
 
-        formPanel.add(makeLabel("Last Name"), gbc);
-        gbc.gridy++;
-        JTextField lnField = makeField();
-        formPanel.add(lnField, gbc);
-        gbc.gridy++;
+    formPanel.add(makeLabel("Last Name"), gbc);
+    gbc.gridy++;
+    JTextField lnField = makeField();
+    formPanel.add(lnField, gbc);
+    gbc.gridy++;
 
-        formPanel.add(makeLabel("Contact Number"), gbc);
-        gbc.gridy++;
-        JTextField ctField = makeField();
-        formPanel.add(ctField, gbc);
-        gbc.gridy++;
+    formPanel.add(makeLabel("Gender"), gbc);
+    gbc.gridy++;
 
-        formPanel.add(makeLabel("License Number"), gbc);
-        gbc.gridy++;
-        JTextField licenseField = makeField();
-        formPanel.add(licenseField, gbc);
-        gbc.gridy++;
+    String[] gender = {
+            "Male",
+            "Female",
+            "Others"
+    };
 
-        formPanel.add(makeLabel("Assign Route"), gbc);
-        gbc.gridy++;
+    JComboBox<String> genderBox = new JComboBox<>(gender);
+    genderBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+    genderBox.setPreferredSize(new Dimension(300, 42));
+    formPanel.add(genderBox, gbc);
+    gbc.gridy++;
 
-        JComboBox<Route> routeBox = new JComboBox<>();
+    formPanel.add(makeLabel("Date of Birth"), gbc);
+    gbc.gridy++;
 
-        try {
-            List<Route> routes = sas.getRoutesByTerminal(util.Session.currentSubAdmin.getTerminalID());
+    JDateChooser birthDateChooser = new JDateChooser();
+    birthDateChooser.setDateFormatString("yyyy-MM-dd");
+    birthDateChooser.setPreferredSize(new Dimension(300, 42));
 
-            if (routes != null) {
-                for (Route r : routes) {
-                    routeBox.addItem(r);
-                }
+    formPanel.add(birthDateChooser, gbc);
+    gbc.gridy++;
+
+    formPanel.add(makeLabel("Contact Number"), gbc);
+    gbc.gridy++;
+    JTextField ctField = makeField();
+    formPanel.add(ctField, gbc);
+    gbc.gridy++;
+
+    formPanel.add(makeLabel("License Number"), gbc);
+    gbc.gridy++;
+    JTextField licenseField = makeField();
+    formPanel.add(licenseField, gbc);
+    gbc.gridy++;
+
+    formPanel.add(makeLabel("Assign Route"), gbc);
+    gbc.gridy++;
+
+    JComboBox<Route> routeBox = new JComboBox<>();
+
+    try {
+        List<Route> routes = sas.getRoutesByTerminal(util.Session.currentSubAdmin.getTerminalID());
+
+        if (routes != null) {
+            for (Route r : routes) {
+                routeBox.addItem(r);
             }
-        } catch (Exception ex) {
-            System.err.println("Error loading routes: " + ex.getMessage());
+        }
+    } catch (Exception ex) {
+        System.err.println("Error loading routes: " + ex.getMessage());
+    }
+
+    routeBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+    routeBox.setPreferredSize(new Dimension(300, 42));
+    formPanel.add(routeBox, gbc);
+    gbc.gridy++;
+
+    formPanel.add(makeLabel("Initial Password"), gbc);
+    gbc.gridy++;
+    JPasswordField pwField = makePasswordField();
+    formPanel.add(pwField, gbc);
+    gbc.gridy++;
+
+    formPanel.add(makeLabel("Confirm Password"), gbc);
+    gbc.gridy++;
+    JPasswordField cpwField = makePasswordField();
+    formPanel.add(cpwField, gbc);
+    gbc.gridy++;
+
+    gbc.insets = new Insets(25, 0, 0, 0);
+    gbc.gridwidth = 2;
+
+    JButton registerBtn = new JButton("SUBMIT FOR APPROVAL");
+    registerBtn.setBackground(new Color(46, 204, 113));
+    registerBtn.setForeground(Color.WHITE);
+    registerBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    registerBtn.setFocusPainted(false);
+    registerBtn.setBorderPainted(false);
+    registerBtn.setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
+    registerBtn.setPreferredSize(new Dimension(300, 50));
+    registerBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+    registerBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+        public void mouseEntered(java.awt.event.MouseEvent evt) {
+            registerBtn.setBackground(new Color(27, 149, 74));
         }
 
-        routeBox.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        routeBox.setPreferredSize(new Dimension(300, 42));
-        formPanel.add(routeBox, gbc);
-        gbc.gridy++;
+        public void mouseExited(java.awt.event.MouseEvent evt) {
+            registerBtn.setBackground(new Color(46, 204, 113));
+        }
+    });
 
-        formPanel.add(makeLabel("Initial Password"), gbc);
-        gbc.gridy++;
-        JPasswordField pwField = makePasswordField();
-        formPanel.add(pwField, gbc);
-        gbc.gridy++;
+    registerBtn.addActionListener(e -> {
 
-        formPanel.add(makeLabel("Confirm Password"), gbc);
-        gbc.gridy++;
-        JPasswordField cpwField = makePasswordField();
-        formPanel.add(cpwField, gbc);
-        gbc.gridy++;
+        String id = idField.getText().trim();
+        String fn = fnField.getText().trim();
+        String ln = lnField.getText().trim();
 
-        gbc.insets = new Insets(25, 0, 0, 0);
-        gbc.gridwidth = 2;
+        String selectedGender = (String) genderBox.getSelectedItem();
 
-        JButton registerBtn = new JButton("SUBMIT FOR APPROVAL");
-        registerBtn.setBackground(new Color(46, 204, 113));
-        registerBtn.setForeground(Color.WHITE);
-        registerBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        registerBtn.setFocusPainted(false);
-        registerBtn.setBorderPainted(false);
-        registerBtn.setBorder(BorderFactory.createEmptyBorder(12, 30, 12, 30));
-        registerBtn.setPreferredSize(new Dimension(300, 50));
-        registerBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        registerBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                registerBtn.setBackground(new Color(27, 149, 74));
+        String ct = ctField.getText().trim();
+        String license = licenseField.getText().trim();
+
+        String pw = new String(pwField.getPassword());
+        String cpw = new String(cpwField.getPassword());
+
+        Route selectedRoute = (Route) routeBox.getSelectedItem();
+
+        if (id.isEmpty() || fn.isEmpty() || ln.isEmpty()
+                || ct.isEmpty() || license.isEmpty()
+                || pw.isEmpty() || cpw.isEmpty()) {
+
+            showErrorDialog("Validation Error",
+                    "Please fill in all required fields");
+            return;
+        }
+
+        if (birthDateChooser.getDate() == null) {
+            showErrorDialog("Validation Error",
+                    "Please select birth date");
+            return;
+        }
+
+        if (selectedRoute == null) {
+            showErrorDialog("Validation Error",
+                    "Please assign a route to the driver");
+            return;
+        }
+
+        if (!pw.equals(cpw)) {
+            showErrorDialog("Validation Error",
+                    "Passwords do not match");
+            return;
+        }
+
+        if (pw.length() < 6) {
+            showErrorDialog("Validation Error",
+                    "Password must be at least 6 characters");
+            return;
+        }
+
+        if (util.Session.currentSubAdmin == null) {
+            showErrorDialog("Session Error",
+                    "Session expired. Please log in again.");
+            return;
+        }
+
+        try {
+
+            Date selectedDate = birthDateChooser.getDate();
+
+            LocalDate doB = selectedDate.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+
+            int routeID = selectedRoute.getRouteID();
+
+            String requestCode = ds.registerDriver(
+                    id,
+                    fn,
+                    ln,
+                    selectedGender,
+                    doB,
+                    "",
+                    ct,
+                    license,
+                    LocalDate.now().plusYears(5),
+                    "",
+                    routeID,
+                    pw,
+                    cpw
+            );
+
+            if (requestCode != null && !requestCode.isEmpty()) {
+
+                showApprovalPendingDialog(requestCode);
+
+                idField.setText("");
+                fnField.setText("");
+                lnField.setText("");
+                ctField.setText("");
+                licenseField.setText("");
+                pwField.setText("");
+                cpwField.setText("");
+
+                birthDateChooser.setDate(null);
+
+                driversLoaded = false;
+                overviewLoaded = false;
+
+            } else {
+
+                showErrorDialog("Registration Failed",
+                        "Failed to submit driver registration.");
+
             }
 
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                registerBtn.setBackground(new Color(46, 204, 113));
-            }
-        });
+        } catch (Exception ex) {
 
-        registerBtn.addActionListener(e -> {
-            String id = idField.getText().trim();
-            String fn = fnField.getText().trim();
-            String ln = lnField.getText().trim();
-            String ct = ctField.getText().trim();
-            String license = licenseField.getText().trim();
-            String pw = new String(pwField.getPassword());
-            String cpw = new String(cpwField.getPassword());
+            System.err.println("Error registering driver: " + ex.getMessage());
+            ex.printStackTrace();
 
-            Route selectedRoute = (Route) routeBox.getSelectedItem();
+            showErrorDialog("Registration Error",
+                    "An error occurred: " + ex.getMessage());
+        }
+    });
 
-            if (id.isEmpty() || fn.isEmpty() || ln.isEmpty() || ct.isEmpty() || pw.isEmpty()) {
-                showErrorDialog("Validation Error", "Please fill in all required fields");
-                return;
-            }
+    formPanel.add(registerBtn, gbc);
 
-            if (selectedRoute == null) {
-                showErrorDialog("Validation Error", "Please assign a route to the driver");
-                return;
-            }
+    JScrollPane scrollPane = new JScrollPane(formPanel);
+    scrollPane.setBorder(null);
+    scrollPane.setOpaque(false);
+    scrollPane.getViewport().setOpaque(false);
 
-            if (!pw.equals(cpw)) {
-                showErrorDialog("Validation Error", "Passwords do not match");
-                return;
-            }
+    panel.add(scrollPane, BorderLayout.CENTER);
 
-            if (pw.length() < 6) {
-                showErrorDialog("Validation Error", "Password must be at least 6 characters");
-                return;
-            }
-
-            if (util.Session.currentSubAdmin == null) {
-                showErrorDialog("Session Error", "Session expired. Please log out and log in again.");
-                return;
-            }
-
-            try {
-                int routeID = selectedRoute.getRouteID();
-
-                String requestCode = ds.registerDriver(
-                        id,
-                        fn,
-                        ln,
-                        "M",
-                        LocalDate.now(),
-                        "",
-                        ct,
-                        license,
-                        LocalDate.now().plusYears(5),
-                        "",
-                        routeID,
-                        pw,
-                        cpw
-                );
-
-                if (requestCode != null && !requestCode.isEmpty()) {
-                    showApprovalPendingDialog(requestCode);
-
-                    idField.setText("");
-                    fnField.setText("");
-                    lnField.setText("");
-                    ctField.setText("");
-                    licenseField.setText("");
-                    pwField.setText("");
-                    cpwField.setText("");
-
-                    driversLoaded = false;
-                    overviewLoaded = false;
-                } else {
-                    showErrorDialog("Registration Failed", "Failed to submit driver registration. Request code is null.");
-                }
-            } catch (Exception ex) {
-                System.err.println("Error registering driver: " + ex.getMessage());
-                ex.printStackTrace();
-                showErrorDialog("Registration Error", "An error occurred: " + ex.getMessage());
-            }
-        });
-
-        formPanel.add(registerBtn, gbc);
-
-        JScrollPane scrollPane = new JScrollPane(formPanel);
-        scrollPane.setBorder(null);
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-
-        panel.add(scrollPane, BorderLayout.CENTER);
-        return panel;
-    }
+    return panel;
+}
 
     private void showDriverProfile(Driver driver, DriverPerformance performance) {
         if (driver == null) {

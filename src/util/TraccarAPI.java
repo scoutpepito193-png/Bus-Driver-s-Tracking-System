@@ -8,7 +8,7 @@ import org.json.JSONObject;
 public class TraccarAPI 
 {
     private static String sessionCookie;
-    private static final String BASE_URL = "https://heads-cdna-compatibility-hispanic.trycloudflare.com/";
+    private static final String BASE_URL = "https://gorgeous-utah-shots-before.trycloudflare.com/";
     
     public static APIResponse logIn(String email, String password)
     {

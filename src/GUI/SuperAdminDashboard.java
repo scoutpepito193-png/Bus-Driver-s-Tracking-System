@@ -416,89 +416,120 @@ public class SuperAdminDashboard extends JFrame {
         return box;
     }
 
-    private JPanel createSubAdminsPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
-        panel.setBackground(new Color(240, 242, 245));
+private JPanel createSubAdminsPanel() {
+    JPanel panel = new JPanel(new BorderLayout());
+    panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+    panel.setBackground(new Color(240, 242, 245));
 
-        try {
-            List<SubAdmin> list = subs.getSubAdmins();
+    try {
+        List<SubAdmin> list = subs.getSubAdmins();
 
-            if (list == null || list.isEmpty()) {
-                JLabel noDataLabel = new JLabel("No sub admins registered yet.");
-                noDataLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-                noDataLabel.setForeground(new Color(100, 100, 100));
-                noDataLabel.setHorizontalAlignment(JLabel.CENTER);
-                panel.add(noDataLabel, BorderLayout.CENTER);
-                return panel;
+        if (list == null || list.isEmpty()) {
+            JLabel noDataLabel = new JLabel("No sub admins registered yet.");
+            noDataLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            noDataLabel.setForeground(new Color(100, 100, 100));
+            noDataLabel.setHorizontalAlignment(JLabel.CENTER);
+            panel.add(noDataLabel, BorderLayout.CENTER);
+            return panel;
+        }
+
+        java.util.List<SubAdmin> displayList = new java.util.ArrayList<>();
+
+        for (SubAdmin sa : list) {
+            if (sa == null) {
+                continue;
             }
 
-            String[] columns = {"Sub Admin ID", "Name", "Contact", "Position", "Terminal", "Status"};
-            Object[][] data = new Object[list.size()][6];
+            SubAdmin fullSubAdmin = null;
 
-            for (int i = 0; i < list.size(); i++) {
-                SubAdmin sa = list.get(i);
+            try {
+                String publicSubId = sa.getpublic_sub_id();
 
-                if (sa == null) {
-                    continue;
+                if (publicSubId != null && !publicSubId.trim().isEmpty()) {
+                    fullSubAdmin = subs.searchSubAdminById(publicSubId);
                 }
-
-                String fn = (sa.getfirstName() != null) ? sa.getfirstName() : "";
-                String ln = (sa.getlastName() != null) ? sa.getlastName() : "";
-
-                data[i][0] = (sa.getpublic_sub_id() != null && !sa.getpublic_sub_id().isEmpty())
-                        ? sa.getpublic_sub_id()
-                        : "(no ID)";
-                data[i][1] = (fn + " " + ln).trim();
-                data[i][2] = (sa.getcontactNum() != null && !sa.getcontactNum().isEmpty())
-                        ? sa.getcontactNum()
-                        : "(not set)";
-                data[i][3] = (sa.getposition() != null && !sa.getposition().isEmpty())
-                        ? sa.getposition()
-                        : "(not set)";
-                data[i][4] = getTerminalName(sa.getTerminalID());
-                data[i][5] = "Active";
+            } catch (Exception ex) {
+                System.err.println("Unable to fetch full sub admin profile: " + ex.getMessage());
             }
 
-            JTable table = new JTable(new DefaultTableModel(data, columns) {
-                public boolean isCellEditable(int row, int column) {
-                    return false;
-                }
-            });
+            displayList.add(fullSubAdmin != null ? fullSubAdmin : sa);
+        }
 
-            styleTable(table, new Color(155, 89, 182));
+        String[] columns = {"Sub Admin ID", "Name", "Contact", "Position", "Terminal", "Status"};
+        Object[][] data = new Object[displayList.size()][6];
 
-            table.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    if (evt.getClickCount() == 2) {
-                        int row = table.rowAtPoint(evt.getPoint());
+        for (int i = 0; i < displayList.size(); i++) {
+            SubAdmin sa = displayList.get(i);
 
-                        if (row >= 0 && row < list.size()) {
-                            String publicSubId = (String) table.getValueAt(row, 0);
+            String fn = sa.getfirstName() != null ? sa.getfirstName() : "";
+            String ln = sa.getlastName() != null ? sa.getlastName() : "";
+            String fullName = (fn + " " + ln).trim();
 
-                            SubAdmin fullSubAdmin = subs.searchSubAdminById(publicSubId);
+            int terminalID = sa.getTerminalID();
 
-                            if (fullSubAdmin != null) {
-                                showSubAdminProfileDialog(fullSubAdmin);
-                            } else {
-                                showErrorDialog("Error", "Sub Admin profile not found.");
-                            }
+            data[i][0] = sa.getpublic_sub_id() != null && !sa.getpublic_sub_id().isEmpty()
+                    ? sa.getpublic_sub_id()
+                    : "(no ID)";
+
+            data[i][1] = fullName.isEmpty() ? "(unknown sub admin)" : fullName;
+
+            data[i][2] = sa.getcontactNum() != null && !sa.getcontactNum().isEmpty()
+                    ? sa.getcontactNum()
+                    : "(not set)";
+
+            data[i][3] = sa.getposition() != null && !sa.getposition().isEmpty()
+                    ? sa.getposition()
+                    : "(not set)";
+
+            data[i][4] = getTerminalName(terminalID);
+
+            data[i][5] = "Active";
+        }
+
+        JTable table = new JTable(new DefaultTableModel(data, columns) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
+
+        styleTable(table, new Color(155, 89, 182));
+
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    int row = table.rowAtPoint(evt.getPoint());
+
+                    if (row >= 0 && row < displayList.size()) {
+                        SubAdmin selectedSubAdmin = displayList.get(row);
+
+                        if (selectedSubAdmin != null) {
+                            showSubAdminProfileDialog(selectedSubAdmin);
+                        } else {
+                            showErrorDialog("Error", "Sub Admin profile not found.");
                         }
                     }
                 }
-            });
+            }
+        });
 
-            JScrollPane scrollPane = new JScrollPane(table);
-            scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
-            panel.add(scrollPane, BorderLayout.CENTER);
-        } catch (Exception e) {
-            System.err.println("Error loading sub admins panel: " + e.getMessage());
-            e.printStackTrace();
-        }
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
+        panel.add(scrollPane, BorderLayout.CENTER);
+    } catch (Exception e) {
+        System.err.println("Error loading sub admins panel: " + e.getMessage());
+        e.printStackTrace();
 
-        return panel;
+        JLabel errorLabel = new JLabel("Unable to load sub admins.");
+        errorLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        errorLabel.setForeground(new Color(231, 76, 60));
+        errorLabel.setHorizontalAlignment(JLabel.CENTER);
+        panel.add(errorLabel, BorderLayout.CENTER);
     }
+
+    return panel;
+}
+
 
     private void showSubAdminProfileDialog(SubAdmin subAdmin) {
         JDialog dlg = new JDialog(this, "Sub Admin Profile", true);
@@ -509,7 +540,7 @@ public class SuperAdminDashboard extends JFrame {
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        contentPanel.setBackground(Color.WHITE);
+        contentPanel.setBackground(Color.WHITE);    
 
         JLabel headerLabel = new JLabel("SUB ADMIN PROFILE");
         headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));

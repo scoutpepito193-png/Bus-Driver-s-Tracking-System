@@ -120,37 +120,43 @@ public class DriverAttendanceRepo
     }
 
     public int countActiveDriversToday(int subAdminId) {
-    int count = 0;
+        int count = 0;
 
-    String sql =
-        "SELECT COUNT(DISTINCT a.driver_id) " +
-        "FROM driver_attendance a " +
-        "JOIN driver d ON a.driver_id = d.driver_id " +
-        "WHERE DATE(a.date) = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila')::date " +
-        "AND a.status = 'PRESENT' " +
-        "AND d.assigned_by = ?";
+        LocalDate today = LocalDate.now();
 
-    try (Connection conn = dbConnection.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String sql =
+            "SELECT COUNT(DISTINCT a.driver_id) " +
+            "FROM driver_attendance a " +
+            "JOIN driver d ON a.driver_id = d.driver_id " +
+            "WHERE DATE(a.date) = ? " +
+            "AND a.status = 'PRESENT' " +
+            "AND d.assigned_by = ?";
 
-        stmt.setInt(1, subAdminId);
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-        ResultSet rs = stmt.executeQuery();
+            stmt.setDate(1, java.sql.Date.valueOf(today));
+            stmt.setInt(2, subAdminId);
 
-        if (rs.next()) {
-            count = rs.getInt(1);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-    } catch (Exception e) {
-        e.printStackTrace();
+        return count;
     }
 
-    return count;
-}
 
     
 public int countAbsentDriversToday(int subAdminId) {
     int count = 0;
+
+    LocalDate today = LocalDate.now();
 
     String sql =
         "SELECT COUNT(*) FROM driver d " +
@@ -158,13 +164,14 @@ public int countAbsentDriversToday(int subAdminId) {
         "AND NOT EXISTS ( " +
         "   SELECT 1 FROM driver_attendance a " +
         "   WHERE a.driver_id = d.driver_id " +
-        "   AND DATE(a.date) = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila')::date " +
+        "   AND DATE(a.date) = ? " +
         ")";
 
     try (Connection conn = dbConnection.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
         stmt.setInt(1, subAdminId);
+        stmt.setDate(2, java.sql.Date.valueOf(today));
 
         ResultSet rs = stmt.executeQuery();
 
@@ -178,5 +185,6 @@ public int countAbsentDriversToday(int subAdminId) {
 
     return count;
 }
+
 
 }
